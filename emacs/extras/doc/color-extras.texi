@@ -67,7 +67,7 @@ Indices
 
 @samp{color-extras.el} extends Emacs' built-in @code{color} library with
 practical tools for working with color values in everyday editing.
-Theme authors, CSS developers, and anyone who manipulates color codes
+Theme authors@comma{} CSS developers@comma{} and anyone who manipulates color codes
 in source files will find it useful.
 
 The package provides three main capabilities:
@@ -75,18 +75,18 @@ The package provides three main capabilities:
 @itemize
 @item
 @strong{Conversion} between hexadecimal (HEX) and Hue-Saturation-Luminance
-(HSL) color representations, either for the color at point or for
+(HSL) color representations@comma{} either for the color at point or for
 every color in a buffer (@ref{Conversion, , Conversion commands}).
 @item
-@strong{Contrast analysis} against white, black, and an optional reference
-color, following the WCAG contrast ratio standard
-(@ref{Contrast analysis}).
+@strong{Contrast analysis} against white@comma{} black@comma{} and an optional reference
+color@comma{} following the WCAG contrast ratio standard
+(@ref{Contrast analysis, , Contrast analysis}).
 @item
 @strong{Embark integration} that lets you act on any HEX or HSL color
-string with a single keystroke (@ref{Embark integration}).
+string with a single keystroke (@ref{Embark integration, , Embark integration}).
 @end itemize
 
-Internally, the package relies on Emacs' built-in @code{color-rgb-to-hsl}
+Internally@comma{} the package relies on Emacs' built-in @code{color-rgb-to-hsl}
 and @code{color-hsl-to-rgb} for the mathematical conversions and on the
 @samp{ct} package for contrast ratio computation.
 
@@ -102,7 +102,7 @@ and @code{color-hsl-to-rgb} for the mathematical conversions and on the
 
 @vindex color-extras-hex-pattern
 The constant @code{color-extras-hex-pattern} is a regular expression that
-matches a six-digit hexadecimal RGB color string, with or without a
+matches a six-digit hexadecimal RGB color string@comma{} with or without a
 leading @samp{#}.  The first capture group contains the six hex digits.
 This pattern is used throughout the package to detect HEX colors at
 point and in buffer-wide searches (@ref{Conversion, , Conversion commands}).
@@ -110,9 +110,9 @@ point and in buffer-wide searches (@ref{Conversion, , Conversion commands}).
 @vindex color-extras-hsl-scaled-pattern
 The constant @code{color-extras-hsl-scaled-pattern} is a regular expression
 that matches an HSL color written as three comma-separated numbers
-(e.g., @samp{210, 50%, 40%}).  Hue ranges from 0 to 360; saturation and
+(e.g.@comma{} @samp{210@comma{} 50%@comma{} 40%}).  Hue ranges from 0 to 360; saturation and
 luminance range from 0 to 100 and may include trailing @samp{%}  signs.
-The three capture groups correspond to hue, saturation, and luminance.
+The three capture groups correspond to hue@comma{} saturation@comma{} and luminance.
 
 @node Commands
 @chapter Commands
@@ -126,19 +126,20 @@ The three capture groups correspond to hue, saturation, and luminance.
 @section Conversion
 
 @findex color-extras-convert
-When you need to switch a color between HEX and HSL notation, place
+When you need to switch a color between HEX and HSL notation@comma{} place
 point on the color value and call @code{color-extras-convert}.  If the
-color at point is HEX (e.g., @samp{#ff0000}), the command converts it to
-HSL (e.g., @samp{0, 100%, 50%}); if it is HSL, the command produces HEX@.
+color at point is HEX (e.g.@comma{} @samp{#ff0000})@comma{} the command converts it to
+HSL (e.g.@comma{} @samp{0@comma{} 100%@comma{} 50%}); if it is HSL@comma{} the command produces HEX@.
 The converted value is saved to the kill ring and reported in the echo
-area, so you can immediately yank it wherever you need it.  If no
-recognizable color is found at point, the command prompts for one.
+area@comma{} so you can immediately yank it wherever you need it.  If no
+recognizable color is found at point@comma{} the command reports this in the
+echo area.  You can also pass a COLOR argument from Lisp code.
 
 @findex color-extras-convert-all
-To convert every color in a file at once, use
+To convert every color in a file at once@comma{} use
 @code{color-extras-convert-all}.  It prompts for the target format---either
 @samp{"hex"} or @samp{"hsl"}---and replaces all colors matching the @emph{opposite}
-format throughout the buffer.  For example, choosing @samp{"hex"} finds all
+format throughout the buffer.  For example@comma{} choosing @samp{"hex"} finds all
 HSL strings and rewrites them as HEX values.  An optional FILE
 argument lets you operate on a file other than the current buffer.
 
@@ -149,11 +150,11 @@ argument lets you operate on a file other than the current buffer.
 Verifying that foreground and background colors meet accessibility
 guidelines is a frequent need.  The command @code{color-extras-contrast}
 computes the WCAG contrast ratio between a primary color and both
-white (@samp{#ffffff}) and black (@samp{#000000}), displaying the results in the
-echo area.  If you supply an optional second color, the command also
+white (@samp{#ffffff}) and black (@samp{#000000})@comma{} displaying the results in the
+echo area.  If you supply an optional second color@comma{} the command also
 reports the contrast ratio between the two.
 
-The primary color defaults to the color at point; if none is found,
+The primary color defaults to the color at point; if none is found@comma{}
 the command prompts for one.  The second color is always prompted for
 and may be left blank.  This command requires the @samp{ct} package for its
 @code{ct-contrast-ratio} function.
@@ -177,16 +178,16 @@ and may be left blank.  This command requires the @samp{ct} package for its
 @findex color-extras-looking-at-color
 The function @code{color-extras-parse-color} accepts a color string and
 returns either a HEX string (without the leading @samp{#}) or an HSL list
-of three numbers, depending on which pattern matches.  Pass a non-nil
+of three numbers@comma{} depending on which pattern matches.  Pass a non-nil
 STRING argument to get the HSL result as a formatted string instead of
 a list.
 
 Three companion functions detect colors at point:
 @code{color-extras-looking-at-rgb} returns the six-digit HEX string (or
-@code{nil}), @code{color-extras-looking-at-hsl-scaled} returns the HSL color as
-a list or formatted string, and @code{color-extras-looking-at-color} tries
+@code{nil})@comma{} @code{color-extras-looking-at-hsl-scaled} returns the HSL color as
+a list or formatted string@comma{} and @code{color-extras-looking-at-color} tries
 HEX first and falls back to HSL@.  These are the building blocks used
-by the interactive commands (@ref{Conversion}).
+by the interactive commands (@ref{Conversion, , Conversion}).
 
 @node HSL formatting
 @section HSL formatting
@@ -194,11 +195,14 @@ by the interactive commands (@ref{Conversion}).
 @findex color-extras-hsl-split
 @findex color-extras-hsl-to-string
 @findex color-extras-format-hsl
-The function @code{color-extras-hsl-split} extracts hue, saturation, and
+The function @code{color-extras-hsl-split} extracts hue@comma{} saturation@comma{} and
 luminance from the current regexp match data (assuming a match against
 @code{color-extras-hsl-scaled-pattern}) and returns them as a list of three
-numbers.  @code{color-extras-hsl-to-string} takes such a list and formats
-it as @samp{"H, S%, L%"}, rounding each component to the nearest integer.
+numbers.  When the optional STRING argument is non-nil@comma{} match data is
+read from that string (for use after @code{string-match}); otherwise@comma{} match
+data is read from the current buffer (for use after
+@code{thing-at-point-looking-at} or @code{re-search-forward}).  @code{color-extras-hsl-to-string} takes such a list and formats
+it as @samp{"H@comma{} S%@comma{} L%"}@comma{} rounding each component to the nearest integer.
 @code{color-extras-format-hsl} is a convenience wrapper that returns either
 the list or the string form depending on its STRING argument.
 
@@ -211,16 +215,16 @@ the list or the string form depending on its STRING argument.
 @findex color-extras-rgb-to-hex
 These four functions form the conversion core of the package.
 
-@code{color-extras-hex-to-rgb} converts a HEX string (supporting 3-, 4-,
-6-, and 8-digit forms) to a list of three RGB floats in the range
-0.0--1.0.  @code{color-extras-rgb-to-hex} does the reverse, accepting
+@code{color-extras-hex-to-rgb} converts a HEX string (supporting 3-@comma{} 4-@comma{}
+6-@comma{} and 8-digit forms) to a list of three RGB floats in the range
+0.0--1.0.  @code{color-extras-rgb-to-hex} does the reverse@comma{} accepting
 three integers in the range 0--255 and returning a @samp{#RRGGBB} string.
 
 @code{color-extras-hex-to-hsl} converts a HEX string to an HSL list.  When
-the optional RESCALE argument is non-nil, hue is scaled to 0--360 and
+the optional RESCALE argument is non-nil@comma{} hue is scaled to 0--360 and
 saturation and luminance to 0--100; otherwise all three values are in
 the 0.0--1.0 range.  @code{color-extras-hsl-to-hex} performs the inverse
-transformation, with the same RESCALE convention.
+transformation@comma{} with the same RESCALE convention.
 
 @node Rescaling helpers
 @section Rescaling helpers
@@ -238,18 +242,18 @@ rescales when its RESCALE argument is non-nil.
 @chapter Embark integration
 
 @findex color-extras-embark-color-finder
-When the @samp{embark} package is loaded, @samp{color-extras.el} registers a
-target finder, @code{color-extras-embark-color-finder}, that recognizes HEX
+When the @samp{embark} package is loaded@comma{} @samp{color-extras.el} registers a
+target finder@comma{} @code{color-extras-embark-color-finder}@comma{} that recognizes HEX
 and HSL color strings at point and tags them with the @code{color}
 category.
 
-A dedicated keymap, @code{color-extras-embark-map}, is associated with this
+A dedicated keymap@comma{} @code{color-extras-embark-map}@comma{} is associated with this
 category.  It provides two actions:
 
 @table @asis
 @item @samp{c}
 @code{color-extras-convert} --- convert between HEX and HSL
-(@ref{Conversion}).
+(@ref{Conversion, , Conversion}).
 @item @samp{w}
 @code{embark-copy-as-kill} --- copy the color string to the kill
 ring.

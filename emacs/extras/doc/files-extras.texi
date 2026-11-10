@@ -86,20 +86,20 @@ It depends on the @samp{paths} package for directory and file path constants
 and on @samp{transient} for quick-access dispatch menus.
 
 The package addresses several common pain points in daily Emacs usage.
-On macOS, it overrides the default trash mechanism to use the external
-@samp{trash} utility, which preserves Finder's ``Put Back'' functionality.  It
-adds safeguards around the scratch buffer, preventing accidental kills
+On macOS@comma{} it overrides the default trash mechanism to use the external
+@samp{trash} utility@comma{} which preserves Finder's ``Put Back'' functionality.  It
+adds safeguards around the scratch buffer@comma{} preventing accidental kills
 by burying it instead.  It also provides an alert system for auto-save
-data, ensuring that recovery notifications are not silently missed.
+data@comma{} ensuring that recovery notifications are not silently missed.
 
-Beyond buffer management, the package integrates with external tools.
+Beyond buffer management@comma{} the package integrates with external tools.
 The @code{files-extras-ocr-pdf} command drives @samp{ocrmypdf} to add a text
-layer to scanned PDFs, supporting language selection and forced re-OCR@.
+layer to scanned PDFs@comma{} supporting language selection and forced re-OCR@.
 A pair of commands automates downloading and installing the Bypass
 Paywalls browser extensions for Chrome and Firefox.
 
 The package also offers two transient dispatch menus: one for jumping to
-frequently used files (inbox, config, agenda, ledger, etc.) and one for
+frequently used files (inbox@comma{} config@comma{} agenda@comma{} ledger@comma{} etc.) and one for
 opening personal Elpaca-managed packages.  These menus provide a
 keyboard-driven launcher for the files you access most often.
 
@@ -119,7 +119,7 @@ The user option @code{files-extras-screenshot-directory} specifies the
 directory where macOS saves screenshots.  The default value is the
 downloads directory (via @code{paths-dir-downloads}).  This is used by
 @code{files-extras-copy-most-recent-screenshot}
-(@ref{Copying paths and contents}) to
+(@ref{Copying paths and contents, , Copying paths and contents}) to
 locate the most recent screenshot file.
 
 @node New buffer major mode
@@ -128,10 +128,10 @@ locate the most recent screenshot file.
 @vindex files-extras-new-empty-buffer-major-mode
 The user option @code{files-extras-new-empty-buffer-major-mode} specifies the
 major mode to activate when creating a new empty buffer with
-@code{files-extras-new-empty-buffer} (@ref{Creating buffers}).
+@code{files-extras-new-empty-buffer} (@ref{Creating buffers, , Creating buffers}).
 
 The default value is @code{org-mode}.  It accepts any symbol naming a valid
-major mode function.  If set to @code{nil}, the new buffer will use
+major mode function.  If set to @code{nil}@comma{} the new buffer will use
 @code{fundamental-mode}.  You might change this to @code{markdown-mode} or
 @code{text-mode} if you prefer a different default for scratch-like buffers.
 
@@ -169,11 +169,11 @@ reflects both your unsaved changes and the file's current state on disk.
 
 The command @code{files-extras-save-all-buffers} saves all file-visiting
 buffers without prompting for confirmation.  It passes a prefix argument
-of 4 to @code{save-some-buffers}, which bypasses the per-buffer confirmation
+of 4 to @code{save-some-buffers}@comma{} which bypasses the per-buffer confirmation
 that the default behavior would require.  A buffer containing characters
 that its coding system cannot encode is skipped with a message rather
-than saved, because saving it would raise a coding-system prompt; this
-keeps unattended callers, such as the midnight hook, from blocking on
+than saved@comma{} because saving it would raise a coding-system prompt; this
+keeps unattended callers@comma{} such as the midnight hook@comma{} from blocking on
 the minibuffer.
 
 The command @code{files-extras-save-buffer-no-hooks} saves the current buffer
@@ -183,7 +183,7 @@ as formatting or linting) that you want to skip for a particular save.
 
 The command @code{files-extras-revert-all-file-buffers} refreshes every open
 file buffer without confirmation.  Buffers with unsaved modifications
-are left untouched, but buffers whose underlying files are no longer
+are left untouched@comma{} but buffers whose underlying files are no longer
 readable are killed.  A summary message is displayed when the process
 completes.
 
@@ -199,19 +199,19 @@ The buffer is marked so that @code{save-some-buffers} will offer to save it.
 
 The command @code{files-extras-new-buffer-in-current-mode} creates a new
 buffer with the same major mode as the current one.  For @code{shell-mode} and
-@code{eshell-mode}, it calls the appropriate shell launcher instead of simply
-setting the mode, ensuring a proper process is attached.
+@code{eshell-mode}@comma{} it calls the appropriate shell launcher instead of simply
+setting the mode@comma{} ensuring a proper process is attached.
 
 @node Switching buffers
 @section Switching buffers
 
 @findex files-extras-switch-to-alternate-buffer
 The command @code{files-extras-switch-to-alternate-buffer} switches to the
-most recently used buffer in the current window, functioning as a quick
+most recently used buffer in the current window@comma{} functioning as a quick
 toggle between two buffers.  It respects the frame's @code{buffer-predicate}
-parameter, so it will skip buffers that the frame is configured to
+parameter@comma{} so it will skip buffers that the frame is configured to
 ignore.  Internally it uses @code{files-extras-get-alternate-buffer} to
-determine the target (@ref{Buffer information}).
+determine the target (@ref{Buffer information, , Buffer information}).
 
 @node Killing and burying buffers
 @section Killing and burying buffers
@@ -222,7 +222,7 @@ determine the target (@ref{Buffer information}).
 @findex files-extras-kill-all-file-visiting-buffers
 @findex files-extras-bury-buffer-switch-to-other-window
 The command @code{files-extras-kill-this-buffer} kills the current buffer.
-This is a more reliable alternative to the built-in @code{kill-this-buffer},
+This is a more reliable alternative to the built-in @code{kill-this-buffer}@comma{}
 which can sometimes stop working due to menu-bar assumptions.
 
 The command @code{files-extras-kill-other-buffer} kills the buffer displayed in
@@ -248,7 +248,7 @@ bottom of the buffer list.
 
 @findex files-extras-eval-region-or-buffer
 The command @code{files-extras-eval-region-or-buffer} evaluates the active
-region if one is selected, otherwise evaluates the entire buffer.  This
+region if one is selected@comma{} otherwise evaluates the entire buffer.  This
 provides a single keybinding for both common evaluation workflows.
 
 @node Copying paths and contents
@@ -264,26 +264,26 @@ the echo area and copies it to the kill ring.
 
 The command @code{files-extras-copy-current-path} copies the full path of the
 current buffer's file (or @code{default-directory} if the buffer is not
-visiting a file) to the kill ring.  With a prefix argument, it copies
+visiting a file) to the kill ring.  With a prefix argument@comma{} it copies
 the buffer name instead.
 
 The command @code{files-extras-copy-contents} copies the entire contents of a
-file to the kill ring.  When called interactively, it uses the file at
-point in Dired, the current buffer's file, or prompts for a file.
+file to the kill ring.  When called interactively@comma{} it uses the file at
+point in Dired@comma{} the current buffer's file@comma{} or prompts for a file.
 
 The command @code{files-extras-copy-as-kill-dwim} copies a context-appropriate
-string to the kill ring.  In a @code{helpful-mode} buffer, it extracts the
-symbol name from the buffer title and kills the buffer.  In Dired, it
-copies the file at point.  In a file-visiting buffer, it copies the
+string to the kill ring.  In a @code{helpful-mode} buffer@comma{} it extracts the
+symbol name from the buffer title and kills the buffer.  In Dired@comma{} it
+copies the file at point.  In a file-visiting buffer@comma{} it copies the
 buffer's file name.
 
 The command @code{files-extras-copy-most-recent-screenshot} finds the most
 recent screenshot in @code{files-extras-screenshot-directory}
-(@ref{Screenshot directory}) and copies its full
+(@ref{Screenshot directory, , Screenshot directory}) and copies its full
 path to the kill ring.  Screenshots are identified by matching the macOS
 screenshot naming pattern (@samp{Screenshot YYYY-MM-DD at HH.MM.SS.EXT}).
-This is useful for quickly referencing a screenshot you just took,
-e.g., to attach it to an email or insert it into a document.
+This is useful for quickly referencing a screenshot you just took@comma{}
+e.g.@comma{} to attach it to an email or insert it into a document.
 
 @node OCR for PDF files
 @section OCR for PDF files
@@ -291,31 +291,31 @@ e.g., to attach it to an email or insert it into a document.
 @findex files-extras-ocr-pdf
 The command @code{files-extras-ocr-pdf} applies optical character recognition
 to a PDF file using the external @samp{ocrmypdf} tool (which must be
-installed separately, e.g., via @samp{brew install ocrmypdf}).
+installed separately@comma{} e.g.@comma{} via @samp{brew install ocrmypdf}).
 
 The command determines the file to OCR from context: the file at point
-in Dired, the file visited in @code{pdf-view-mode}, or the file associated
+in Dired@comma{} the file visited in @code{pdf-view-mode}@comma{} or the file associated
 with the current Ebib or Bib@TeX{} entry.  It prompts for the language of
-the document, using either Ebib's language field or a general language
+the document@comma{} using either Ebib's language field or a general language
 selector.
 
-Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use an already validated document language without consulting the selected buffer or prompting. Ebib PDF postprocessing supplies both explicitly. The function returns its OCR process so callers can observe completion without searching unrelated process names. Unless explicit PARAMETERS are supplied, a missing OCR language code raises an error before starting a subprocess.
+Programmatic callers may supply FILENAME and the fourth argument LANGUAGE to use an already validated document language without consulting the selected buffer or prompting. Ebib PDF postprocessing supplies both explicitly. The function returns its OCR process so callers can observe completion without searching unrelated process names. Unless explicit PARAMETERS are supplied@comma{} a missing OCR language code raises an error before starting a subprocess.
 
-With a prefix argument, the command forces OCR even if the PDF already
-contains a text layer.  Without the prefix argument, @samp{ocrmypdf} skips
-pages with text and adds OCR to image-only pages, including in mixed
+With a prefix argument@comma{} the command forces OCR even if the PDF already
+contains a text layer.  Without the prefix argument@comma{} @samp{ocrmypdf} skips
+pages with text and adds OCR to image-only pages@comma{} including in mixed
 documents.  Normal processing preserves original page images: it does
-not deskew or optimize them, and uses PDF output instead of converting
-the document to PDF/A@.  This avoids replacing compact scans of covers,
+not deskew or optimize them@comma{} and uses PDF output instead of converting
+the document to PDF/A@.  This avoids replacing compact scans of covers@comma{}
 blank pages or illustrations with larger raster images merely because
 they have no text layer.  Tagged documents with text can complete
 successfully without forcing OCR@.  Forced OCR still deskews and
 rasterizes pages; explicit PARAMETERS retain full control of the command.
 
 The process runs asynchronously.  Status messages are displayed as the
-OCR proceeds, with duplicate messages suppressed.  The process filter
+OCR proceeds@comma{} with duplicate messages suppressed.  The process filter
 @code{files-extras-ocr-pdf-process-filter} translates raw @samp{ocrmypdf} output
-into user-friendly messages (@ref{Process support}).
+into user-friendly messages (@ref{Process support, , Process support}).
 
 @node File recovery and diffing
 @section File recovery and diffing
@@ -325,13 +325,13 @@ into user-friendly messages (@ref{Process support}).
 The command @code{files-extras-recover-all-files} recovers all files that have
 auto-save data in the Emacs auto-save directory.  This is useful after a
 crash when @code{recover-session} fails because no session file was created.
-After each recovery attempt, it runs @code{files-extras-diff-buffer-with-file}
+After each recovery attempt@comma{} it runs @code{files-extras-diff-buffer-with-file}
 to show the differences.
 
 The command @code{files-extras-diff-buffer-with-file} runs a unified diff
 (@samp{-u}) comparing the current buffer against the file on disk.  This
 command is also automatically called after @code{recover-this-file} via
-@samp{:after} advice, so you always see what changed.
+@samp{:after} advice@comma{} so you always see what changed.
 
 @node Image conversion
 @section Image conversion
@@ -356,13 +356,13 @@ buffer.
 @findex files-extras-download-bypass-paywalls-chrome
 @findex files-extras-download-bypass-paywalls-firefox
 The command @code{files-extras-download-bypass-paywalls-chrome} downloads the
-Bypass Paywalls Chrome Clean extension as a zip file, extracts it, opens
-the Chrome extensions management page (via a Keyboard Maestro macro),
+Bypass Paywalls Chrome Clean extension as a zip file@comma{} extracts it@comma{} opens
+the Chrome extensions management page (via a Keyboard Maestro macro)@comma{}
 and opens the extracted folder in Finder.  The user then drags the
 folder onto the extensions page to complete installation.
 
 The command @code{files-extras-download-bypass-paywalls-firefox} performs the
-equivalent operation for Firefox, downloading an XPI file and opening
+equivalent operation for Firefox@comma{} downloading an XPI file and opening
 the Firefox extensions page for manual installation.
 
 Both commands verify that the download URL is reachable before
@@ -381,8 +381,8 @@ Grammarly's web-based external editor in the default browser.
 @findex files-extras-buffer-local-set-key
 The command @code{files-extras-buffer-local-set-key} interactively binds a
 key sequence to a command in the current buffer only.  It creates a new
-sparse keymap with the current local map as its parent, adds the
-binding, and installs the new map.  This is useful for one-off bindings
+sparse keymap with the current local map as its parent@comma{} adds the
+binding@comma{} and installs the new map.  This is useful for one-off bindings
 in specific buffers without affecting the global or mode-level keymap.
 
 @node Transient dispatch menus
@@ -391,12 +391,12 @@ in specific buffers without affecting the global or mode-level keymap.
 @findex files-extras-dispatch
 @findex files-extras-packages-dispatch
 The command @code{files-extras-dispatch} presents a transient menu for
-jumping to frequently used files: inbox (mobile and desktop), agenda,
-config, feeds, notes, scratch, calendar, ledger, and others.  Each
+jumping to frequently used files: inbox (mobile and desktop)@comma{} agenda@comma{}
+config@comma{} feeds@comma{} notes@comma{} scratch@comma{} calendar@comma{} ledger@comma{} and others.  Each
 entry opens the corresponding file or buffer with a single keystroke.
 
 The command @code{files-extras-packages-dispatch} presents a transient menu
-for opening personal Elpaca-managed package files, organized into
+for opening personal Elpaca-managed package files@comma{} organized into
 ``Tlon'' and ``Personal'' groups.  It is accessible from the main dispatch
 menu via the @samp{p} key.
 
@@ -422,15 +422,15 @@ menu via the @samp{p} key.
 @findex files-extras-open-buffer-files
 @findex files-extras-bollp
 The function @code{files-extras-get-alternate-buffer} returns the most
-recently used buffer in the current window, respecting the frame's
+recently used buffer in the current window@comma{} respecting the frame's
 @code{buffer-predicate}.  It is used internally by
-@code{files-extras-switch-to-alternate-buffer} (@ref{Switching buffers}).
+@code{files-extras-switch-to-alternate-buffer} (@ref{Switching buffers, , Switching buffers}).
 
 The function @code{files-extras-get-stem-of-current-buffer} returns the base
 name (without extension or directory) of the current buffer's file.
 
 The function @code{files-extras-buffer-file-name} returns the file name of
-the current buffer, adjusting paths that go through the @samp{git-dirs}
+the current buffer@comma{} adjusting paths that go through the @samp{git-dirs}
 directory structure to point to their canonical locations.
 
 The function @code{files-extras-open-buffer-files} returns a list of all
@@ -452,27 +452,27 @@ beginning of the last line in the buffer.
 @findex files-extras-get-nth-directory
 @findex files-extras-get-current-dir-lowercased
 The function @code{files-extras-read-file} prompts for a file path with a
-context-aware default: the file at point in Dired, the current buffer's
-file, or an explicit FILE argument.
+context-aware default: the file at point in Dired@comma{} the current buffer's
+file@comma{} or an explicit FILE argument.
 
 The function @code{files-extras-newest-file} returns the path of the most
-recently modified file in a directory, excluding @samp{.DS_Store} and
+recently modified file in a directory@comma{} excluding @samp{.DS_Store} and
 @samp{.localized} files (common macOS clutter).
 
 The function @code{files-extras-lines-to-list} reads a file and returns its
 lines as a list of strings.  The function @code{files-extras-list-to-lines}
-performs the inverse operation, writing a list to a file with one element
+performs the inverse operation@comma{} writing a list to a file with one element
 per line.
 
 The function @code{files-extras-get-help-file} searches for a documentation
-file (@samp{.org} or @samp{.md}) corresponding to the given source file, looking
+file (@samp{.org} or @samp{.md}) corresponding to the given source file@comma{} looking
 in @samp{doc/} and @samp{docs/} subdirectories.
 
 The function @code{files-extras-get-nth-directory} extracts the Nth path
 component from a directory path.
 
 The function @code{files-extras-get-current-dir-lowercased} returns the base
-name of the current directory, lowercased, with hyphens replaced by
+name of the current directory@comma{} lowercased@comma{} with hyphens replaced by
 underscores.
 
 @node Mode and buffer switching
@@ -502,7 +502,7 @@ It is used by the @code{files-extras-dispatch} menu.
 @findex files-extras-ocr-pdf-process-filter
 The function @code{files-extras-ocr-pdf-process-filter} is a process filter
 for @samp{ocrmypdf} output.  It translates raw process output into
-human-readable status messages and suppresses duplicates.  For example,
+human-readable status messages and suppresses duplicates.  For example@comma{}
 it informs the user when OCR has already been performed and a prefix
 argument is needed to force re-processing.
 
@@ -513,14 +513,14 @@ argument is needed to force re-processing.
 @vindex files-extras-walk-dir-locals-upward
 The function @code{files-extras-walk-dir-locals-file} enables chaining of
 @samp{.dir-locals.el} files from the current directory upward through the
-file system hierarchy.  By default, Emacs only applies the nearest
+file system hierarchy.  By default@comma{} Emacs only applies the nearest
 @samp{.dir-locals.el}; this function makes it possible to layer settings from
 multiple levels.
 
 The variable @code{files-extras-walk-dir-locals-upward} controls the order
-in which the chained files are evaluated.  When non-nil, evaluation
+in which the chained files are evaluated.  When non-nil@comma{} evaluation
 proceeds from the current directory upward (most specific first);
-otherwise, evaluation proceeds from the top down.  The default value
+otherwise@comma{} evaluation proceeds from the top down.  The default value
 is @code{nil}.
 
 This function is designed to be used as @samp{:around} advice on
@@ -538,22 +538,22 @@ but commented out by default; uncomment it if you need this behavior.
 The function @code{files-extras-system-move-file-to-trash} overrides
 @code{system-move-file-to-trash} (via @samp{:override} advice) to use the
 external @samp{trash} utility on macOS@.  This preserves Finder's ``Put Back''
-functionality, which the default Emacs trash implementation does not
+functionality@comma{} which the default Emacs trash implementation does not
 support.
 
 The function @code{files-extras-bury-scratch-buffer} is added to
 @code{kill-buffer-query-functions}.  It intercepts attempts to kill the
-@samp{*scratch*} buffer and buries it instead, returning @code{nil} to prevent the
+@samp{*scratch*} buffer and buries it instead@comma{} returning @code{nil} to prevent the
 kill.
 
 The function @code{files-extras-auto-save-alert} is added to
-@code{find-file-hook}.  When auto-save data is newer than the visited file,
+@code{find-file-hook}.  When auto-save data is newer than the visited file@comma{}
 it triggers a high-severity alert (via the @samp{alert} package) to ensure
 the notification is not missed.
 
 The function @code{files-extras-make-hashed-auto-save-file-name-a} advises
-@code{make-auto-save-file-name} (@samp{:around}) to hash the buffer file name,
-preventing excessively long auto-save file paths.  Similarly,
+@code{make-auto-save-file-name} (@samp{:around}) to hash the buffer file name@comma{}
+preventing excessively long auto-save file paths.  Similarly@comma{}
 @code{files-extras-make-hashed-backup-file-name-a} advises
 @code{make-backup-file-name-1} to hash backup file names in directories
 specified by @code{backup-directory-alist}.

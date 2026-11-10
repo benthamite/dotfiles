@@ -69,17 +69,17 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{read-aloud-extras.el} extends the @samp{read-aloud} package, which provides text-to-speech functionality within Emacs. The base package handles the core reading pipeline, but it offers limited control over speech parameters and does not support PDF buffers. This package fills those gaps with:
+@samp{read-aloud-extras.el} extends the @samp{read-aloud} package@comma{} which provides text-to-speech functionality within Emacs. The base package handles the core reading pipeline@comma{} but it offers limited control over speech parameters and does not support PDF buffers. This package fills those gaps with:
 
 @itemize
 @item
-User options and commands for adjusting the speech rate on the fly (@ref{Rate options}, @ref{Rate commands}).
+User options and commands for adjusting the speech rate on the fly (@ref{Rate options, , Rate options}@comma{} @ref{Rate commands, , Rate commands}).
 @item
-A user option and command for choosing the speech voice (@ref{Voice option}, @ref{Setting the voice}).
+A user option and command for choosing the speech voice (@ref{Voice option, , Voice option}@comma{} @ref{Setting the voice, , Setting the voice}).
 @item
-A command to read entire files, including PDFs, by extracting their text first (@ref{Reading files}).
+A command to read entire files@comma{} including PDFs@comma{} by extracting their text first (@ref{Reading files, , Reading files}).
 @item
-A patch via @samp{el-patch} that enables reading selected text in @samp{pdf-view-mode} buffers (@ref{PDF selection patch}).
+A patch via @samp{el-patch} that enables reading selected text in @samp{pdf-view-mode} buffers (@ref{PDF selection patch, , PDF selection patch}).
 @end itemize
 
 The speech-engine customization is currently implemented for the macOS @samp{say} backend. The package depends on @samp{el-patch} and @samp{read-aloud}.
@@ -96,16 +96,16 @@ The speech-engine customization is currently implemented for the macOS @samp{say
 @section Rate options
 
 @vindex read-aloud-extras-rate
-The user option @code{read-aloud-extras-rate} specifies the speech rate in words per minute. The default value is @samp{200}, which corresponds to a natural conversational pace. You can change this to any integer; higher values produce faster speech. This value is passed to the speech engine whenever the engine configuration is updated (@ref{Rate commands}).
+The user option @code{read-aloud-extras-rate} specifies the speech rate in words per minute. The default value is @samp{200}@comma{} which corresponds to a natural conversational pace. You can change this to any integer; higher values produce faster speech. This value is passed to the speech engine whenever the engine configuration is updated (@ref{Rate commands, , Rate commands}).
 
 @vindex read-aloud-extras-rate-change
-The user option @code{read-aloud-extras-rate-change} controls the increment or decrement applied by the @code{read-aloud-extras-increase-rate} and @code{read-aloud-extras-decrease-rate} commands. The default value is @samp{10} words per minute. If you find the adjustments too coarse or too fine, change this value accordingly.
+The user option @code{read-aloud-extras-rate-change} controls the increment or decrement applied by the @code{read-aloud-extras-increase-rate} and @code{read-aloud-extras-decrease-rate} commands. The default value is @samp{10} words per minute. If you find the adjustments too coarse or too fine@comma{} change this value accordingly.
 
 @node Voice option
 @section Voice option
 
 @vindex read-aloud-extras-voice
-The user option @code{read-aloud-extras-voice} holds the name of the voice used by the speech engine. It is a string that must match a voice recognized by the configured engine (for macOS @samp{say}, examples include @samp{"Alex"}, @samp{"Samantha"}, @samp{"Daniel"}). The default is an empty string, which causes the engine to use its own default voice. Change this option or use the @code{read-aloud-extras-set-voice} command (@ref{Setting the voice}) to select a specific voice.
+The user option @code{read-aloud-extras-voice} holds the name of the voice used by the speech engine. It is a string that must match a voice recognized by the configured engine (for macOS @samp{say}@comma{} examples include @samp{"Alex"}@comma{} @samp{"Samantha"}@comma{} @samp{"Daniel"}). The default is an empty string@comma{} which causes the engine to use its own default voice. Change this option or use the @code{read-aloud-extras-set-voice} command (@ref{Setting the voice, , Setting the voice}) to select a specific voice.
 
 @node Commands
 @chapter Commands
@@ -120,19 +120,19 @@ The user option @code{read-aloud-extras-voice} holds the name of the voice used 
 @section Rate commands
 
 @findex read-aloud-extras-set-rate
-The command @code{read-aloud-extras-set-rate} prompts for a new speech rate in words per minute, updates the @code{read-aloud-extras-rate} option, and applies the change to the active speech engine. This is useful when you want to jump to a specific rate rather than incrementing.
+The command @code{read-aloud-extras-set-rate} prompts for a new speech rate in words per minute@comma{} updates the @code{read-aloud-extras-rate} option@comma{} and applies the change to the active speech engine. This is useful when you want to jump to a specific rate rather than incrementing.
 
 @findex read-aloud-extras-increase-rate
 @findex read-aloud-extras-decrease-rate
-For quick adjustments while listening, @code{read-aloud-extras-increase-rate} and @code{read-aloud-extras-decrease-rate} raise or lower the current rate by the amount specified in @code{read-aloud-extras-rate-change} (@ref{Rate options}). These are convenient when bound to keys so you can speed up or slow down without interrupting the reading flow.
+For quick adjustments while listening@comma{} @code{read-aloud-extras-increase-rate} and @code{read-aloud-extras-decrease-rate} raise or lower the current rate by the amount specified in @code{read-aloud-extras-rate-change} (@ref{Rate options, , Rate options}). These are convenient when bound to keys so you can speed up or slow down without interrupting the reading flow.
 
-Both commands call @code{read-aloud-extras-set-rate} internally, which in turn updates the engine configuration.
+Both commands call @code{read-aloud-extras-set-rate} internally@comma{} which in turn updates the engine configuration.
 
 @node Setting the voice
 @section Setting the voice
 
 @findex read-aloud-extras-set-voice
-The command @code{read-aloud-extras-set-voice} lets you pick a new voice for the speech engine interactively. On macOS, it runs @samp{say -v \?} to retrieve the list of installed voices, presents them with @code{completing-read} (showing both the voice name and its language), and stores your selection in @code{read-aloud-extras-voice} (@ref{Voice option}). The engine configuration is updated immediately so the next reading operation uses the new voice.
+The command @code{read-aloud-extras-set-voice} lets you pick a new voice for the speech engine interactively. On macOS@comma{} it runs @samp{say -v \?} to retrieve the list of installed voices@comma{} presents them with @code{completing-read} (showing both the voice name and its language)@comma{} and stores your selection in @code{read-aloud-extras-voice} (@ref{Voice option, , Voice option}). The engine configuration is updated immediately so the next reading operation uses the new voice.
 
 This command currently supports only the @samp{say} engine. Invoking it with a different engine signals an error.
 
@@ -140,9 +140,9 @@ This command currently supports only the @samp{say} engine. Invoking it with a d
 @section Reading files
 
 @findex read-aloud-extras-read-file
-The command @code{read-aloud-extras-read-file} reads the entire content of a file aloud. If called without an argument, it reads the file visited by the current buffer. You can also pass a FILE argument programmatically.
+The command @code{read-aloud-extras-read-file} reads the entire content of a file aloud. If called without an argument@comma{} it reads the file visited by the current buffer. You can also pass a FILE argument programmatically.
 
-For PDF files, the command extracts the text using @code{pdf-tools-extras-convert-pdf} before reading. For all other file types, it reads the buffer contents directly. The extracted or read text is placed in a dedicated @samp{*read-aloud*} buffer, filled to remove excessive line breaks, and then read from the beginning with @code{read-aloud-buf}. The @samp{*read-aloud*} buffer is displayed so you can follow along.
+For PDF files@comma{} the command extracts the text using @code{pdf-tools-extras-convert-pdf} before reading. For all other file types@comma{} it reads the buffer contents directly. The extracted or read text is placed in a dedicated @samp{*read-aloud*} buffer@comma{} filled to remove excessive line breaks@comma{} and then read from the beginning with @code{read-aloud-buf}. The @samp{*read-aloud*} buffer is displayed so you can follow along.
 
 @node Patched functions
 @chapter Patched functions
@@ -155,9 +155,9 @@ For PDF files, the command extracts the text using @code{pdf-tools-extras-conver
 @section PDF selection patch
 
 @findex read-aloud-this
-The standard @code{read-aloud-this} command reads either the active region or the word at point. However, it does not recognize selections made in @samp{pdf-view-mode} buffers because PDF Tools uses its own selection mechanism rather than the standard Emacs region.
+The standard @code{read-aloud-this} command reads either the active region or the word at point. However@comma{} it does not recognize selections made in @samp{pdf-view-mode} buffers because PDF Tools uses its own selection mechanism rather than the standard Emacs region.
 
-This package patches @code{read-aloud-this} via @samp{el-patch} to check @code{pdf-view-active-region-p} in addition to @code{use-region-p}. When a PDF selection is detected, it retrieves the selected text with @code{pdf-view-active-region-text} instead of @code{buffer-substring-no-properties}. This allows you to select text in a PDF and have it read aloud seamlessly, just as you would in a regular text buffer.
+This package patches @code{read-aloud-this} via @samp{el-patch} to check @code{pdf-view-active-region-p} in addition to @code{use-region-p}. When a PDF selection is detected@comma{} it retrieves the selected text with @code{pdf-view-active-region-text} instead of @code{buffer-substring-no-properties}. This allows you to select text in a PDF and have it read aloud seamlessly@comma{} just as you would in a regular text buffer.
 
 @node Functions
 @chapter Functions
@@ -175,13 +175,13 @@ This package patches @code{read-aloud-this} via @samp{el-patch} to check @code{p
 @findex read-aloud-extras-update-say-engine
 The function @code{read-aloud-extras-update-engine} updates the parameters for a named engine in the @code{read-aloud-engines} variable. The function @code{read-aloud-extras-update-current-engine} dispatches to the appropriate engine-specific updater based on the value of @code{read-aloud-engine}; currently only the @samp{say} engine is supported. The function @code{read-aloud-extras-update-say-engine} constructs the argument list for the macOS @samp{say} command using the current values of @code{read-aloud-extras-voice} and @code{read-aloud-extras-rate}.
 
-These functions are called automatically by the rate and voice commands (@ref{Rate commands}, @ref{Setting the voice}) and do not normally need to be invoked directly.
+These functions are called automatically by the rate and voice commands (@ref{Rate commands, , Rate commands}@comma{} @ref{Setting the voice, , Setting the voice}) and do not normally need to be invoked directly.
 
 @node Voice selection
 @section Voice selection
 
 @findex read-aloud-extras-select-say-voice
-The function @code{read-aloud-extras-select-say-voice} queries the system for available @samp{say} voices by running @samp{say -v \?}, parses the output into a list of voice-name and language pairs, and prompts the user with @code{completing-read}. It returns the selected voice name as a string. This function is called by @code{read-aloud-extras-set-voice} (@ref{Setting the voice}).
+The function @code{read-aloud-extras-select-say-voice} queries the system for available @samp{say} voices by running @samp{say -v \?}@comma{} parses the output into a list of voice-name and language pairs@comma{} and prompts the user with @code{completing-read}. It returns the selected voice name as a string. This function is called by @code{read-aloud-extras-set-voice} (@ref{Setting the voice, , Setting the voice}).
 
 @node Indices
 @chapter Indices

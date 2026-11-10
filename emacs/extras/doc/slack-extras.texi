@@ -59,15 +59,15 @@ Indices
 
 @itemize
 @item
-Extended org link storage that adds @code{slack-activity-feed-buffer-mode} support to @samp{ol-emacs-slack} (@ref{Link storage}).
+Extended org link storage that adds @code{slack-activity-feed-buffer-mode} support to @samp{ol-emacs-slack} (@ref{Link storage, , Link storage}).
 @item
-Commands to capture the message at point to personal or work inboxes (@ref{Capture}).
+Commands to capture the message at point to personal or work inboxes (@ref{Capture, , Capture}).
 @item
-Local ActivityWatch channel context for selected channel and thread buffers (@ref{ActivityWatch context}).
+Local ActivityWatch channel context for selected channel and thread buffers (@ref{ActivityWatch context, , ActivityWatch context}).
 @item
-A tab-bar notification element showing Slack unreads and mentions (@ref{Tab-bar notifications}).
+A tab-bar notification element showing Slack unreads and mentions (@ref{Tab-bar notifications, , Tab-bar notifications}).
 @item
-Team registration with session credentials read from Chrome (@ref{Credentials from Chrome}).
+Team registration with session credentials read from Chrome (@ref{Credentials from Chrome, , Credentials from Chrome}).
 @end itemize
 
 The package depends on @samp{slack} and @samp{ol}.
@@ -76,7 +76,7 @@ The package depends on @samp{slack} and @samp{ol}.
 @chapter Link storage
 
 @findex slack-extras--store-link
-The function @code{slack-extras--store-link} replaces @code{ol/slack-store-link} as the @samp{emacs-slack} link `:store` handler via @code{org-link-set-parameters}. It delegates to the original @code{ol/slack-store-link} in @code{slack-message-buffer-mode} and @code{slack-thread-message-buffer-mode}, and adds support for @code{slack-activity-feed-buffer-mode} by reading the @code{ts} and @code{room-id} text properties at point. This makes @code{org-store-link} and capture templates that use @code{%a} work in the activity feed.
+The function @code{slack-extras--store-link} replaces @code{ol/slack-store-link} as the @samp{emacs-slack} link `:store` handler via @code{org-link-set-parameters}. It delegates to the original @code{ol/slack-store-link} in @code{slack-message-buffer-mode} and @code{slack-thread-message-buffer-mode}@comma{} and adds support for @code{slack-activity-feed-buffer-mode} by reading the @code{ts} and @code{room-id} text properties at point. This makes @code{org-store-link} and capture templates that use @code{%a} work in the activity feed.
 
 @node Commands
 @chapter Commands
@@ -89,18 +89,18 @@ The function @code{slack-extras--store-link} replaces @code{ol/slack-store-link}
 @section Capture
 
 @findex slack-extras-personal-capture
-The command @code{slack-extras-personal-capture} captures the Slack message at point to the personal inbox via @code{org-capture} template @samp{s}. It is bound to @samp{o} in @code{slack-activity-feed-buffer-mode-map}, @code{slack-thread-message-buffer-mode-map} and @code{slack-message-buffer-mode-map}.
+The command @code{slack-extras-personal-capture} captures the Slack message at point to the personal inbox via @code{org-capture} template @samp{s}. It is bound to @samp{o} in @code{slack-activity-feed-buffer-mode-map}@comma{} @code{slack-thread-message-buffer-mode-map} and @code{slack-message-buffer-mode-map}.
 
 @findex slack-extras-work-capture
-The command @code{slack-extras-work-capture} captures the Slack message at point to the work inbox via @code{org-capture} template @samp{S}. It is bound to @samp{E} in @code{slack-activity-feed-buffer-mode-map}, @code{slack-thread-message-buffer-mode-map} and @code{slack-message-buffer-mode-map}.
+The command @code{slack-extras-work-capture} captures the Slack message at point to the work inbox via @code{org-capture} template @samp{S}. It is bound to @samp{E} in @code{slack-activity-feed-buffer-mode-map}@comma{} @code{slack-thread-message-buffer-mode-map} and @code{slack-message-buffer-mode-map}.
 
 @node ActivityWatch context
 @chapter ActivityWatch context
 
 @findex slack-extras-activity-watch-data
-When @samp{activity-watch-mode} is loaded, @code{slack-extras-activity-watch-data} contributes channel and workspace names and IDs through @code{activity-watch-data-functions}. It reads the room object already held by the sampled Slack buffer. This lets a time tracker use the selected channel rather than the buffer's unrelated inherited working directory.
+When @samp{activity-watch-mode} is loaded@comma{} @code{slack-extras-activity-watch-data} contributes channel and workspace names and IDs through @code{activity-watch-data-functions}. It reads the room object already held by the sampled Slack buffer. This lets a time tracker use the selected channel rather than the buffer's unrelated inherited working directory.
 
-Public and private channels, including their threads, provide channel context. Direct messages, group direct messages and mixed-room views provide only workspace context, allowing work conversations to remain general work without inventing a project. The integration reads no messages and makes no network requests. ActivityWatch receives the metadata only when its watcher samples the selected buffer of a focused frame.
+Public and private channels@comma{} including their threads@comma{} provide channel context. Direct messages@comma{} group direct messages and mixed-room views provide only workspace context@comma{} allowing work conversations to remain general work without inventing a project. The integration reads no messages and makes no network requests. ActivityWatch receives the metadata only when its watcher samples the selected buffer of a focused frame.
 
 @node Tab-bar notifications
 @chapter Tab-bar notifications
@@ -111,34 +111,34 @@ The variable @code{tab-bar-extras-slack-notifications-enabled} controls whether 
 @findex slack-extras-actionable-unreads-p
 The function @code{slack-extras-actionable-unreads-p} determines whether there are Slack notifications worth the user's attention. It triggers a debounced refresh of the Activity feed unread summary and returns the value of @code{slack-has-unreads}.
 
-The tab-bar element @code{tab-bar-extras-slack-element} displays a Slack icon (from @samp{nerd-icons}) and a badge when @code{slack-extras-actionable-unreads-p} returns non-nil. The badge shows the total mention count, or a bullet (@code{•}) when there are actionable unreads but no @@mentions (such as thread replies or DMs). Registration appends the element to @code{tab-bar-extras-global-mode-string} and immediately syncs @code{global-mode-string} via @code{tab-bar-extras-set-global-mode-string}, so the badge appears even when @samp{slack-extras} loads after the initial tab-bar sync.
+The tab-bar element @code{tab-bar-extras-slack-element} displays a Slack icon (from @samp{nerd-icons}) and a badge when @code{slack-extras-actionable-unreads-p} returns non-nil. The badge shows the total mention count@comma{} or a bullet (@code{•}) when there are actionable unreads but no @@mentions (such as thread replies or DMs). Registration appends the element to @code{tab-bar-extras-global-mode-string} and immediately syncs @code{global-mode-string} via @code{tab-bar-extras-set-global-mode-string}@comma{} so the badge appears even when @samp{slack-extras} loads after the initial tab-bar sync.
 
 @findex tab-bar-extras-toggle-slack-notifications
-The command @code{tab-bar-extras-toggle-slack-notifications} toggles Slack notifications in the tab bar. It also participates in the master toggle: when @code{tab-bar-extras-toggle-notifications} is called, Slack notifications are toggled along with the other notification sources.
+The command @code{tab-bar-extras-toggle-slack-notifications} toggles Slack notifications in the tab bar. It also participates in the master toggle: when @code{tab-bar-extras-toggle-notifications} is called@comma{} Slack notifications are toggled along with the other notification sources.
 
 @node Credentials from Chrome
 @chapter Credentials from Chrome
 
-@samp{emacs-slack} authenticates with a browser session: an @samp{xoxc-} token and the @samp{d} cookie. Slack invalidates both whenever that browser session ends, so credentials copied once into 1Password go stale. This section registers teams with the credentials Chrome currently holds instead.
+@samp{emacs-slack} authenticates with a browser session: an @samp{xoxc-} token and the @samp{d} cookie. Slack invalidates both whenever that browser session ends@comma{} so credentials copied once into 1Password go stale. This section registers teams with the credentials Chrome currently holds instead.
 
 @vindex slack-extras-teams
-The variable @code{slack-extras-teams} lists the teams to register. Each element is a plist with @samp{:domain} (the workspace host, such as @samp{"epochai.slack.com"}), @samp{:fallback} (a function of no arguments returning @samp{(TOKEN . COOKIE)}, typically read from 1Password), and any other @code{slack-register-team} options, such as @samp{:name} and @samp{:animate-image}.
+The variable @code{slack-extras-teams} lists the teams to register. Each element is a plist with @samp{:domain} (the workspace host@comma{} such as @samp{"epochai.slack.com"})@comma{} @samp{:fallback} (a function of no arguments returning @samp{(TOKEN . COOKIE)}@comma{} typically read from 1Password)@comma{} and any other @code{slack-register-team} options@comma{} such as @samp{:name} and @samp{:animate-image}.
 
 @findex slack-extras-register-teams
-The command @code{slack-extras-register-teams} registers every team in @code{slack-extras-teams}. For each team it asks @code{slack-extras-chrome-credentials} for the current pair and uses @samp{:fallback} only when that returns nil. Every team already registered under the same name with a different token is disconnected, its buffers are killed and it is removed from the team registries first, so calling the command again after a sign-out refreshes the team without leaving a duplicate. The buffers must go, and @code{slack-current-team} moves to the new team, because both hold the old team object and the Activity feed would otherwise register it again. A team that was connected is connected again under the new token.
+The command @code{slack-extras-register-teams} registers every team in @code{slack-extras-teams}. For each team it asks @code{slack-extras-chrome-credentials} for the current pair and uses @samp{:fallback} only when that returns nil. Every team already registered under the same name with a different token is disconnected@comma{} its buffers are killed and it is removed from the team registries first@comma{} so calling the command again after a sign-out refreshes the team without leaving a duplicate. The buffers must go@comma{} and @code{slack-current-team} moves to the new team@comma{} because both hold the old team object and the Activity feed would otherwise register it again. A team that was connected is connected again under the new token.
 
 @findex slack-extras-chrome-credentials
 @vindex slack-extras-chrome-program
 @vindex slack-extras-chrome-cache-directory
-The function @code{slack-extras-chrome-credentials} runs @code{slack-extras-chrome-program} (@samp{claude/bin/slack_chrome.py ensure DOMAIN}), which verifies the cached pair with @samp{auth.test} and, if Slack rejects it, reads the @samp{d} cookie from Chrome's cookie database and derives the token from the workspace's @samp{/ssb/redirect} page. It then reads the pair from @samp{DOMAIN.json} in @code{slack-extras-chrome-cache-directory}. It returns nil when the program fails, for example when no Chrome profile is signed in to that workspace.
+The function @code{slack-extras-chrome-credentials} runs @code{slack-extras-chrome-program} (@samp{claude/bin/slack_chrome.py ensure DOMAIN})@comma{} which verifies the cached pair with @samp{auth.test} and@comma{} if Slack rejects it@comma{} reads the @samp{d} cookie from Chrome's cookie database and derives the token from the workspace's @samp{/ssb/redirect} page. It then reads the pair from @samp{DOMAIN.json} in @code{slack-extras-chrome-cache-directory}. It returns nil when the program fails@comma{} for example when no Chrome profile is signed in to that workspace.
 
 @node Reachability before connecting
 @chapter Reachability before connecting
 
 @findex slack-extras--open-when-reachable
-On macOS, opening a websocket resolves its host on Emacs's main thread, so a reconnect while the resolver is slow freezes Emacs. @samp{slack-extras} therefore advises @code{slack-ws-open} to check first, from a subprocess with @code{simple-extras-probe-url} (see the @samp{simple-extras} manual), whether the websocket host answers. Only the host is probed, never the URL's token. If the host answers, the websocket opens as before. If not, the open is skipped and @code{slack-ws-reconnect} schedules another attempt, with its usual backoff and attempt limit.
+On macOS@comma{} opening a websocket resolves its host on Emacs's main thread@comma{} so a reconnect while the resolver is slow freezes Emacs. @samp{slack-extras} therefore advises @code{slack-ws-open} to check first@comma{} from a subprocess with @code{simple-extras-probe-url} (see the @samp{simple-extras} manual)@comma{} whether the websocket host answers. Only the host is probed@comma{} never the URL's token. If the host answers@comma{} the websocket opens as before. If not@comma{} the open is skipped and @code{slack-ws-reconnect} schedules another attempt@comma{} with its usual backoff and attempt limit.
 
-Only one probe per team runs at a time; an open requested meanwhile is dropped. When the probe ends, the open is also dropped, with no reconnect, if the team was unregistered or replaced, reconnection was turned off, the websocket got connected, or another connection attempt was made in the meantime.
+Only one probe per team runs at a time; an open requested meanwhile is dropped. When the probe ends@comma{} the open is also dropped@comma{} with no reconnect@comma{} if the team was unregistered or replaced@comma{} reconnection was turned off@comma{} the websocket got connected@comma{} or another connection attempt was made in the meantime.
 
 @node Indices
 @chapter Indices

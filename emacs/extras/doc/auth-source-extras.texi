@@ -50,56 +50,56 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{auth-source-extras.el} reads secrets that Emacs needs without a person present, such as API keys and tokens, from a 1Password vault named ``Automation'' (``Automations'' in the Epoch account). Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the @samp{op-automations} wrapper, so reads never prompt while you are logged in, and a leaked token exposes only that one vault.
+@samp{auth-source-extras.el} reads secrets that Emacs needs without a person present@comma{} such as API keys and tokens@comma{} from a 1Password vault named ``Automation'' (``Automations'' in the Epoch account). Each 1Password account has its own Automation vault and a read-only service account that can read nothing else. The service account's token is stored in the macOS login Keychain and read by the @samp{op-automations} wrapper@comma{} so reads never prompt while you are logged in@comma{} and a leaked token exposes only that one vault.
 
 @node Reading secrets
 @chapter Reading secrets
 
 @findex auth-source-extras-op-get
-@code{auth-source-extras-op-get} returns one field of one item: @samp{(auth-source-extras-op-get ITEM FIELD ACCOUNT)}. ITEM is the item title, FIELD a field label or ID such as @samp{"credential"} or @samp{"password"}, and ACCOUNT an account symbol such as @samp{personal} or @samp{tlon}, defaulting to @samp{personal}. For example, @samp{(auth-source-extras-op-get "openai.com" "credential" 'tlon)} reads the Tlon OpenAI key.
+@code{auth-source-extras-op-get} returns one field of one item: @samp{(auth-source-extras-op-get ITEM FIELD ACCOUNT)}. ITEM is the item title@comma{} FIELD a field label or ID such as @samp{"credential"} or @samp{"password"}@comma{} and ACCOUNT an account symbol such as @samp{personal} or @samp{tlon}@comma{} defaulting to @samp{personal}. For example@comma{} @samp{(auth-source-extras-op-get "openai.com" "credential" 'tlon)} reads the Tlon OpenAI key.
 
-The first request for an account fetches the requested item together with every item listed for that account in @code{auth-source-extras-op-prefetch}. Each item is fetched by its own CLI process and all of them run in parallel, since a single @samp{op} invocation fetches items one after another. Fetched items stay in memory for the rest of the session, so later reads are instant and a session makes one round of requests per account.
+The first request for an account fetches the requested item together with every item listed for that account in @code{auth-source-extras-op-prefetch}. Each item is fetched by its own CLI process and all of them run in parallel@comma{} since a single @samp{op} invocation fetches items one after another. Fetched items stay in memory for the rest of the session@comma{} so later reads are instant and a session makes one round of requests per account. While a batch waits@comma{} timers and other process filters do not run@comma{} so a timer that reads a secret cannot start a second batch inside the first.
 
-If an item cannot be read, for example because the account has no token in the Keychain or the item does not exist, the function returns nil and displays one warning per distinct reason, naming the affected items. The reason is the last line of the CLI's own error output, such as @samp{"mbsync/password" isn't an item in the "Automation" vault} or @samp{no token in the Keychain for op-service-account/tlon-automation}; it never contains item values. This lets a shared configuration load on machines that can read only some of the accounts.
+If an item cannot be read@comma{} for example because the account has no token in the Keychain or the item does not exist@comma{} the function returns nil and displays one warning per distinct reason@comma{} naming the affected items. The reason is the last line of the CLI's own error output@comma{} such as @samp{"mbsync/password" isn't an item in the "Automation" vault} or @samp{no token in the Keychain for op-service-account/tlon-automation}; it never contains item values. This lets a shared configuration load on machines that can read only some of the accounts.
 
-Only an item that does not exist, reported by the CLI as @samp{isn't an item}, or one whose title only fuzzily matched, is remembered as missing for the rest of the session. Every other failure is transient: a rate limit (the personal account's service account allows about 1,000 requests a day, and the CLI answers @samp{Too many requests} once they are spent), a network error, a timeout or a missing Keychain token. It is warned about but not cached, so the next read tries the item again.
+Only an item that does not exist@comma{} reported by the CLI as @samp{isn't an item}@comma{} or one whose title only fuzzily matched@comma{} is remembered as missing for the rest of the session. Every other failure is transient: a rate limit (the personal account's service account allows about 1@comma{}000 requests a day@comma{} and the CLI answers @samp{Too many requests} once they are spent)@comma{} a network error@comma{} a timeout or a missing Keychain token. It is warned about but not cached@comma{} so the next read tries the item again.
 
 @findex auth-source-extras-op-clear-cache
-@code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing, so the next read fetches fresh values, for example after rotating a key.
+@code{auth-source-extras-op-clear-cache} forgets every cached secret and vault listing@comma{} so the next read fetches fresh values@comma{} for example after rotating a key.
 
-Field IDs take precedence over display labels. Empty template labels are ignored, so duplicate labels such as @samp{password} cannot hide the actual password field.
+Field IDs take precedence over display labels. Empty template labels are ignored@comma{} so duplicate labels such as @samp{password} cannot hide the actual password field.
 
-Results are accepted only when the returned item's title matches the requested one exactly. When no item has a given title, the CLI can return another item whose website matches it, and that would hand out the wrong secret.
+Results are accepted only when the returned item's title matches the requested one exactly. When no item has a given title@comma{} the CLI can return another item whose website matches it@comma{} and that would hand out the wrong secret.
 
 @node Unlocking git-crypt repositories
 @chapter Unlocking git-crypt repositories
 
 @findex auth-source-extras-git-crypt-unlock
-@code{auth-source-extras-git-crypt-unlock} unlocks the @samp{git-crypt} repository in the current directory with a key stored as a Document item in the Tlon Automation vault. Called interactively, it offers the titles of that vault's documents. The binary key is written by the CLI straight to a private temporary file, byte for byte, passed to @samp{git-crypt unlock}, and deleted whatever the outcome. From Lisp, @samp{(auth-source-extras-git-crypt-unlock REPO KEY ACCOUNT)} also accepts another account.
+@code{auth-source-extras-git-crypt-unlock} unlocks the @samp{git-crypt} repository in the current directory with a key stored as a Document item in the Tlon Automation vault. Called interactively@comma{} it offers the titles of that vault's documents. The binary key is written by the CLI straight to a private temporary file@comma{} byte for byte@comma{} passed to @samp{git-crypt unlock}@comma{} and deleted whatever the outcome. From Lisp@comma{} @samp{(auth-source-extras-git-crypt-unlock REPO KEY ACCOUNT)} also accepts another account.
 
 @node The auth-source backend
 @chapter The auth-source backend
 
 @findex auth-source-extras-op-search
-Adding the symbol @samp{1password-automation} to @code{auth-sources} makes generic @code{auth-source-search} lookups, such as the GitHub tokens used by Forge and Magit or the SMTP password, read from the Automation vaults. The backend looks for items titled @samp{HOST/USER}, @samp{USER@@HOST}, @samp{HOST:PORT/USER}, @samp{HOST:PORT} and @samp{HOST}. A bare @samp{HOST} title matches only if its stored @samp{username} field, when it has one, is among the requested users. The backend searches accounts in order and uses cached items before listing a vault. It stops once enough credentials are found, so a cached SMTP password needs no vault requests. Successful vault listings are cached; failed listings warn and are retried on the next lookup. Other accounts and authentication backends remain available when a vault cannot be listed. A known, more-specific item retains precedence over a cached generic credential. Entries without a nonempty password are not returned. Requests that allow credential creation can still retrieve existing entries, but the backend cannot create or delete entries.
+Adding the symbol @samp{1password-automation} to @code{auth-sources} makes generic @code{auth-source-search} lookups@comma{} such as the GitHub tokens used by Forge and Magit or the SMTP password@comma{} read from the Automation vaults. The backend looks for items titled @samp{HOST/USER}@comma{} @samp{USER@@HOST}@comma{} @samp{HOST:PORT/USER}@comma{} @samp{HOST:PORT} and @samp{HOST}. A bare @samp{HOST} title matches only if its stored @samp{username} field@comma{} when it has one@comma{} is among the requested users. The backend searches accounts in order and uses cached items before listing a vault. It stops once enough credentials are found@comma{} so a cached SMTP password needs no vault requests. Successful vault listings are cached; failed listings warn and are retried on the next lookup. Other accounts and authentication backends remain available when a vault cannot be listed. A known@comma{} more-specific item retains precedence over a cached generic credential. Entries without a nonempty password are not returned. Requests that allow credential creation can still retrieve existing entries@comma{} but the backend cannot create or delete entries.
 
 @node Customization
 @chapter Customization
 
 @vindex auth-source-extras-op-prefetch
-@code{auth-source-extras-op-prefetch} lists, per account, the item titles to fetch together on first use. List every item the configuration reads at startup.
+@code{auth-source-extras-op-prefetch} lists@comma{} per account@comma{} the item titles to fetch together on first use. List every item the configuration reads at startup.
 
 @vindex auth-source-extras-op-vault
-@code{auth-source-extras-op-vault} names the vault the service accounts can read, @samp{"Automation"} by default.
+@code{auth-source-extras-op-vault} names the vault the service accounts can read@comma{} @samp{"Automation"} by default.
 
 @vindex auth-source-extras-op-account-vaults
-@code{auth-source-extras-op-account-vaults} maps accounts whose automation vault has another name to that name. By default it maps @samp{epoch} to @samp{"Automations"}, so @samp{(auth-source-extras-op-get ITEM FIELD 'epoch)} reads Epoch's Automations vault.
+@code{auth-source-extras-op-account-vaults} maps accounts whose automation vault has another name to that name. By default it maps @samp{epoch} to @samp{"Automations"}@comma{} so @samp{(auth-source-extras-op-get ITEM FIELD 'epoch)} reads Epoch's Automations vault.
 
 @vindex auth-source-extras-op-program
-@code{auth-source-extras-op-program} is the service-account wrapper, @samp{op-automations} by default. It is called as @samp{op-automations @@ACCOUNT ...} and reads that account's token from the login Keychain (@samp{op-service-account/ACCOUNT-automation}) itself, so no read can prompt.
+@code{auth-source-extras-op-program} is the service-account wrapper@comma{} @samp{op-automations} by default. It is called as @samp{op-automations @@ACCOUNT ...} and reads that account's token from the login Keychain (@samp{op-service-account/ACCOUNT-automation}) itself@comma{} so no read can prompt.
 
 @vindex auth-source-extras-op-search-accounts
-@code{auth-source-extras-op-search-accounts} lists the accounts the @samp{auth-source} backend searches, in order: @samp{personal}, then @samp{tlon}.
+@code{auth-source-extras-op-search-accounts} lists the accounts the @samp{auth-source} backend searches@comma{} in order: @samp{personal}@comma{} then @samp{tlon}.
 
 @vindex auth-source-extras-op-timeout
 @code{auth-source-extras-op-timeout} is how many seconds to wait for a batch of fetches before giving up on the items still pending.
@@ -107,7 +107,7 @@ Adding the symbol @samp{1password-automation} to @code{auth-sources} makes gener
 @node Setting up a machine
 @chapter Setting up a machine
 
-An account admin creates one read-only service account per person and machine, with access only to that account's Automation vault, and hands its token over through 1Password. The recipient stores it in the login Keychain under the service name @samp{op-automations} expects, for example with @samp{security add-generic-password -U -a "$USER" -s op-service-account/tlon-automation -w TOKEN}.
+An account admin creates one read-only service account per person and machine@comma{} with access only to that account's Automation vault@comma{} and hands its token over through 1Password. The recipient stores it in the login Keychain under the service name @samp{op-automations} expects@comma{} for example with @samp{security add-generic-password -U -a "$USER" -s op-service-account/tlon-automation -w TOKEN}.
 
 @node Indices
 @chapter Indices

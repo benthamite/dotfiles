@@ -29,6 +29,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 
 @menu
 * Overview::
+* Variables::
+* Toggle::
 * Conditional theme loading::
 * Theme customizations::
 * Indices::
@@ -57,18 +59,48 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{modus-themes-extras.el} extends the @samp{modus-themes} package (Modus Operandi and Modus Vivendi) with automatic theme switching based on the operating system's appearance setting. On macOS, both the Emacs Mac port and Emacs Plus provide mechanisms to detect whether the system is in light or dark mode; this package uses those mechanisms to load the appropriate Modus theme without manual intervention.
+@samp{modus-themes-extras.el} extends the @samp{modus-themes} package with automatic theme switching based on the operating system's appearance setting. On macOS@comma{} both the Emacs Mac port and Emacs Plus provide mechanisms to detect whether the system is in light or dark mode; this package uses those mechanisms to load the appropriate theme without manual intervention.
 
-The package also provides theme-aware face customizations, particularly for the @samp{highlight-parentheses} package, ensuring that parenthesis highlighting colors stay consistent with the active Modus theme.
+The light and dark themes are configurable via @code{modus-themes-extras-light-theme} and @code{modus-themes-extras-dark-theme}@comma{} defaulting to @code{modus-operandi} and @code{modus-vivendi} respectively. Any theme supported by @code{modus-themes-load-theme} can be used (including @code{ef-themes}).
+
+The package also provides theme-aware face customizations@comma{} particularly for the @samp{highlight-parentheses} package@comma{} ensuring that parenthesis highlighting colors stay consistent with the active Modus theme.
 
 The main capabilities are:
 
 @itemize
 @item
-@strong{Automatic theme switching.} Detecting the system appearance and loading Modus Operandi (light) or Modus Vivendi (dark) accordingly, with support for both Emacs Mac and Emacs Plus distributions (@ref{Conditional theme loading}).
+@strong{Configurable theme pair.} Specifying which themes to use for light and dark mode (@ref{Variables, , Variables}).
 @item
-@strong{Theme-aware face customization.} Setting parenthesis highlighting colors from the Modus palette (@ref{Theme customizations}).
+@strong{Manual toggle.} Toggling between the configured light and dark themes (@ref{Toggle, , Toggle}).
+@item
+@strong{Automatic theme switching.} Detecting the system appearance and loading the configured light or dark theme accordingly@comma{} with support for both Emacs Mac and Emacs Plus distributions (@ref{Conditional theme loading, , Conditional theme loading}).
+@item
+@strong{Theme-aware face customization.} Setting parenthesis highlighting colors from the Modus palette (@ref{Theme customizations, , Theme customizations}).
 @end itemize
+
+@node Variables
+@chapter Variables
+
+@vindex modus-themes-extras-light-theme
+The user option @code{modus-themes-extras-light-theme} specifies the theme to load when the system is in light mode. It defaults to @code{modus-operandi}.
+
+@vindex modus-themes-extras-dark-theme
+The user option @code{modus-themes-extras-dark-theme} specifies the theme to load when the system is in dark mode. It defaults to @code{modus-vivendi}.
+
+Both accept any theme symbol. For example@comma{} to use @code{ef-themes}:
+
+@lisp
+(setq modus-themes-extras-light-theme 'ef-maris-light)
+(setq modus-themes-extras-dark-theme 'ef-maris-dark)
+@end lisp
+
+@node Toggle
+@chapter Toggle
+
+@findex modus-themes-extras-toggle
+The command @code{modus-themes-extras-toggle} toggles between the configured light and dark themes. It reads @code{modus-themes-extras-light-theme} and @code{modus-themes-extras-dark-theme} at call time@comma{} so changes to those variables take effect immediately without requiring any additional setup.
+
+This replaces the built-in @code{modus-themes-toggle} (which relies on the static @code{modus-themes-to-toggle} list) with a dynamic alternative that always respects the current values of the user options.
 
 @node Conditional theme loading
 @chapter Conditional theme loading
@@ -78,9 +110,9 @@ The function @code{modus-themes-extras-load-theme-conditionally} is the main ent
 
 @itemize
 @item
-For the @strong{Emacs Mac port} (@code{'emacs-mac}), it immediately calls @code{modus-themes-extras-load-theme-emacs-mac} to read the current system appearance and load the matching theme.
+For the @strong{Emacs Mac port} (@code{'emacs-mac})@comma{} it immediately calls @code{modus-themes-extras-load-theme-emacs-mac} to read the current system appearance and load the matching theme.
 @item
-For @strong{Emacs Plus} (@code{'emacs-plus}), it adds @code{modus-themes-extras-load-theme-emacs-plus} to the @code{ns-system-appearance-change-functions} hook, which Emacs Plus calls whenever the system appearance changes. This means the theme updates automatically when you toggle dark mode in System Settings.
+For @strong{Emacs Plus} (@code{'emacs-plus})@comma{} it adds @code{modus-themes-extras-load-theme-emacs-plus} to the @code{ns-system-appearance-change-functions} hook@comma{} which Emacs Plus calls whenever the system appearance changes@comma{} and also loads the theme immediately based on the current value of @code{ns-system-appearance}. The immediate load ensures the theme is applied even when initialization runs after the hook's initial startup invocation (e.g. on a fresh profile build where elpaca takes time to compile packages).
 @end itemize
 
 You would typically call this function once during initialization:
@@ -98,13 +130,13 @@ You would typically call this function once during initialization:
 @section Emacs Mac port
 
 @findex modus-themes-extras-load-theme-emacs-mac
-The command @code{modus-themes-extras-load-theme-emacs-mac} reads the current appearance from the @samp{mac-application-state} function. When the appearance is @samp{"NSAppearanceNameAqua"} (light mode), it loads @code{modus-operandi}. When it is @samp{"NSAppearanceNameDarkAqua"} (dark mode), it loads @code{modus-vivendi}. This command can also be called interactively to force a theme refresh.
+The command @code{modus-themes-extras-load-theme-emacs-mac} reads the current appearance from the @samp{mac-application-state} function. When the appearance is @samp{"NSAppearanceNameAqua"} (light mode)@comma{} it loads @code{modus-themes-extras-light-theme}. When it is @samp{"NSAppearanceNameDarkAqua"} (dark mode)@comma{} it loads @code{modus-themes-extras-dark-theme}. This command can also be called interactively to force a theme refresh.
 
 @node Emacs Plus
 @section Emacs Plus
 
 @findex modus-themes-extras-load-theme-emacs-plus
-The function @code{modus-themes-extras-load-theme-emacs-plus} is designed for the @code{ns-system-appearance-change-functions} hook in Emacs Plus. It receives the new appearance as a symbol (@code{'light} or @code{'dark}) and loads the corresponding Modus theme. Because this function is triggered by the hook, the theme switch happens automatically whenever the system appearance changes.
+The function @code{modus-themes-extras-load-theme-emacs-plus} is designed for the @code{ns-system-appearance-change-functions} hook in Emacs Plus. It receives the new appearance as a symbol (@code{'light} or @code{'dark}) and loads the corresponding theme from @code{modus-themes-extras-light-theme} or @code{modus-themes-extras-dark-theme}. Because this function is triggered by the hook@comma{} the theme switch happens automatically whenever the system appearance changes.
 
 @node Theme customizations
 @chapter Theme customizations
@@ -118,18 +150,18 @@ The function @code{modus-themes-extras-load-theme-emacs-plus} is designed for th
 @section Parenthesis highlighting
 
 @findex modus-themes-extras-highlight-parentheses
-The function @code{modus-themes-extras-highlight-parentheses} configures the @samp{highlight-parentheses} package to use colors from the active Modus theme. It retrieves intense background colors (cyan, magenta, green, yellow) and their corresponding foreground colors from the Modus palette via @code{modus-themes-get-color-value} and sets @code{highlight-parentheses-background-colors} and @code{highlight-parentheses-colors} accordingly.
+The function @code{modus-themes-extras-highlight-parentheses} configures the @samp{highlight-parentheses} package to use colors from the active Modus theme. It retrieves intense background colors (cyan@comma{} magenta@comma{} green@comma{} yellow) and their corresponding foreground colors from the Modus palette via @code{modus-themes-get-color-value} and sets @code{highlight-parentheses-background-colors} and @code{highlight-parentheses-colors} accordingly.
 
-If @code{global-highlight-parentheses-mode} is available, the function also enables it. This function is suitable for use in the @code{modus-themes-after-load-theme-hook} or any theme-switching hook to keep parenthesis colors synchronized with the active theme.
+If @code{global-highlight-parentheses-mode} is available@comma{} the function also enables it. This function is suitable for use in the @code{modus-themes-after-load-theme-hook} or any theme-switching hook to keep parenthesis colors synchronized with the active theme.
 
 @node Extra face customization
 @section Extra face customization
 
 @findex modus-themes-extras-set-faces
-The function @code{modus-themes-extras-set-faces} is provided as a hook point for additional theme-specific face customizations. Its body is currently empty, but its docstring shows how to add conditional face settings based on the active theme:
+The function @code{modus-themes-extras-set-faces} is provided as a hook point for additional theme-specific face customizations. Its body is currently empty@comma{} but its docstring shows how to add conditional face settings based on the active theme:
 
 @lisp
-(if (eq 'modus-operandi (car custom-enabled-themes))
+(if (eq modus-themes-extras-light-theme (car custom-enabled-themes))
     (set-face-attribute 'hl-sentence nil :background "#bfefff")
   (set-face-attribute 'hl-sentence nil :background "#004065"))
 @end lisp

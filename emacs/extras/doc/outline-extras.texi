@@ -50,7 +50,7 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{outline-extras.el} extends the built-in @samp{outline} library with improved heading promotion and demotion commands. The built-in @code{outline-promote} and @code{outline-demote} commands, when called with a prefix argument, operate on the entire subtree but leave point at an unintuitive position afterward. The commands in this package wrap those operations so that point reliably returns to the heading line you just modified, making repeated promotions and demotions smoother.
+@samp{outline-extras.el} extends the built-in @samp{outline} library with improved heading promotion and demotion commands. The built-in @code{outline-promote} and @code{outline-demote} commands@comma{} when called with a prefix argument@comma{} operate on the entire subtree but leave point at an unintuitive position afterward. The commands in this package wrap those operations so that point reliably returns to the heading line you just modified@comma{} making repeated promotions and demotions smoother.
 
 The package requires only @samp{outline} itself and works in any buffer where @samp{outline-minor-mode} or a derived mode (such as @samp{org-mode}) is active.
 
@@ -66,9 +66,9 @@ The package requires only @samp{outline} itself and works in any buffer where @s
 
 @findex outline-extras-promote-heading
 @findex outline-extras-demote-heading
-When restructuring a document you often need to promote or demote a heading together with its subtree. The built-in commands @code{outline-promote} and @code{outline-demote} accept a prefix argument of @code{C-u} to operate on the entire subtree, but after the operation point may land on the line below the heading rather than on the heading itself. This is disorienting when you want to perform several adjustments in sequence.
+When restructuring a document you often need to promote or demote a heading together with its subtree. The built-in commands @code{outline-promote} and @code{outline-demote} accept a prefix argument of @code{C-u} to operate on the entire subtree@comma{} but after the operation point may land on the line below the heading rather than on the heading itself. This is disorienting when you want to perform several adjustments in sequence.
 
-The command @code{outline-extras-promote-heading} promotes the current heading and its subtree by one level, then moves point back to the heading line. Similarly, @code{outline-extras-demote-heading} demotes the heading and its subtree by one level and repositions point on the heading. Both commands achieve this by calling the underlying @samp{outline-promote} or @samp{outline-demote} with a prefix argument of 4 and then invoking @code{outline-previous-heading} to correct the cursor position.
+The command @code{outline-extras-promote-heading} promotes the current heading and its subtree by one level@comma{} then moves point back to the heading line. Similarly@comma{} @code{outline-extras-demote-heading} demotes the heading and its subtree by one level and repositions point on the heading. Both commands achieve this by calling the underlying @samp{outline-promote} or @samp{outline-demote} with a prefix argument of 4 and then invoking @code{outline-previous-heading} to correct the cursor position.
 
 These commands are most useful when bound to convenient keys so that you can rapidly restructure an outline without losing your place.
 

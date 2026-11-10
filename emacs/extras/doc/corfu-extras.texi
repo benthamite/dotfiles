@@ -55,13 +55,13 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{corfu-extras.el} extends @samp{corfu}, the lightweight completion-overlay package for Emacs. Corfu displays completion candidates in a popup at point, but two common workflow needs are not covered out of the box:
+@samp{corfu-extras.el} extends @samp{corfu}@comma{} the lightweight completion-overlay package for Emacs. Corfu displays completion candidates in a popup at point@comma{} but two common workflow needs are not covered out of the box:
 
 @itemize
 @item
-Enabling Corfu in the minibuffer without conflicting with @samp{vertico}, which also operates there (@ref{Minibuffer activation}).
+Enabling Corfu in the minibuffer without conflicting with @samp{vertico}@comma{} which also operates there (@ref{Minibuffer activation, , Minibuffer activation}).
 @item
-Transferring a Corfu completion session to the minibuffer for richer interaction via @samp{consult} (@ref{Transferring completion to the minibuffer}).
+Transferring a Corfu completion session to the minibuffer for richer interaction via @samp{consult} (@ref{Transferring completion to the minibuffer, , Transferring completion to the minibuffer}).
 @end itemize
 
 This package provides one function and one command addressing these needs. The transfer command requires the @samp{consult} package.
@@ -77,9 +77,9 @@ This package provides one function and one command addressing these needs. The t
 @section Minibuffer activation
 
 @findex corfu-extras-enable-always-in-minibuffer
-When both Corfu and Vertico are installed, enabling Corfu unconditionally in the minibuffer would cause conflicts: both packages would attempt to display candidates simultaneously. The function @code{corfu-extras-enable-always-in-minibuffer} solves this by checking whether Vertico is active (via the internal variable @code{vertico--input}) before enabling @code{corfu-mode}.
+When both Corfu and Vertico are installed@comma{} enabling Corfu unconditionally in the minibuffer would cause conflicts: both packages would attempt to display candidates simultaneously. The function @code{corfu-extras-enable-always-in-minibuffer} solves this by checking whether Vertico is active (via the internal variable @code{vertico--input}) before enabling @code{corfu-mode}.
 
-This function is designed to be added to @code{minibuffer-setup-hook}. With it in place, Corfu provides completions in prompts like @samp{M-:} (@code{eval-expression}) and @samp{M-!} (@code{shell-command}), while Vertico remains in charge during @samp{M-x}, @code{find-file}, and other standard completing-read prompts.
+This function is designed to be added to @code{minibuffer-setup-hook}. With it in place@comma{} Corfu provides completions in prompts like @samp{M-:} (@code{eval-expression}) and @samp{M-!} (@code{shell-command})@comma{} while Vertico remains in charge during @samp{M-x}@comma{} @code{find-file}@comma{} and other standard completing-read prompts.
 
 This approach is adapted from Protesilaos Stavrou's configuration.
 
@@ -94,9 +94,9 @@ This approach is adapted from Protesilaos Stavrou's configuration.
 @section Transferring completion to the minibuffer
 
 @findex corfu-extras-move-to-minibuffer
-Sometimes the Corfu popup is too constrained for the task at hand: you may want to filter candidates further, preview them, or use Consult's narrowing features. The command @code{corfu-extras-move-to-minibuffer} transfers the active Corfu completion session to the minibuffer by calling @code{consult-completion-in-region}. The completion boundaries, table, predicate, and extra properties are all preserved.
+Sometimes the Corfu popup is too constrained for the task at hand: you may want to filter candidates further@comma{} preview them@comma{} or use Consult's narrowing features. The command @code{corfu-extras-move-to-minibuffer} transfers the active Corfu completion session to the minibuffer by calling @code{consult-completion-in-region}. The completion boundaries@comma{} table@comma{} predicate@comma{} and extra properties are all preserved.
 
-This command is automatically added to @code{corfu-continue-commands}, which means invoking it does not dismiss the Corfu popup prematurely. You can bind it to a key in @code{corfu-map} for convenient access while the popup is visible.
+This command is automatically added to @code{corfu-continue-commands}@comma{} which means invoking it does not dismiss the Corfu popup prematurely. You can bind it to a key in @code{corfu-map} for convenient access while the popup is visible.
 
 @node Indices
 @chapter Indices

@@ -31,6 +31,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Overview::
 * Project audit::
 * Post-push CI::
+* Inbox monitor drafts::
 * Orchestration run view::
 * Indices::
 
@@ -49,23 +50,23 @@ Indices
 @chapter Overview
 
 @samp{agent-extras.el} extends the @samp{agent} package with commands that depend on
-my own skills, and so do not belong in a package other people install:
+my own skills@comma{} and so do not belong in a package other people install:
 
 @itemize
 @item
 A project audit that runs several audit skills in sequence
-(@ref{Project audit}).
+(@ref{Project audit, , Project audit}).
 @item
-The post-push CI closeout (@ref{Post-push CI}).
+The post-push CI closeout (@ref{Post-push CI, , Post-push CI}).
 @item
 A read-only view of @samp{orchestrate-review} runs
-(@ref{Orchestration run view}).
+(@ref{Orchestration run view, , Orchestration run view}).
 @end itemize
 
 @findex agent-extras-add-menu-entries
-Loading the file calls @code{agent-extras-add-menu-entries}, which adds the three
+Loading the file calls @code{agent-extras-add-menu-entries}@comma{} which adds the three
 commands to the Tools column of @code{agent-menu} after ``run skill'': audit project
-(@samp{t a}), post-push CI (@samp{t c}) and orchestration run (@samp{t o}). Calling it again
+(@samp{t a})@comma{} post-push CI (@samp{t c}) and orchestration run (@samp{t o}). Calling it again
 adds nothing.
 
 @node Project audit
@@ -75,11 +76,11 @@ adds nothing.
 @vindex agent-extras-audit-skills
 @vindex agent-extras-audit-project-directories
 The command @code{agent-extras-audit-project} prompts for a backend and a project
-directory, then runs each skill in @code{agent-extras-audit-skills} with @samp{--accept}
+directory@comma{} then runs each skill in @code{agent-extras-audit-skills} with @samp{--accept}
 through the backend's non-interactive prompt runner. It commits the changes
-after each skill that succeeds, and shows the results in the
+after each skill that succeeds@comma{} and shows the results in the
 @samp{*Agent audit results*} buffer when the last one finishes. It refuses to start
-when the directory has uncommitted changes, since the automatic commits would
+when the directory has uncommitted changes@comma{} since the automatic commits would
 include them.
 
 @code{agent-extras-audit-project-directories} holds the directories offered at the
@@ -91,8 +92,29 @@ prompt. A directory typed at the prompt is saved to it.
 @findex agent-extras-post-push-ci
 The command @code{agent-extras-post-push-ci} runs the @samp{post-push-ci} skill through
 the selected backend with @samp{--no-push --commit HEAD}. Use it after a push has
-already happened and you want an agent to inspect GitHub Actions failures, fix
-the root cause, and continue the authorized CI closeout loop.
+already happened and you want an agent to inspect GitHub Actions failures@comma{} fix
+the root cause@comma{} and continue the authorized CI closeout loop.
+
+@node Inbox monitor drafts
+@chapter Inbox monitor drafts
+
+@findex agent-extras-inbox-drafts-file
+Loading @samp{agent-extras} sets @code{agent-review-file-function} to
+@code{agent-extras-inbox-drafts-file}@comma{} so @samp{m f} (open review file) in the Monitor
+section of @code{agent-menu} opens the inbox monitor's drafts file for the
+current session: the file where draft replies to the messages routed to that
+session's project wait for review@comma{} with the context needed to decide each one.
+The function asks the monitor's @samp{inbox-drafts path --cwd DIR} which project
+holds the session's directory@comma{} and returns nil (so @samp{m f} reports that the
+session has no review file) when the command is missing or no monitored
+project holds the directory. After commenting on the drafts@comma{} @samp{m p} (process
+review file) asks the session to carry out the comments.
+
+@vindex agent-extras-review-files-directory
+@findex agent-extras-review-file-setup
+Any file visited under @code{agent-extras-review-files-directory} (the drafts
+directory) turns on @code{redline-mode}@comma{} so the CriticMarkup comments on each draft
+can be read and written in place@comma{} however the file was opened.
 
 @node Orchestration run view
 @chapter Orchestration run view
@@ -105,7 +127,7 @@ created by the skill; the command remembers opened filenames for the current
 Emacs session and does not scan temporary directories. Each run has its own
 view.
 
-The view shows the recorded stage, phase, status, author and reviewer, and
+The view shows the recorded stage@comma{} phase@comma{} status@comma{} author and reviewer@comma{} and
 the latest stage-level progress with the progress file's age. Pending delivery
 reconciliation and a recorded incomplete return appear as attention items.
 Old progress does not establish that an actor stopped. A returned implementation
@@ -114,17 +136,17 @@ and completion. This view does not validate the full workflow contract.
 
 Session links recheck the recorded native identity before opening a buffer.
 An unavailable or replaced session is labeled unavailable. Legacy version-2
-runs remain readable, but actors without recorded identities cannot be linked.
-File links open the run record, progress file, run directory, or repository.
+runs remain readable@comma{} but actors without recorded identities cannot be linked.
+File links open the run record@comma{} progress file@comma{} run directory@comma{} or repository.
 The run format does not record ordinary spec/plan paths or blocker descriptions;
 the view says so rather than looking through conversations to infer them.
 
 Visible views refresh every five seconds; @samp{g} refreshes immediately and @samp{q}
 quits the window. Killing a view cancels its refresh timer. A read failure
-replaces the display with an explicit error, so stale data cannot appear current.
-Only local files are supported. Run reads are limited to 4 MiB, and progress
-reads to the final 16 KiB@. The view never submits prompts, advances phases,
-reads transcripts, inspects internal tasks, or starts workers.
+replaces the display with an explicit error@comma{} so stale data cannot appear current.
+Only local files are supported. Run reads are limited to 4 MiB@comma{} and progress
+reads to the final 16 KiB@. The view never submits prompts@comma{} advances phases@comma{}
+reads transcripts@comma{} inspects internal tasks@comma{} or starts workers.
 
 @node Indices
 @chapter Indices

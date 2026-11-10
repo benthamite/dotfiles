@@ -56,7 +56,7 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{use-package-extras.el} provides helper macros and a utility function that simplify Emacs configuration when using the @samp{use-package} macro. In configurations where package installation is handled by an external manager such as @samp{elpaca}, you often want @samp{use-package} declarations to configure packages without attempting to install them. This package provides a dedicated macro for that pattern, along with a shorthand for interactive lambdas and a startup-time reporter.
+@samp{use-package-extras.el} provides helper macros and a utility function that simplify Emacs configuration when using the @samp{use-package} macro. In configurations where package installation is handled by an external manager such as @samp{elpaca}@comma{} you often want @samp{use-package} declarations to configure packages without attempting to install them. This package provides a dedicated macro for that pattern@comma{} along with a shorthand for interactive lambdas and a startup-time reporter.
 
 The package depends on @samp{use-package}.
 
@@ -72,7 +72,7 @@ The package depends on @samp{use-package}.
 @section Declaring built-in or externally managed packages
 
 @findex use-feature
-When your Emacs configuration uses an external package manager (such as @samp{elpaca}) that handles installation separately, every @samp{use-package} declaration for an already-installed package needs @samp{:ensure nil} to prevent @samp{use-package} from trying to install it again. The macro @code{use-feature} wraps @code{use-package} and automatically injects @samp{:ensure nil}, so you can write:
+When your Emacs configuration uses an external package manager (such as @samp{elpaca}) that handles installation separately@comma{} every @samp{use-package} declaration for an already-installed package needs @samp{:ensure nil} to prevent @samp{use-package} from trying to install it again. The macro @code{use-feature} wraps @code{use-package} and automatically injects @samp{:ensure nil}@comma{} so you can write:
 
 @lisp
 (use-feature my-package
@@ -99,7 +99,7 @@ The macro accepts the same NAME and ARGS as @code{use-package}. It is also usefu
 @section Creating interactive lambdas
 
 @findex lambda!
-The macro @code{lambda!} provides a concise way to create anonymous interactive functions. It wraps the provided BODY forms in @code{(lambda () (interactive) ...)}, saving you from writing the boilerplate each time. For example:
+The macro @code{lambda!} provides a concise way to create anonymous interactive functions. It wraps the provided BODY forms in @code{(lambda () (interactive) ...)}@comma{} saving you from writing the boilerplate each time. For example:
 
 @lisp
 (lambda! (message "Hello!"))
@@ -124,7 +124,7 @@ This is particularly convenient in key-binding definitions and hook setups where
 @section Displaying startup time
 
 @findex use-package-extras-display-startup-time
-The function @code{use-package-extras-display-startup-time} calculates and displays how long Emacs took to initialize and how many garbage collections occurred during startup. It computes the elapsed time from @code{before-init-time} to @code{after-init-time} and reads the @code{gcs-done} variable, then formats the result into a message like ``Emacs loaded in 0.52 seconds with 5 garbage collections.''
+The function @code{use-package-extras-display-startup-time} calculates and displays how long Emacs took to initialize and how many garbage collections occurred during startup. It computes the elapsed time from @code{before-init-time} to @code{after-init-time} and reads the @code{gcs-done} variable@comma{} then formats the result into a message like ``Emacs loaded in 0.52 seconds with 5 garbage collections.''
 
 This function is typically added to @code{emacs-startup-hook} so the information appears in the echo area once initialization is complete. It provides a quick way to monitor whether configuration changes are affecting startup performance.
 

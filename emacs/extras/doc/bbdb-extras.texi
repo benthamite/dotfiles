@@ -63,7 +63,7 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{bbdb-extras.el} extends BBDB (the Insidious Big Brother Database),
+@samp{bbdb-extras.el} extends BBDB (the Insidious Big Brother Database)@comma{}
 Emacs' contact management system.  The stock BBDB interface requires
 several prompts to create a record and asks for confirmation before
 routine actions such as opening a URL or deleting a field.  This
@@ -75,14 +75,14 @@ The extensions fall into three areas:
 @itemize
 @item
 @strong{Quick record creation}: create a new contact by providing only a
-name, skipping the prompts for email, phone, and other fields
-(@ref{Quick record creation}).
+name@comma{} skipping the prompts for email@comma{} phone@comma{} and other fields
+(@ref{Quick record creation, , Quick record creation}).
 @item
 @strong{Export}: send the current BBDB record to macOS Contacts as a vCard
-(@ref{Exporting to vCard}).
+(@ref{Exporting to vCard, , Exporting to vCard}).
 @item
 @strong{Patched behaviors}: open URLs without confirmation and display the
-BBDB buffer without splitting windows (@ref{Patched functions}).
+BBDB buffer without splitting windows (@ref{Patched functions, , Patched functions}).
 @end itemize
 
 @node Commands
@@ -99,13 +99,13 @@ BBDB buffer without splitting windows (@ref{Patched functions}).
 
 @findex bbdb-extras-create-quick
 When you just need to jot down someone's name without filling in every
-field, use @code{bbdb-extras-create-quick}.  It prompts only for the
-contact's first and last name, creates a minimal BBDB record, and
+field@comma{} use @code{bbdb-extras-create-quick}.  It prompts only for the
+contact's first and last name@comma{} creates a minimal BBDB record@comma{} and
 displays it.  This replaces the standard @code{bbdb-create-internal}
-workflow, which asks for email, phone, address, and notes.
+workflow@comma{} which asks for email@comma{} phone@comma{} address@comma{} and notes.
 
 Internally the command delegates to @code{bbdb-extras-read-record-quick}
-(@ref{Reading a quick record}), which handles the name prompt and
+(@ref{Reading a quick record, , Reading a quick record})@comma{} which handles the name prompt and
 validation.
 
 @node Exporting to vCard
@@ -114,7 +114,7 @@ validation.
 @findex bbdb-extras-export-vcard
 The command @code{bbdb-extras-export-vcard} exports the BBDB record at
 point to a temporary @samp{.vcf} file and opens it with the system's
-default handler (@samp{open} on macOS), which is typically the Contacts
+default handler (@samp{open} on macOS)@comma{} which is typically the Contacts
 application.  This provides a quick path from BBDB to the system
 address book without manual copy-pasting.  It relies on the
 @samp{bbdb-vcard} package for the actual vCard serialization.
@@ -123,11 +123,11 @@ address book without manual copy-pasting.  It relies on the
 @section Deleting without confirmation
 
 @findex bbdb-extras-delete-field-or-record-no-confirm
-By default, @code{bbdb-delete-field-or-record} asks for confirmation before
+By default@comma{} @code{bbdb-delete-field-or-record} asks for confirmation before
 every deletion.  If you find this disruptive---especially during bulk
 cleanup---the command
 @code{bbdb-extras-delete-field-or-record-no-confirm} performs the same
-deletion but bypasses the confirmation prompt.  Use with care, as the
+deletion but bypasses the confirmation prompt.  Use with care@comma{} as the
 action is not undoable.
 
 @node Functions
@@ -146,7 +146,7 @@ record and populates only its first and last name fields via
 @code{bbdb-read-name}.  The optional FIRST-AND-LAST argument controls the
 reading mode (see the @code{bbdb-read-name} docstring for details).  This
 function is used by @code{bbdb-extras-create-quick}
-(@ref{Quick record creation}).
+(@ref{Quick record creation, , Quick record creation}).
 
 @node Patched functions
 @chapter Patched functions
@@ -175,9 +175,9 @@ URL to open when the field contains multiple entries.
 @findex bbdb-extras-pop-up-window
 The function @code{bbdb-extras-pop-up-window} replaces @code{bbdb-pop-up-window}.
 The stock version splits the largest window to show the @samp{*BBDB*}
-buffer, which can be disruptive in tiled layouts.  The patched version
-reuses an existing window instead of splitting, providing a less
-intrusive display.  If the @samp{*BBDB*} buffer is already visible, the
+buffer@comma{} which can be disruptive in tiled layouts.  The patched version
+reuses an existing window instead of splitting@comma{} providing a less
+intrusive display.  If the @samp{*BBDB*} buffer is already visible@comma{} the
 function simply selects its window when SELECT is non-nil.
 
 @node Indices

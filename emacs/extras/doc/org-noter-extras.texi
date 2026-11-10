@@ -65,21 +65,21 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{org-noter-extras.el} extends @samp{org-noter}, the package that facilitates taking interleaved notes on PDF documents within Org mode. When @samp{org-noter} creates skeleton annotations from PDF highlights, the resulting headings are generic (``Highlight on page N'') and the extracted text often contains hyphenation artifacts from the PDF layout engine. @samp{org-noter-extras.el} provides a suite of commands to clean up, reformat, and navigate these annotations more efficiently.
+@samp{org-noter-extras.el} extends @samp{org-noter}@comma{} the package that facilitates taking interleaved notes on PDF documents within Org mode. When @samp{org-noter} creates skeleton annotations from PDF highlights@comma{} the resulting headings are generic (``Highlight on page N'') and the extracted text often contains hyphenation artifacts from the PDF layout engine. @samp{org-noter-extras.el} provides a suite of commands to clean up@comma{} reformat@comma{} and navigate these annotations more efficiently.
 
 The package provides the following capabilities:
 
 @itemize
 @item
-@strong{Annotation cleanup.} A command to replace generic highlight headings with custom titles and wrap the extracted text in quote blocks (@ref{Annotation cleanup}).
+@strong{Annotation cleanup.} A command to replace generic highlight headings with custom titles and wrap the extracted text in quote blocks (@ref{Annotation cleanup, , Annotation cleanup}).
 @item
-@strong{Annotation merging.} A command to merge the contents of two adjacent annotations into one, useful when a single passage spans multiple highlights (@ref{Merging annotations}).
+@strong{Annotation merging.} A command to merge the contents of two adjacent annotations into one@comma{} useful when a single passage spans multiple highlights (@ref{Merging annotations, , Merging annotations}).
 @item
-@strong{Dehyphenation.} Functions to remove hyphenation artifacts from text extracted from PDFs, where words broken across lines retain their hyphens (@ref{Dehyphenation}).
+@strong{Dehyphenation.} Functions to remove hyphenation artifacts from text extracted from PDFs@comma{} where words broken across lines retain their hyphens (@ref{Dehyphenation, , Dehyphenation}).
 @item
-@strong{Page offset correction.} A command to adjust page numbers in annotation headings when the PDF page numbers differ from the printed page numbers (@ref{Page offset correction}).
+@strong{Page offset correction.} A command to adjust page numbers in annotation headings when the PDF page numbers differ from the printed page numbers (@ref{Page offset correction, , Page offset correction}).
 @item
-@strong{Navigation.} Commands to move between notes while keeping focus in the Org buffer rather than switching to the PDF viewer (@ref{Navigation}).
+@strong{Navigation.} Commands to move between notes while keeping focus in the Org buffer rather than switching to the PDF viewer (@ref{Navigation, , Navigation}).
 @end itemize
 
 The package depends on @samp{org-noter}.
@@ -96,7 +96,7 @@ The package depends on @samp{org-noter}.
 @section Dehyphenation characters
 
 @vindex org-noter-extras-dehyphenate-hyphens
-The constant @code{org-noter-extras-dehyphenate-hyphens} holds a list of strings representing hyphen characters that should be treated as word-break markers by the dehyphenation functions. Its default value is @samp{("-" "¬")}, covering the standard ASCII hyphen and the not sign (@samp{U+00AC}), which some PDF extraction tools produce in place of soft hyphens. You can change the active hyphen character interactively with @code{org-noter-extras-set-hyphen} (@ref{Dehyphenation}).
+The constant @code{org-noter-extras-dehyphenate-hyphens} holds a list of strings representing hyphen characters that should be treated as word-break markers by the dehyphenation functions. Its default value is @samp{("-" "¬")}@comma{} covering the standard ASCII hyphen and the not sign (@samp{U+00AC})@comma{} which some PDF extraction tools produce in place of soft hyphens. You can change the active hyphen character interactively with @code{org-noter-extras-set-hyphen} (@ref{Dehyphenation, , Dehyphenation}).
 
 @node Heading and quote patterns
 @section Heading and quote patterns
@@ -106,11 +106,11 @@ The constant @code{org-noter-extras-dehyphenate-hyphens} holds a list of strings
 @vindex org-noter-quote-end
 Several constants define the patterns that @samp{org-noter-extras.el} uses to identify and manipulate annotation structures:
 
-The constant @code{org-noter-highlight-heading-regexp} matches the default heading formats that @samp{org-noter} creates for highlight annotations, including page headings such as @samp{"Highlight on page 42"} or @samp{"Highlight on p. 42"}, and chapter headings such as @samp{"Highlight on chapter 2"}. The first capture group extracts the page, page range, chapter, or chapter range. This pattern is used by the cleanup and merge commands.
+The constant @code{org-noter-highlight-heading-regexp} matches the default heading formats that @samp{org-noter} creates for highlight annotations@comma{} including page headings such as @samp{"Highlight on page 42"} or @samp{"Highlight on p. 42"}@comma{} and chapter headings such as @samp{"Highlight on chapter 2"}. The first capture group extracts the page@comma{} page range@comma{} chapter@comma{} or chapter range. This pattern is used by the cleanup and merge commands.
 
-The constant @code{org-noter-quote-begin} holds the string @samp{"\n#+begin_quote\n"}, used when wrapping annotation content in an Org quote block during cleanup (@ref{Annotation cleanup}).
+The constant @code{org-noter-quote-begin} holds the string @samp{"\n#+begin_quote\n"}@comma{} used when wrapping annotation content in an Org quote block during cleanup (@ref{Annotation cleanup, , Annotation cleanup}).
 
-The constant @code{org-noter-quote-end} holds the string @samp{"\n#+end_quote\n"}, matching the end of the quote block.
+The constant @code{org-noter-quote-end} holds the string @samp{"\n#+end_quote\n"}@comma{} matching the end of the quote block.
 
 @node Commands
 @chapter Commands
@@ -127,7 +127,7 @@ The constant @code{org-noter-quote-end} holds the string @samp{"\n#+end_quote\n"
 @section Annotation cleanup
 
 @findex org-noter-extras-cleanup-annotation
-After running @code{org-noter-create-skeleton} to generate annotations from PDF highlights, each annotation gets a generic heading like ``Highlight on page 42'' or ``Highlight on p. 42'' with the extracted text in a child ``Contents'' heading. The command @code{org-noter-extras-cleanup-annotation} transforms this into a more useful format:
+After running @code{org-noter-create-skeleton} to generate annotations from PDF highlights@comma{} each annotation gets a generic heading like ``Highlight on page 42'' or ``Highlight on p. 42'' with the extracted text in a child ``Contents'' heading. The command @code{org-noter-extras-cleanup-annotation} transforms this into a more useful format:
 
 @enumerate
 @item
@@ -137,13 +137,13 @@ It switches to the Org notes buffer.
 @item
 It prompts you for a descriptive title for the annotation.
 @item
-It extracts the text content from the ``Contents'' subheading, running dehyphenation and filling the text to remove PDF line breaks.
+It extracts the text content from the ``Contents'' subheading@comma{} running dehyphenation and filling the text to remove PDF line breaks.
 @item
 It replaces the generic heading with the supplied title (without any page-number suffix).
 @item
 It wraps the extracted content in an Org quote block (@samp{#+begin_quote} @dots{} @samp{#+end_quote}).
 @item
-It appends a citation after the quote block, where @samp{KEY} is the bib key obtained from the inherited @samp{Custom_ID} property and the locator is extracted from the original heading. Page headings produce citations like @samp{[cite:@@KEY, p. N]}; chapter headings produce citations like @samp{[cite:@@KEY, chap. N]}.
+It appends a citation after the quote block@comma{} where @samp{KEY} is the bib key obtained from the inherited @samp{Custom_ID} property and the locator is extracted from the original heading. Page headings produce citations like @samp{[cite:@@KEY@comma{} p. N]}; chapter headings produce citations like @samp{[cite:@@KEY@comma{} chap. N]}.
 @end enumerate
 
 This command is intended to be called with point on a highlight heading or its ``Contents'' child heading. It signals an error if no @samp{Custom_ID} property can be found by inheritance.
@@ -152,20 +152,20 @@ This command is intended to be called with point on a highlight heading or its `
 @section Merging annotations
 
 @findex org-noter-extras-merge-contents-with-next
-When a highlighted passage spans two separate PDF annotations (for example, because the text crosses a page boundary or you highlighted in two steps), you end up with two adjacent ``Highlight on page'' headings. The command @code{org-noter-extras-merge-contents-with-next} combines them into a single annotation:
+When a highlighted passage spans two separate PDF annotations (for example@comma{} because the text crosses a page boundary or you highlighted in two steps)@comma{} you end up with two adjacent ``Highlight on page'' headings. The command @code{org-noter-extras-merge-contents-with-next} combines them into a single annotation:
 
 @enumerate
 @item
-With point on a ``Highlight on page N'' heading, it extracts the contents from both the current and the next annotation at the same outline level.
+With point on a ``Highlight on page N'' heading@comma{} it extracts the contents from both the current and the next annotation at the same outline level.
 @item
-It renames the current heading to ``Highlight on pages N--M'' (using an en dash), where M is the page number from the next annotation.
+It renames the current heading to ``Highlight on pages N--M'' (using an en dash)@comma{} where M is the page number from the next annotation.
 @item
 It replaces the body of the current ``Contents'' subheading with the concatenation of both annotations' text.
 @item
 It deletes the next annotation subtree entirely.
 @end enumerate
 
-If point is not on a highlight heading, or if there is no next annotation at the same level, the command signals a user error.
+If point is not on a highlight heading@comma{} or if there is no next annotation at the same level@comma{} the command signals a user error.
 
 @node Dehyphenation
 @section Dehyphenation
@@ -173,7 +173,7 @@ If point is not on a highlight heading, or if there is no next annotation at the
 @findex org-noter-extras-dehyphenate
 @findex org-noter-extras-dehyphenate-inserted-heading
 @findex org-noter-extras-set-hyphen
-Text extracted from PDFs often contains hyphens at the positions where the original layout engine broke words across lines. The command @code{org-noter-extras-dehyphenate} removes these artifacts by searching for the pattern ``letter-hyphen space letter'' and joining the two letter sequences. It operates on the current paragraph by default, or on the active region if one is set. The hyphen characters it searches for are defined by @code{org-noter-extras-dehyphenate-hyphens} (@ref{Dehyphenation characters}).
+Text extracted from PDFs often contains hyphens at the positions where the original layout engine broke words across lines. The command @code{org-noter-extras-dehyphenate} removes these artifacts by searching for the pattern ``letter-hyphen space letter'' and joining the two letter sequences. It operates on the current paragraph by default@comma{} or on the active region if one is set. The hyphen characters it searches for are defined by @code{org-noter-extras-dehyphenate-hyphens} (@ref{Dehyphenation characters, , Dehyphenation characters}).
 
 New headings inserted by @code{org-noter} are dehyphenated automatically via
 @code{org-noter-insert-heading-hook}.
@@ -184,9 +184,9 @@ The command @code{org-noter-extras-set-hyphen} lets you interactively change the
 @section Page offset correction
 
 @findex org-noter-extras-highlight-offset
-PDF page numbers and printed page numbers often differ because the PDF includes front matter (title page, table of contents, etc.) that is not counted in the book's own pagination. The command @code{org-noter-extras-highlight-offset} corrects all ``Highlight on page N'' headings in the current buffer by subtracting a user-specified offset from each page number.
+PDF page numbers and printed page numbers often differ because the PDF includes front matter (title page@comma{} table of contents@comma{} etc.) that is not counted in the book's own pagination. The command @code{org-noter-extras-highlight-offset} corrects all ``Highlight on page N'' headings in the current buffer by subtracting a user-specified offset from each page number.
 
-The offset is defined as the PDF page number minus the book page number. For example, if the PDF viewer shows page 220 but the printed page says 210, the offset is 10. The command prompts for this value interactively. The offset is typically positive (PDF pages tend to be higher than book pages) but can be negative if needed.
+The offset is defined as the PDF page number minus the book page number. For example@comma{} if the PDF viewer shows page 220 but the printed page says 210@comma{} the offset is 10. The command prompts for this value interactively. The offset is typically positive (PDF pages tend to be higher than book pages) but can be negative if needed.
 
 @node Navigation
 @section Navigation
@@ -208,9 +208,9 @@ The command @code{org-noter-extras-sync-next-note} calls the standard @code{org-
 @section Extracting annotation contents
 
 @findex org-noter-get-annotation-contents
-The function @code{org-noter-get-annotation-contents} extracts and cleans the text from an @samp{org-noter} annotation subtree. It determines whether point is on a ``Highlight on page'' heading or a ``Contents'' heading, narrows to the content region, fills the text with a very large @code{fill-column} (effectively unwrapping all lines), runs @code{org-noter-extras-dehyphenate} to remove hyphenation artifacts (@ref{Dehyphenation}), and returns the cleaned text as a string.
+The function @code{org-noter-get-annotation-contents} extracts and cleans the text from an @samp{org-noter} annotation subtree. It determines whether point is on a ``Highlight on page'' heading or a ``Contents'' heading@comma{} narrows to the content region@comma{} fills the text with a very large @code{fill-column} (effectively unwrapping all lines)@comma{} runs @code{org-noter-extras-dehyphenate} to remove hyphenation artifacts (@ref{Dehyphenation, , Dehyphenation})@comma{} and returns the cleaned text as a string.
 
-This function is used internally by @code{org-noter-extras-cleanup-annotation} (@ref{Annotation cleanup}) and @code{org-noter-extras-merge-contents-with-next} (@ref{Merging annotations}).
+This function is used internally by @code{org-noter-extras-cleanup-annotation} (@ref{Annotation cleanup, , Annotation cleanup}) and @code{org-noter-extras-merge-contents-with-next} (@ref{Merging annotations, , Merging annotations}).
 
 @node Indices
 @chapter Indices

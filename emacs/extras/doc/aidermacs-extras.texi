@@ -39,12 +39,12 @@ This manual describes the features and customization options for the Emacs Lisp 
 Commands
 
 * Chat history::
-* Repository map::
 * Launching Aider::
 
 Functions
 
 * Process management::
+* Repository map::
 
 Indices
 
@@ -57,12 +57,12 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{aidermacs-extras.el} extends the @samp{aidermacs} package, which
+@samp{aidermacs-extras.el} extends the @samp{aidermacs} package@comma{} which
 integrates the Aider AI coding assistant into Emacs.  While
-@samp{aidermacs} itself handles running Aider sessions and sending prompts,
+@samp{aidermacs} itself handles running Aider sessions and sending prompts@comma{}
 this extension focuses on the surrounding workflow: extracting useful
-information from the chat history, managing the Aider process
-lifecycle, and launching Aider sessions with sensible defaults.
+information from the chat history@comma{} managing the Aider process
+lifecycle@comma{} and launching Aider sessions with sensible defaults.
 
 The main capabilities are:
 
@@ -72,13 +72,13 @@ Copying recent or selected portions of the Aider chat history to the
 kill ring for reference or sharing (@ref{Chat history, , Chat history commands}).
 @item
 Preventing accidental termination of active Aider sessions
-(@ref{Process management}).
+(@ref{Process management, , Process management}).
 @item
 Saving the repository map to a file for inspection
-(@ref{Repository map}).
+(@ref{Repository map, , Repository map}).
 @item
 Launching Aider in the current directory with the current file
-pre-loaded (@ref{Launching Aider}).
+pre-loaded (@ref{Launching Aider, , Launching Aider}).
 @end itemize
 
 @node Commands
@@ -86,7 +86,6 @@ pre-loaded (@ref{Launching Aider}).
 
 @menu
 * Chat history::
-* Repository map::
 * Launching Aider::
 @end menu
 
@@ -99,15 +98,15 @@ recent exchanges.  The command
 @code{aidermacs-extras-copy-recent-history-to-kill-ring} copies the last N
 lines of the @samp{.aider.chat.history.md} file (located in the project
 root) to the kill ring.  By default N is 1000; with a prefix argument
-(e.g., @samp{C-u 500}) you can specify a different count.
+(e.g.@comma{} @samp{C-u 500}) you can specify a different count.
 
 The command uses the external @samp{tail} utility rather than loading the
-file into an Emacs buffer, which keeps it fast even when the history
+file into an Emacs buffer@comma{} which keeps it fast even when the history
 file is very large.
 
 @findex aidermacs-extras-copy-prompt-region
 When you need a specific stretch of the conversation rather than the
-tail end, use @code{aidermacs-extras-copy-prompt-region}.  This command
+tail end@comma{} use @code{aidermacs-extras-copy-prompt-region}.  This command
 scans the current buffer---expected to be the
 @samp{.aider.chat.history.md} file---for Aider prompt blocks (lines
 beginning with =#### =) and prompts you to select a start block and
@@ -119,27 +118,16 @@ buffer if the end block is the last one).  Pressing @samp{RET} without
 selecting an end block copies everything from the start block to the
 end of the buffer.  The text is placed in the kill ring.
 
-@node Repository map
-@section Repository map
-
-@findex aidermacs-extras-save-repo-map
-The command @code{aidermacs-extras-save-repo-map} runs
-@samp{aider --show-repo-map} and writes the output to @samp{repo-map.md} in the
-project root.  This gives you a static snapshot of the repository
-structure that Aider sees, which can be useful for debugging context
-issues.  When the optional ASYNC argument is non-nil, the command runs
-asynchronously.
-
 @node Launching Aider
 @section Launching Aider
 
 @findex aidermacs-extras-run-in-current-dir
 The command @code{aidermacs-extras-run-in-current-dir} starts an Aider
 session in the current @code{default-directory}.  If invoked from a buffer
-that visits a file, the command automatically adds that file to the
+that visits a file@comma{} the command automatically adds that file to the
 Aider session with the @samp{--file} flag.  It also looks for an
 associated help file (via @code{files-extras-get-help-file} from
-@samp{files-extras.el}) and, if one exists, adds it as well.  This saves
+@samp{files-extras.el}) and@comma{} if one exists@comma{} adds it as well.  This saves
 you from having to manually specify files after launching Aider.
 
 @node Functions
@@ -147,6 +135,7 @@ you from having to manually specify files after launching Aider.
 
 @menu
 * Process management::
+* Repository map::
 @end menu
 
 @node Process management
@@ -155,16 +144,27 @@ you from having to manually specify files after launching Aider.
 @findex aidermacs-extras-confirm-kill-buffer
 The function @code{aidermacs-extras-confirm-kill-buffer} is designed to be
 added to @code{kill-buffer-query-functions}.  When you attempt to kill a
-buffer, it checks whether the buffer is a @samp{comint-mode} buffer whose
+buffer@comma{} it checks whether the buffer is a @samp{comint-mode} buffer whose
 name starts with @samp{*aidermacs} and which has a running process.  If all
-three conditions hold, the function prompts for confirmation before
+three conditions hold@comma{} the function prompts for confirmation before
 allowing the kill.  This prevents accidental termination of an active
 Aider session---a mistake that would lose the current conversation
 state.
 
-If the buffer is not an Aidermacs buffer or has no running process,
+If the buffer is not an Aidermacs buffer or has no running process@comma{}
 the function returns @code{t} immediately and the kill proceeds without
 interruption.
+
+@node Repository map
+@section Repository map
+
+@findex aidermacs-extras-save-repo-map
+The function @code{aidermacs-extras-save-repo-map} runs
+@samp{aider --show-repo-map} and writes the output to @samp{repo-map.md} in the
+project root.  This gives you a static snapshot of the repository
+structure that Aider sees@comma{} which can be useful for debugging context
+issues.  When the optional ASYNC argument is non-nil@comma{} the function runs
+asynchronously.
 
 @node Indices
 @chapter Indices

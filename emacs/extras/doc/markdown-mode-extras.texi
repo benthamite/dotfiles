@@ -41,6 +41,7 @@ Commands
 * Clipboard conversion::
 * Section operations::
 * Link editing::
+* Preview with relative paths::
 * Table alignment::
 
 Functions
@@ -60,11 +61,11 @@ Indices
 @chapter Overview
 
 @samp{markdown-mode-extras.el} extends @samp{markdown-mode} with commands for
-clipboard conversion, section manipulation, and link editing.  Much of
+clipboard conversion@comma{} section manipulation@comma{} and link editing.  Much of
 the package revolves around interoperability between Markdown and Org
-mode, using Pandoc as the conversion engine.  If you frequently copy
-content between Org and Markdown files, or paste formatted text from
-the web into a Markdown buffer, these commands save considerable
+mode@comma{} using Pandoc as the conversion engine.  If you frequently copy
+content between Org and Markdown files@comma{} or paste formatted text from
+the web into a Markdown buffer@comma{} these commands save considerable
 manual reformatting.
 
 The main capabilities are:
@@ -72,17 +73,17 @@ The main capabilities are:
 @itemize
 @item
 @strong{Clipboard conversion}: paste clipboard content while converting
-between Org, Markdown, and HTML formats via Pandoc
-(@ref{Clipboard conversion}).
+between Org@comma{} Markdown@comma{} and HTML formats via Pandoc
+(@ref{Clipboard conversion, , Clipboard conversion}).
 @item
 @strong{Section operations}: extract or copy the body of the current
-Markdown section (@ref{Section operations}).
+Markdown section (@ref{Section operations, , Section operations}).
 @item
-@strong{Link editing}: strip the URL from a Markdown link, keeping only the
-description text (@ref{Link editing}).
+@strong{Link editing}: strip the URL from a Markdown link@comma{} keeping only the
+description text (@ref{Link editing, , Link editing}).
 @item
 @strong{Table alignment}: realign every pipe table in the buffer so column
-separators line up (@ref{Table alignment}).
+separators line up (@ref{Table alignment, , Table alignment}).
 @end itemize
 
 @node Commands
@@ -92,6 +93,7 @@ separators line up (@ref{Table alignment}).
 * Clipboard conversion::
 * Section operations::
 * Link editing::
+* Preview with relative paths::
 * Table alignment::
 @end menu
 
@@ -104,18 +106,18 @@ content between Org and Markdown based on the current major mode.  In
 a @samp{markdown-mode} buffer it assumes the clipboard holds Org syntax and
 converts to Markdown; in an @samp{org-mode} buffer it does the reverse.
 The conversion is performed by piping the system clipboard (@samp{pbv} on
-macOS, @samp{xclip} elsewhere) through Pandoc with @samp{--wrap=none}.  A few
+macOS@comma{} @samp{xclip} elsewhere) through Pandoc with @samp{--wrap=none}.  A few
 post-processing cleanups are applied to the Pandoc output before
 yanking.
 
 @findex markdown-mode-extras-paste-with-conversion
 When you copy formatted text from a web page or other rich-text
-source, @code{markdown-mode-extras-paste-with-conversion} converts the
+source@comma{} @code{markdown-mode-extras-paste-with-conversion} converts the
 clipboard to GitHub-Flavored Markdown (@samp{gfm-raw_html}) and inserts the
 result.  It uses @code{simple-extras-pandoc-convert} from @samp{simple-extras.el}
 to detect whether the clipboard contains HTML or Org and to choose the
 appropriate Pandoc input format.  For the reverse process (copying
-Markdown as formatted HTML), see @code{ox-clip-formatted-copy}.
+Markdown as formatted HTML)@comma{} see @code{ox-clip-formatted-copy}.
 
 @node Section operations
 @section Section operations
@@ -125,11 +127,11 @@ The command @code{markdown-mode-extras-copy-section} copies the body of the
 Markdown section at point to the kill ring and echoes it.  A ``section''
 is the text between a heading (@samp{^#+ ...}) and the next heading of the
 same or higher level.  If called with a non-nil SECTION argument
-(available only from Lisp), the command searches for the named section
+(available only from Lisp)@comma{} the command searches for the named section
 instead of using the one at point.
 
-Internally, the command calls @code{markdown-mode-extras-get-section}
-(@ref{Getting section content}).
+Internally@comma{} the command calls @code{markdown-mode-extras-get-section}
+(@ref{Getting section content, , Getting section content}).
 
 @node Link editing
 @section Link editing
@@ -138,22 +140,32 @@ Internally, the command calls @code{markdown-mode-extras-get-section}
 When editing a Markdown document you sometimes want to unlink text
 while keeping the description.  The command
 @code{markdown-mode-extras-remove-url-in-link} does exactly that: with
-point inside a Markdown link (@samp{[description](url)}), it removes the
+point inside a Markdown link (@samp{[description](url)})@comma{} it removes the
 link markup and leaves only the description text.
 
-With a prefix argument, the command instead prompts for a @emph{new} URL
+With a prefix argument@comma{} the command instead prompts for a @emph{new} URL
 and re-inserts the link with the original description and the
 replacement URL@.  This is handy for updating broken or outdated links.
 
 The command uses @code{markdown-mode-extras-delete-link}
-(@ref{Deleting a link}) to remove the original link structure.
+(@ref{Deleting a link, , Deleting a link}) to remove the original link structure.
+
+@node Preview with relative paths
+@section Preview with relative paths
+
+@findex markdown-mode-extras-preview
+The command @code{markdown-mode-extras-preview} works like @code{markdown-preview}@comma{}
+but adds a @samp{<base>} element pointing at the directory of the visited
+file.  @code{markdown-preview} writes its HTML to a temporary file@comma{} so
+without the base element relative links and images in the document do
+not resolve.
 
 @node Table alignment
 @section Table alignment
 
 @findex markdown-mode-extras-align-all-tables
 The command @code{markdown-mode-extras-align-all-tables} walks the buffer
-and calls @code{markdown-table-align} on every pipe table it finds, so
+and calls @code{markdown-table-align} on every pipe table it finds@comma{} so
 column separators line up visually.  The command is wired to
 @samp{markdown-mode-hook} so that tables are aligned whenever a Markdown
 (or GFM) buffer is visited.  Re-running the command is useful after
@@ -173,7 +185,7 @@ pasting or editing table data that leaves the columns misaligned.
 @findex markdown-mode-extras-get-section
 The function @code{markdown-mode-extras-get-section} returns the body of a
 Markdown section as a string.  If the optional SECTION argument (a
-heading title) is provided, the function searches the buffer for that
+heading title) is provided@comma{} the function searches the buffer for that
 heading; otherwise it uses the section containing point.  Section
 boundaries are determined by @code{markdown-outline-previous} and
 @code{markdown-outline-next}.
@@ -186,7 +198,7 @@ The function @code{markdown-mode-extras-delete-link} removes the entire
 Markdown link at point (@samp{[description](url)}) from the buffer and
 returns the link's description text.  It uses @code{markdown-link-at-pos}
 to locate the link boundaries.  This function is used by
-@code{markdown-mode-extras-remove-url-in-link} (@ref{Link editing}).
+@code{markdown-mode-extras-remove-url-in-link} (@ref{Link editing, , Link editing}).
 
 @node Indices
 @chapter Indices

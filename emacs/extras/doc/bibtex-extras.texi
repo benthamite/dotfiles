@@ -70,29 +70,29 @@ Indices
 @chapter Overview
 
 @samp{bibtex-extras.el} extends Emacs' built-in @samp{bibtex-mode} with functions
-for manipulating Bib@TeX{} entries and fields, integrating with the @samp{ebib}
-bibliography manager, and automating common tasks in a Bib@LaTeX{}
+for manipulating Bib@TeX{} entries and fields@comma{} integrating with the @samp{ebib}
+bibliography manager@comma{} and automating common tasks in a Bib@LaTeX{}
 workflow.  It depends on @samp{ebib} for database operations and @samp{el-patch}
 for patching built-in Bib@TeX{} functions.
 
 The package provides a comprehensive set of getter and setter functions
-for Bib@TeX{} fields, making it easy to read, write, and modify field
+for Bib@TeX{} fields@comma{} making it easy to read@comma{} write@comma{} and modify field
 values programmatically.  These functions are used by other packages in
 the extras ecosystem (such as @samp{ebib-extras.el} and @samp{eww-extras.el}) as
 building blocks for higher-level operations.
 
-For daily use, the package offers commands to open the current entry in
-Ebib, move entries between bibliography files, convert misnamed fields
-(e.g., Zotero's ``titleaddon'' to the standard ``journaltitle''), attach
-downloaded files to entries, and escape special characters in Bib@TeX{}
+For daily use@comma{} the package offers commands to open the current entry in
+Ebib@comma{} move entries between bibliography files@comma{} convert misnamed fields
+(e.g.@comma{} Zotero's ``titleaddon'' to the standard ``journaltitle'')@comma{} attach
+downloaded files to entries@comma{} and escape special characters in Bib@TeX{}
 files.
 
 The package also includes a custom sorting predicate that replicates
-Ebib's sorting behavior, ensuring consistent ordering regardless of
+Ebib's sorting behavior@comma{} ensuring consistent ordering regardless of
 whether the buffer is sorted by @samp{bibtex-mode} or @samp{ebib}.
 
 Two @samp{el-patch} modifications adjust built-in behavior: one adds
-``urldate'' to the year lookup fields for automatic key generation, and
+``urldate'' to the year lookup fields for automatic key generation@comma{} and
 the other changes the page-dashes formatter to add a missing en-dash
 rather than remove an existing one.
 
@@ -111,21 +111,21 @@ rather than remove an existing one.
 
 @findex bibtex-extras-open-in-ebib
 The command @code{bibtex-extras-open-in-ebib} opens the Bib@TeX{} entry at point
-in the Ebib interface.  It saves the current buffer, reloads the
-corresponding Ebib database to reflect any recent edits, switches to
-the entry in Ebib, and displays the entry buffer.
+in the Ebib interface.  It saves the current buffer@comma{} reloads the
+corresponding Ebib database to reflect any recent edits@comma{} switches to
+the entry in Ebib@comma{} and displays the entry buffer.
 
 This is useful when you are editing a Bib@TeX{} file directly and want to
 switch to Ebib's richer interface for operations like viewing associated
-files, editing fields with completion, or navigating cross-references.
+files@comma{} editing fields with completion@comma{} or navigating cross-references.
 
 @node Setting fields interactively
 @section Setting fields interactively
 
 @findex bibtex-extras-set-field
 The command @code{bibtex-extras-set-field} prompts for a field name and a
-value, then sets that field in the current entry.  If the field already
-exists, it replaces the value; if it does not, it creates the field.
+value@comma{} then sets that field in the current entry.  If the field already
+exists@comma{} it replaces the value; if it does not@comma{} it creates the field.
 This command was adapted from @code{bibtex-set-field} in @samp{doi-utils.el}.
 
 @node Attaching files from URLs
@@ -148,8 +148,8 @@ operation for HTML files.  Both commands require the entry to have a
 
 @findex bibtex-extras-escape-special-characters
 The command @code{bibtex-extras-escape-special-characters} scans the current
-Bib@TeX{} file and escapes unescaped special characters (@samp{$}, @samp{%}, @samp{#},
-@samp{&}) by prepending a backslash.  It skips the ``url'' and ``file'' fields,
+Bib@TeX{} file and escapes unescaped special characters (@samp{$}@comma{} @samp{%}@comma{} @samp{#}@comma{}
+@samp{&}) by prepending a backslash.  It skips the ``url'' and ``file'' fields@comma{}
 where these characters are legitimate.
 
 This is useful after importing entries from external sources that may
@@ -176,11 +176,11 @@ not properly escape @LaTeX{}-special characters.
 @findex bibtex-extras-get-field-in-string
 @findex bibtex-extras-get-entry-as-string
 The function @code{bibtex-extras-get-key} returns the citation key of the
-Bib@TeX{} entry at point (e.g., ``Author2024'').  It narrows to the entry
+Bib@TeX{} entry at point (e.g.@comma{} ``Author2024'').  It narrows to the entry
 and extracts the key from the entry header.
 
 The function @code{bibtex-extras-get-field} returns the value of a named
-field in the current entry.  Whitespace (newlines, tabs, multiple
+field in the current entry.  Whitespace (newlines@comma{} tabs@comma{} multiple
 spaces) within the value is normalized to single spaces.  It returns
 @code{nil} if the field is empty or absent.
 
@@ -189,11 +189,11 @@ Bib@TeX{} field at point.  This is useful for context-dependent operations.
 
 The function @code{bibtex-extras-get-field-in-string} extracts a field value
 from a Bib@TeX{} entry represented as a string.  It creates a temporary
-buffer, inserts the string, and delegates to @code{bibtex-extras-get-field}.
+buffer@comma{} inserts the string@comma{} and delegates to @code{bibtex-extras-get-field}.
 
 The function @code{bibtex-extras-get-entry-as-string} returns the complete
 Bib@TeX{} entry at point (or a specified KEY) as a string.  When an
-optional FIELD argument is provided, it returns only that field's value.
+optional FIELD argument is provided@comma{} it returns only that field's value.
 The search can be restricted to specific FILES or defaults to
 @code{bibtex-files}.
 
@@ -205,13 +205,13 @@ The search can be restricted to specific FILES or defaults to
 @findex bibtex-extras-kill-field
 @findex bibtex-extras-convert-titleaddon-to-journaltitle
 The function @code{bibtex-extras-add-or-update-field} creates a field with
-the given value if it does not exist, or updates its value if it does.
+the given value if it does not exist@comma{} or updates its value if it does.
 It combines @code{bibtex-make-field} and @code{bibtex-set-field} into a single
 operation.
 
 The function @code{bibtex-extras-append-to-field} appends a value to an
-existing field, using a configurable delimiter (defaulting to ``;'').  If
-the field is empty, it sets the value directly.  This is useful for
+existing field@comma{} using a configurable delimiter (defaulting to ``;'').  If
+the field is empty@comma{} it sets the value directly.  This is useful for
 fields like ``keywords'' that accumulate multiple values.
 
 The function @code{bibtex-extras-kill-field} removes a named field from the
@@ -220,7 +220,7 @@ current entry entirely.
 The function @code{bibtex-extras-convert-titleaddon-to-journaltitle} renames
 the ``titleaddon'' field to ``journaltitle'' in the current entry.  This
 corrects a common issue with entries imported via the Zotero translation
-server, which records the online publication venue in ``titleaddon''
+server@comma{} which records the online publication venue in ``titleaddon''
 rather than the standard Bib@LaTeX{} ``journaltitle'' field.
 
 @node Moving entries
@@ -229,8 +229,8 @@ rather than the standard Bib@LaTeX{} ``journaltitle'' field.
 @findex bibtex-extras-move-entry
 The function @code{bibtex-extras-move-entry} moves a Bib@TeX{} entry identified
 by KEY from its current bibliography file to a TARGET file.  It locates
-the source file using @code{ebib-extras-get-file-of-key}, kills the entry
-from the source buffer, and yanks it at the end of the target buffer,
+the source file using @code{ebib-extras-get-file-of-key}@comma{} kills the entry
+from the source buffer@comma{} and yanks it at the end of the target buffer@comma{}
 saving both.  Ebib must be open for the source file lookup to work.
 
 @node Attaching files to entries
@@ -242,7 +242,7 @@ The function @code{bibtex-extras-url-to-file-attach} generates a file of the
 specified type from the entry's URL field and attaches it using a
 callback.  It is the shared implementation behind
 @code{bibtex-extras-url-to-pdf-attach} and @code{bibtex-extras-url-to-html-attach}
-(@ref{Attaching files from URLs}).
+(@ref{Attaching files from URLs, , Attaching files from URLs}).
 
 The function @code{bibtex-extras-attach-file-to-entry} attaches a file to
 the Bib@TeX{} entry whose key matches the file's base name.  It is used as
@@ -262,7 +262,7 @@ The function @code{bibtex-extras-lessp} is the comparison predicate for
 sorting Bib@TeX{} entries.  Entries with a ``crossref'' field are placed
 before others and sorted in reverse alphabetical order by key.  All
 remaining entries are sorted alphabetically.  This replicates Ebib's
-sorting behavior, ensuring that sorting by either tool produces the same
+sorting behavior@comma{} ensuring that sorting by either tool produces the same
 result.
 
 @node Miscellaneous helpers
@@ -298,8 +298,8 @@ date.
 @findex bibtex-format-entry
 The function @code{bibtex-format-entry} is patched to change the page-dash
 behavior.  The standard function normalizes page ranges to a single dash
-(e.g., ``1--10'' becomes ``1-10'').  The patched version does the opposite:
-it ensures page ranges use an en-dash (e.g., ``1-10'' becomes ``1--10''),
+(e.g.@comma{} ``1--10'' becomes ``1-10'').  The patched version does the opposite:
+it ensures page ranges use an en-dash (e.g.@comma{} ``1-10'' becomes ``1--10'')@comma{}
 which is the correct Bib@LaTeX{} convention for page ranges.
 
 @node Indices

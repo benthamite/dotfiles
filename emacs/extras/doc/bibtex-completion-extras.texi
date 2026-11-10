@@ -51,21 +51,21 @@ Indices
 @chapter Overview
 
 @samp{bibtex-completion-extras.el} provides a targeted extension for the
-@samp{bibtex-completion} package, which underlies bibliography completion
+@samp{bibtex-completion} package@comma{} which underlies bibliography completion
 interfaces such as @samp{ivy-bibtex} and @samp{helm-bibtex}.  It depends on
 @samp{el-patch} for modifying the initialization function.
 
 The sole purpose of this package is to disable the automatic file
 watching that @samp{bibtex-completion} sets up during initialization.  By
-default, @samp{bibtex-completion} uses @code{file-notify-add-watch} to monitor
+default@comma{} @samp{bibtex-completion} uses @code{file-notify-add-watch} to monitor
 bibliography files and automatically reload them when changes are
 detected.  This can cause performance issues with large bibliography
 files or on systems where file notification events are frequent.
 
-By removing the file-watching code, this package trades automatic
+By removing the file-watching code@comma{} this package trades automatic
 reloading for manual control.  The bibliography data can still be
 refreshed on demand by calling @code{bibtex-completion-clear-cache} followed
-by any completion command, or simply by restarting Emacs.
+by any completion command@comma{} or simply by restarting Emacs.
 
 @node Patched functions
 @chapter Patched functions
@@ -81,17 +81,17 @@ by any completion command, or simply by restarting Emacs.
 The function @code{bibtex-completion-init} is patched using @samp{el-patch} to
 remove the block of code that sets up file watches on bibliography
 files.  The original function iterates over all files returned by
-@code{bibtex-completion-normalize-bibliography}, verifies they exist, and
+@code{bibtex-completion-normalize-bibliography}@comma{} verifies they exist@comma{} and
 adds a @code{file-notify-add-watch} for each one.  The patched version skips
 this entire loop.
 
 The rest of the initialization---removing old watch descriptors and
 pre-calculating display format widths---is preserved unchanged.  This
 means existing watches from a previous initialization are still cleaned
-up properly, and the completion display continues to work as expected.
+up properly@comma{} and the completion display continues to work as expected.
 
 The patch is applied at load time using @samp{el-patch-defun}.  If you later
-need to re-enable file watching, you can call the original function via
+need to re-enable file watching@comma{} you can call the original function via
 @samp{el-patch-unpatch} or simply unload this package.
 
 @node Indices

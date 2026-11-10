@@ -52,8 +52,8 @@ Indices
 
 @samp{kmacro-extras.el} extends Emacs' built-in keyboard macro system
 (@samp{kmacro.el}).  The stock macro counter can insert sequential numbers
-(1, 2, 3, @dots{}) during macro execution, but switching to alphabetical
-sequences (a, b, c, @dots{}) requires manually changing the counter format
+(1@comma{} 2@comma{} 3@comma{} @dots{}) during macro execution@comma{} but switching to alphabetical
+sequences (a@comma{} b@comma{} c@comma{} @dots{}) requires manually changing the counter format
 and resetting the counter value---two separate operations that are easy
 to forget.  This package wraps both steps into a single toggle command.
 
@@ -73,17 +73,17 @@ keyboard macro counter between numeric and alphabetical mode:
 
 @itemize
 @item
-When the current format is numeric (@samp{%d}), the command sets the
-format to @samp{%c} (character) and resets the counter to 97, the ASCII
+When the current format is numeric (@samp{%d})@comma{} the command sets the
+format to @samp{%c} (character) and resets the counter to 97@comma{} the ASCII
 code for @samp{a}.  Subsequent insertions via @code{kmacro-insert-counter}
-will produce @samp{a}, @samp{b}, @samp{c}, and so on.
+will produce @samp{a}@comma{} @samp{b}@comma{} @samp{c}@comma{} and so on.
 @item
-When the current format is alphabetical (@samp{%c}), the command sets it
+When the current format is alphabetical (@samp{%c})@comma{} the command sets it
 back to @samp{%d} and resets the counter to 1.
 @end itemize
 
 This is especially handy when you need to label items with letters in
-one macro and switch back to numbers for the next, without
+one macro and switch back to numbers for the next@comma{} without
 interrupting your editing flow.  A confirmation message (@samp{"Set to
 alphabetical"} or @samp{"Set to numeric"}) is displayed in the echo area
 after each toggle.

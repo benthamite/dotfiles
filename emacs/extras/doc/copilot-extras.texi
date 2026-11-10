@@ -44,6 +44,7 @@ Functions
 
 * Conditional activation::
 * Restarting Copilot::
+* Suppressing canceled-request noise::
 
 Indices
 
@@ -56,7 +57,7 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{copilot-extras.el} extends the @samp{copilot.el} package, which
+@samp{copilot-extras.el} extends the @samp{copilot.el} package@comma{} which
 integrates GitHub Copilot into Emacs.  The stock @samp{copilot-mode} is a
 simple on/off toggle with no built-in awareness of buffer context.
 This extension adds two pieces of missing functionality:
@@ -65,10 +66,14 @@ This extension adds two pieces of missing functionality:
 @item
 @strong{Conditional activation}: enable Copilot automatically in
 programming buffers while skipping read-only buffers and
-user-specified modes (@ref{Conditional activation}).
+user-specified modes (@ref{Conditional activation, , Conditional activation}).
 @item
 @strong{Restart workaround}: quickly cycle @samp{copilot-mode} off and on when
-the process stops responding (@ref{Restarting Copilot}).
+the process stops responding (@ref{Restarting Copilot, , Restarting Copilot}).
+@item
+@strong{Noise suppression}: silence harmless ``Request was canceled''
+messages that Copilot logs whenever a completion request is
+superseded (@ref{Suppressing canceled-request noise, , Suppressing canceled-request noise}).
 @end itemize
 
 @node User options
@@ -85,12 +90,12 @@ the process stops responding (@ref{Restarting Copilot}).
 The user option @code{copilot-extras-excluded-modes} is a list of major
 mode symbols in which @samp{copilot-mode} should @emph{not} be activated by
 @code{copilot-extras-enable-conditionally}
-(@ref{Conditional activation}).  You might add modes where inline
+(@ref{Conditional activation, , Conditional activation}).  You might add modes where inline
 completions are distracting or conflict with other tools---for
-example, terminal emulators, shell prompts, or documentation browsers.
+example@comma{} terminal emulators@comma{} shell prompts@comma{} or documentation browsers.
 
 The type is a list of symbols.  The default value is an empty list
-@code{()}, meaning no modes are excluded beyond the read-only check.
+@code{()}@comma{} meaning no modes are excluded beyond the read-only check.
 
 @node Functions
 @chapter Functions
@@ -98,6 +103,7 @@ The type is a list of symbols.  The default value is an empty list
 @menu
 * Conditional activation::
 * Restarting Copilot::
+* Suppressing canceled-request noise::
 @end menu
 
 @node Conditional activation
@@ -106,7 +112,7 @@ The type is a list of symbols.  The default value is an empty list
 @findex copilot-extras-enable-conditionally
 The function @code{copilot-extras-enable-conditionally} is designed to be
 added to a hook such as @code{prog-mode-hook} or @code{text-mode-hook}.  It
-activates @samp{copilot-mode} in the current buffer @emph{unless} either of the
+activates @samp{copilot-mode} in the current buffer @emph{unless} any of the
 following is true:
 
 @enumerate
@@ -114,7 +120,15 @@ following is true:
 The buffer is read-only (@code{buffer-read-only} is non-nil).
 @item
 The buffer's major mode appears in
-@code{copilot-extras-excluded-modes} (@ref{@code{copilot-extras-excluded-modes}}).
+@code{copilot-extras-excluded-modes} (@ref{@code{copilot-extras-excluded-modes}, , @code{copilot-extras-excluded-modes}}).
+@item
+The function is called from a non-interactive context (i.e.@comma{}
+@code{this-command} is @code{nil})@comma{} such as a timer.  Starting the Copilot
+server in such contexts can trigger errors that freeze Emacs.
+@item
+The buffer is an Org capture buffer (@code{org-capture-mode} is
+active).  Copilot's change tracker can crash in these short-lived
+buffers.
 @end enumerate
 
 This provides a convenient ``enable everywhere except@dots{}'' policy without
@@ -125,11 +139,35 @@ requiring per-mode hook configuration.
 
 @findex copilot-extras-restart-copilot
 The function @code{copilot-extras-restart-copilot} quickly disables and
-re-enables @samp{copilot-mode} in the current buffer, with a brief pause
+re-enables @samp{copilot-mode} in the current buffer@comma{} with a brief pause
 between the two operations.  This is a workaround for situations where
 the Copilot process stops providing suggestions.  The function only
-acts when @samp{copilot-mode} is already active, so it is safe to call
-unconditionally---for instance, from a periodic timer.
+acts when @samp{copilot-mode} is already active@comma{} so it is safe to call
+unconditionally---for instance@comma{} from a periodic timer.
+
+@node Suppressing canceled-request noise
+@section Suppressing canceled-request noise
+
+@vindex copilot-extras-suppressed-error-codes
+The user option @code{copilot-extras-suppressed-error-codes} lists JSON-RPC
+error codes that should be silenced.  The default value is @samp{(-32800
+-32602)}:
+
+@itemize
+@item
+@samp{-32800} (``Request was canceled''): the server canceled a superseded
+request@comma{} which is normal during typing.
+@item
+@samp{-32602} (``Document for URI could not be found''): a transient URI
+mismatch between the editor and the server.
+@end itemize
+
+@findex copilot-extras-suppress-canceled-log
+The function @code{copilot-extras-suppress-canceled-log} is installed as
+@samp{:around} advice on @code{copilot--log}.  It intercepts error-level log
+calls whose error object carries a code listed in
+@code{copilot-extras-suppressed-error-codes} and silently drops them.  All
+other log messages pass through unchanged.
 
 @node Indices
 @chapter Indices

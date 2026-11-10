@@ -50,9 +50,9 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{ediff-extras.el} extends @samp{ediff}, the built-in Emacs facility for interactive difference merging. By default, when you quit an Ediff session, the comparison buffers (buffer A, buffer B, and optionally buffer C) remain open, cluttering the buffer list. This small package adds a cleanup hook that automatically kills all Ediff-related buffers upon quitting, keeping the buffer list tidy.
+@samp{ediff-extras.el} extends @samp{ediff}@comma{} the built-in Emacs facility for interactive difference merging. By default@comma{} when you quit an Ediff session@comma{} the comparison buffers (buffer A@comma{} buffer B@comma{} and optionally buffer C) remain open@comma{} cluttering the buffer list. This small package adds a cleanup hook that automatically kills all Ediff-related buffers upon quitting@comma{} keeping the buffer list tidy.
 
-The cleanup function is added to @code{ediff-quit-hook} when the package is loaded, so no additional configuration is required.
+The cleanup function is added to @code{ediff-quit-hook} when the package is loaded@comma{} so no additional configuration is required.
 
 @node Functions
 @chapter Functions
@@ -65,9 +65,9 @@ The cleanup function is added to @code{ediff-quit-hook} when the package is load
 @section Buffer cleanup on quit
 
 @findex ediff-extras-cleanup-buffers
-The function @code{ediff-extras-cleanup-buffers} kills all buffers associated with the current Ediff session: buffer A, buffer B, buffer C (if it exists in a three-way comparison), and the Ediff control buffer. It checks that each buffer is live before attempting to kill it, so it handles partial sessions gracefully.
+The function @code{ediff-extras-cleanup-buffers} kills all buffers associated with the current Ediff session: buffer A@comma{} buffer B@comma{} buffer C (if it exists in a three-way comparison)@comma{} and the Ediff control buffer. It checks that each buffer is live before attempting to kill it@comma{} so it handles partial sessions gracefully.
 
-This function is automatically added to @code{ediff-quit-hook} when the package is loaded. If you prefer to keep the comparison buffers around after quitting, you can remove it:
+This function is automatically added to @code{ediff-quit-hook} when the package is loaded. If you prefer to keep the comparison buffers around after quitting@comma{} you can remove it:
 
 @lisp
 (remove-hook 'ediff-quit-hook 'ediff-extras-cleanup-buffers)

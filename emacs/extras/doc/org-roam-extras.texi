@@ -75,27 +75,27 @@ Indices
 @node Overview
 @chapter Overview
 
-@samp{org-roam-extras.el} extends the @samp{org-roam} package, a personal
+@samp{org-roam-extras.el} extends the @samp{org-roam} package@comma{} a personal
 knowledge management system for Emacs based on Zettelkasten principles.
 It depends on @samp{org-extras} for heading manipulation utilities and
 @samp{paths} for directory constants.
 
 The package adds several capabilities on top of the standard @samp{org-roam}
 interface.  It provides a configurable node inclusion function that
-filters out headings tagged with ``noid'' or ``ARCHIVE'', certain
-conventional heading names (like ``Local variables'' or ``Further reading''),
+filters out headings tagged with ``noid'' or ``ARCHIVE''@comma{} certain
+conventional heading names (like ``Local variables'' or ``Further reading'')@comma{}
 and sub-headings in specific directories such as journal entries.  This
 keeps the Org Roam database focused on substantive notes.
 
-For note creation, the package offers a workflow that prompts for a note
-type (generic, person, or project-specific), determines the appropriate
-directory and tags, creates a slugified file, and sets up the initial
+For note creation@comma{} the package offers a workflow that prompts for a note
+type (generic@comma{} person@comma{} or project-specific)@comma{} determines the appropriate
+directory and tags@comma{} creates a slugified file@comma{} and sets up the initial
 structure.  A complementary command converts existing headings into
 standalone notes.
 
 The package enhances node finding with a specialized command that
-queries the Org Roam database for prioritized nodes, optionally filtered
-by tag or directory.  This surfaces actionable items sorted by priority,
+queries the Org Roam database for prioritized nodes@comma{} optionally filtered
+by tag or directory.  This surfaces actionable items sorted by priority@comma{}
 skipping nodes that already have scheduled dates or deadlines.
 
 Backlink tracking is supported through functions that count backlinks
@@ -107,8 +107,8 @@ A set of commands for replacing internal @code{[[*Title]]} links with proper
 @code{[[id:UUID]]} links automates the conversion of legacy link formats
 within entire directories of Org files.
 
-Finally, a statistics command summarizes your open TODO items and their
-total effort estimates from the Org Roam database (@ref{Statistics}).
+Finally@comma{} a statistics command summarizes your open TODO items and their
+total effort estimates from the Org Roam database (@ref{Statistics, , Statistics}).
 
 @node User options
 @chapter User options
@@ -126,14 +126,14 @@ total effort estimates from the Org Roam database (@ref{Statistics}).
 The user option @code{org-roam-extras-excluded-dirs} specifies a list of
 directory paths to exclude from Org Roam's file scanning.  Files within
 these directories will not be indexed.  The default value includes
-inactive, archive, and collaborator-specific directories.  Add
+inactive@comma{} archive@comma{} and collaborator-specific directories.  Add
 directories here when they contain Org files that should not appear in
 Org Roam queries.
 
 The user option @code{org-roam-extras-excluded-files} specifies a list of
 file names or patterns to exclude from Org Roam.  Entries can be literal
 file names or regular expression patterns.  The default includes
-template files, old data files, and Dropbox conflict copies.  Both
+template files@comma{} old data files@comma{} and sync-conflict copies.  Both
 options feed into @code{org-roam-file-exclude-regexp}.
 
 @node Backlink buffer display
@@ -142,12 +142,12 @@ options feed into @code{org-roam-file-exclude-regexp}.
 @vindex org-roam-extras-auto-show-backlink-buffer
 The user option @code{org-roam-extras-auto-show-backlink-buffer} controls
 whether the Org Roam backlink buffer is automatically displayed when
-opening a file that has backlinks.  The default value is @code{nil}, meaning
+opening a file that has backlinks.  The default value is @code{nil}@comma{} meaning
 the backlink buffer is not shown automatically.  Set it to @code{t} if you
 want the backlink buffer to appear whenever you visit a note with
 incoming links.
 
-When enabled, @code{org-roam-extras-show-backlink-buffer} (@ref{Backlink display})
+When enabled@comma{} @code{org-roam-extras-show-backlink-buffer} (@ref{Backlink display, , Backlink display})
 should be added to @code{find-file-hook}.
 
 @node Commands
@@ -171,21 +171,21 @@ should be added to @code{find-file-hook}.
 @findex org-roam-extras-convert-heading-to-note
 The command @code{org-roam-extras-new-note} creates a new Org Roam note
 through a guided workflow.  It first prompts the user to select a note
-type: ``generic'', ``person'', ``Epoch'', ``Borges'', ``tango'', or ``tlon-notes''.
-The type determines the target directory (e.g., @code{paths-dir-notes} for
-generic, @code{paths-dir-people} for person, @code{paths-dir-epoch} for Epoch) and
+type: ``generic''@comma{} ``person''@comma{} ``Epoch''@comma{} ``Borges''@comma{} ``tango''@comma{} or ``tlon-notes''.
+The type determines the target directory (e.g.@comma{} @code{paths-dir-notes} for
+generic@comma{} @code{paths-dir-people} for person@comma{} @code{paths-dir-epoch} for Epoch) and
 the initial tags.
 
-After selecting the type, it prompts for the note name, creates a file
-with a slugified version of that name (via @code{simple-extras-slugify}),
-inserts the @samp{#+title:} line and an initial heading, sets the tags,
-creates an Org ID, narrows to the new entry, and places point at the end
+After selecting the type@comma{} it prompts for the note name@comma{} creates a file
+with a slugified version of that name (via @code{simple-extras-slugify})@comma{}
+inserts the @samp{#+title:} line and an initial heading@comma{} sets the tags@comma{}
+creates an Org ID@comma{} narrows to the new entry@comma{} and places point at the end
 of the buffer.
 
 The command @code{org-roam-extras-convert-heading-to-note} extracts the
-current Org heading and its subtree from the source buffer, prompts for
-a note name (defaulting to the heading title), and creates a new file in
-the current directory.  The heading content is moved into the new file,
+current Org heading and its subtree from the source buffer@comma{} prompts for
+a note name (defaulting to the heading title)@comma{} and creates a new file in
+the current directory.  The heading content is moved into the new file@comma{}
 which gets a @samp{#+title:} line and an adjusted top-level heading.  The
 original heading is removed from the source buffer.
 
@@ -196,18 +196,18 @@ original heading is removed from the source buffer.
 @findex org-roam-extras-node-find-special
 @findex org-roam-extras-node-select-tag
 The command @code{org-roam-extras-node-find} acts as an enhanced wrapper
-around @code{org-roam-node-find}.  Before invoking the finder, it widens the
+around @code{org-roam-node-find}.  Before invoking the finder@comma{} it widens the
 buffer and shows all headings (via @code{org-extras-fold-show-all-headings}).
-After jumping to the selected node, it recenters the buffer.
+After jumping to the selected node@comma{} it recenters the buffer.
 
 The command @code{org-roam-extras-node-find-special} provides a filtered view
 of Org Roam nodes.  It queries the database for nodes that have a
-priority, have either no TODO state or the state ``TODO'', and do not have
+priority@comma{} have either no TODO state or the state ``TODO''@comma{} and do not have
 a SCHEDULED or DEADLINE timestamp.  The results are presented sorted by
-priority (ascending: @samp{[#1]} through @samp{[#9]} for numeric priorities,
+priority (ascending: @samp{[#1]} through @samp{[#9]} for numeric priorities@comma{}
 or @samp{[#A]} first for alphabetic priorities).  Numeric priorities are
-displayed as numbers, not character codes.  After upgrading from an Org
-version that stored numeric priorities as character codes, rebuild the
+displayed as numbers@comma{} not character codes.  After upgrading from an Org
+version that stored numeric priorities as character codes@comma{} rebuild the
 Org Roam cache so its stored priorities and sorting use the current format.
 
 The command accepts an optional FILTER-SPEC argument:
@@ -236,7 +236,7 @@ tags present in the Org Roam database.  It is used internally by
 
 @findex org-roam-extras-id-goto
 The command @code{org-roam-extras-id-goto} jumps to the location of an Org
-ID@.  It widens the buffer both before and after the jump, which handles
+ID@.  It widens the buffer both before and after the jump@comma{} which handles
 the case where the target is in a currently narrowed buffer.  The jump
 is performed twice (via @code{org-roam-id-open}) to ensure the correct
 position is reached even when narrowing interferes.
@@ -247,19 +247,19 @@ position is reached even when narrowing interferes.
 @findex org-roam-extras-replace-star-links-with-id
 The command @code{org-roam-extras-replace-star-links-with-id} walks through
 every @samp{.org} file in a given directory and converts links of the form
-@code{[[*Title][Description]]} into @code{[[id:UUID][Description]]}, where UUID is
+@code{[[*Title][Description]]} into @code{[[id:UUID][Description]]}@comma{} where UUID is
 the Org ID of the node whose title matches.
 
-The command is fully automatic: it visits each file, performs the
-substitutions (using @code{org-element-map} for robust parsing), and saves
-any modified buffers.  When called with a prefix argument (NOCASE), the
+The command is fully automatic: it visits each file@comma{} performs the
+substitutions (using @code{org-element-map} for robust parsing)@comma{} and saves
+any modified buffers.  When called with a prefix argument (NOCASE)@comma{} the
 title matching is case-insensitive.  An optional DIRS argument restricts
 the ID lookup to nodes within specific directories.
 
-Internally, the command uses
+Internally@comma{} the command uses
 @code{org-roam-extras--replace-star-links-with-id-in-file} to process each
 file and @code{org-roam-extras-get-id-of-title} to resolve titles to IDs
-(@ref{Link utilities}).
+(@ref{Link utilities, , Link utilities}).
 
 @node Statistics
 @section Statistics
@@ -267,9 +267,9 @@ file and @code{org-roam-extras-get-id-of-title} to resolve titles to IDs
 @findex org-roam-extras-count-todos-and-efforts
 The command @code{org-roam-extras-count-todos-and-efforts} queries the Org
 Roam database for all nodes with a TODO keyword and tallies those that
-are still open (i.e., not in a done state such as ``DONE'', ``CANCELLED'',
+are still open (i.e.@comma{} not in a done state such as ``DONE''@comma{} ``CANCELLED''@comma{}
 or ``DELEGATED'').  It sums their effort estimates and reports the total
-count and effort in the echo area, formatted as hours and minutes.
+count and effort in the echo area@comma{} formatted as hours and minutes.
 
 This gives you a quick overview of your outstanding workload across the
 entire Org Roam database without needing to visit individual files.
@@ -281,37 +281,37 @@ entire Org Roam database without needing to visit individual files.
 The function @code{org-roam-extras-setup-db-sync} disables Org Roam's
 autosync mode and installs a repeating idle timer that calls
 @code{org-roam-db-sync} every 20 minutes.  Because this timer runs as
-background maintenance, it inhibits debugger entry and reports sync failures
+background maintenance@comma{} it inhibits debugger entry and reports sync failures
 with @code{message} instead of opening the debugger.
 
 @node Fast file check
 @section Fast file check
 
 @findex org-roam--list-files-fd-org-roam
-The configuration lists files with the @samp{fd-org-roam} method, defined here as @code{org-roam--list-files-fd-org-roam}. It runs the dotfiles' @samp{bin/fd-org-roam} wrapper, which adds the @samp{fd} options @samp{--no-ignore --hidden} so that @samp{fd} lists the same files as @samp{find -L}, gitignored and hidden notes included, in about a tenth of the time. The method takes the place of a @samp{(fd . PATH)} entry in @code{org-roam-list-files-commands}, which @code{org-roam--list-files} silently skips: its pattern variable shadows the variable that holds the result.
+The configuration lists files with the @samp{fd-org-roam} method@comma{} defined here as @code{org-roam--list-files-fd-org-roam}. It runs the dotfiles' @samp{bin/fd-org-roam} wrapper@comma{} which adds the @samp{fd} options @samp{--no-ignore --hidden} so that @samp{fd} lists the same files as @samp{find -L}@comma{} gitignored and hidden notes included@comma{} in about a tenth of the time. The method takes the place of a @samp{(fd . PATH)} entry in @code{org-roam-list-files-commands}@comma{} which @code{org-roam--list-files} silently skips: its pattern variable shadows the variable that holds the result.
 
 @findex org-roam-extras-plainly-descendant-p
-@code{org-roam-extras-plainly-descendant-p} is @samp{:before-until} advice for @code{org-roam-descendant-of-p}, installed by the configuration. That function resolves both of its arguments with @code{file-truename} to rule out a file being the directory itself, and @code{org-roam-file-p} calls it for every file @code{org-roam-list-files} finds. With @code{org-roam-directory} set to the whole Google Drive, those calls took about three quarters of a 20-second listing, during which Emacs and its server were blocked. The advice answers @samp{t} when the file's expanded name extends the directory's, the case for every listed file, and leaves any other case to the original function. It differs only for a symlink inside the directory that points back at the directory itself.
+@code{org-roam-extras-plainly-descendant-p} is @samp{:before-until} advice for @code{org-roam-descendant-of-p}@comma{} installed by the configuration. That function resolves both of its arguments with @code{file-truename} to rule out a file being the directory itself@comma{} and @code{org-roam-file-p} calls it for every file @code{org-roam-list-files} finds. With @code{org-roam-directory} set to the whole Google Drive@comma{} those calls took about three quarters of a 20-second listing@comma{} during which Emacs and its server were blocked. The advice answers @samp{t} when the file's expanded name extends the directory's@comma{} the case for every listed file@comma{} and leaves any other case to the original function. It differs only for a symlink inside the directory that points back at the directory itself.
 
 @findex org-roam-extras-list-files-in-all-roots
 @findex org-roam-extras-file-in-any-root-p
-Org-roam reads one directory, but some notes repositories live outside it, in @code{paths-dirs-org-additional}. Two pieces of @samp{:around} advice, installed by the configuration, make those directories Org-roam roots as well, while @code{org-roam-directory} stays the single root that keys the database. @code{org-roam-extras-list-files-in-all-roots} advises @code{org-roam-list-files}: it appends the files of each additional directory, listed with @code{org-roam-directory} bound to that directory. @code{org-roam-extras-file-in-any-root-p} advises @code{org-roam-file-p}: when the original rejects a file, it retries with @code{org-roam-directory} bound to each additional directory the file plainly lies under, so the extension and exclusion tests still apply. @code{org-roam-db-sync}, saving a note and the other callers of these two functions therefore treat the additional directories like @code{org-roam-directory}.
+Org-roam reads one directory@comma{} but some notes repositories live outside it@comma{} in @code{paths-dirs-org-additional}. Two pieces of @samp{:around} advice@comma{} installed by the configuration@comma{} make those directories Org-roam roots as well@comma{} while @code{org-roam-directory} stays the single root that keys the database. @code{org-roam-extras-list-files-in-all-roots} advises @code{org-roam-list-files}: it appends the files of each additional directory@comma{} listed with @code{org-roam-directory} bound to that directory. @code{org-roam-extras-file-in-any-root-p} advises @code{org-roam-file-p}: when the original rejects a file@comma{} it retries with @code{org-roam-directory} bound to each additional directory the file plainly lies under@comma{} so the extension and exclusion tests still apply. @code{org-roam-db-sync}@comma{} saving a note and the other callers of these two functions therefore treat the additional directories like @code{org-roam-directory}.
 
 @node Batch processing dump
 @section Batch processing dump
 
 @findex org-roam-extras-dump-actionable-todos
 The function @code{org-roam-extras-dump-actionable-todos} writes a JSON array
-of actionable TODOs (active state, no scheduled or deadline date) to a
-file path, returning the count.  Each record carries @samp{id}, @samp{file},
-@samp{title}, @samp{priority}, @samp{todo}, @samp{effort}, @samp{tags}, and @samp{olp}.  An optional
+of actionable TODOs (active state@comma{} no scheduled or deadline date) to a
+file path@comma{} returning the count.  Each record carries @samp{id}@comma{} @samp{file}@comma{}
+@samp{title}@comma{} @samp{priority}@comma{} @samp{todo}@comma{} @samp{effort}@comma{} @samp{tags}@comma{} and @samp{olp}.  An optional
 filter spec mirrors @code{org-roam-extras-node-find-special}: @code{(:tag . TAG)}
-restricts to a tag, and @code{(:dir DIRECTORY)} restricts to nodes whose
+restricts to a tag@comma{} and @code{(:dir DIRECTORY)} restricts to nodes whose
 file lives under a directory.
 
-This is the input feed for the @samp{overnight-todos} Claude skill, which
+This is the input feed for the @samp{overnight-todos} Claude skill@comma{} which
 classifies each TODO and acts on those it can complete without user
-input.  It can also be called ad hoc from the shell, for example:
+input.  It can also be called ad hoc from the shell@comma{} for example:
 
 @example
 emacsclient -e "(org-roam-extras-dump-actionable-todos \"/tmp/todos.json\")"
@@ -337,7 +337,7 @@ emacsclient -e "(org-roam-extras-dump-actionable-todos \"/tmp/todos.json\")"
 @findex org-roam-extras-node-include-function
 The function @code{org-roam-extras-node-include-function} is intended for
 @code{org-roam-node-include}.  It returns @code{t} for headings that should
-receive an Org ID and be included in the Org Roam database, and @code{nil}
+receive an Org ID and be included in the Org Roam database@comma{} and @code{nil}
 for those that should be excluded.
 
 Exclusion criteria include:
@@ -346,12 +346,12 @@ Exclusion criteria include:
 @item
 Headings tagged with ``noid'' or ``ARCHIVE''.
 @item
-Headings with specific conventional names such as ``Local variables'',
-``Evaluation'', ``History'', ``Further reading'', ``External links'', and
+Headings with specific conventional names such as ``Local variables''@comma{}
+``Evaluation''@comma{} ``History''@comma{} ``Further reading''@comma{} ``External links''@comma{} and
 ``Related entries''.
 @item
-Sub-headings (level > 1) in specific directories such as the journal,
-Trash, and gptel directories.
+Sub-headings (level > 1) in specific directories such as the journal@comma{}
+Trash@comma{} and gptel directories.
 @end itemize
 
 @node Backlink tracking
@@ -380,8 +380,8 @@ count and forces a modeline refresh by calling
 
 @findex org-roam-extras-show-backlink-buffer
 The function @code{org-roam-extras-show-backlink-buffer} displays the Org
-Roam buffer when visiting a file with backlinks, provided
-@code{org-roam-extras-auto-show-backlink-buffer} is non-@code{nil} (@ref{Backlink buffer display}).  It checks whether the Org Roam buffer is already
+Roam buffer when visiting a file with backlinks@comma{} provided
+@code{org-roam-extras-auto-show-backlink-buffer} is non-@code{nil} (@ref{Backlink buffer display, , Backlink buffer display}).  It checks whether the Org Roam buffer is already
 visible and only displays it if it is not.
 
 @node People directory
@@ -390,7 +390,7 @@ visible and only displays it if it is not.
 @findex org-roam-extras-get-people
 The function @code{org-roam-extras-get-people} queries the Org Roam database
 for level-1 headings in files within the people directory
-(@code{paths-dir-people}).  It returns a list of @samp{(title id)} pairs, useful
+(@code{paths-dir-people}).  It returns a list of @samp{(title id)} pairs@comma{} useful
 for building completion interfaces or reports about contacts.
 
 @node Note creation helpers
@@ -401,7 +401,7 @@ for building completion interfaces or reports about contacts.
 The function @code{org-roam-extras-get-note-properties} prompts the user to
 select a note type and returns a list of @samp{(DIR TAGS)} appropriate for
 that type.  It is used by @code{org-roam-extras-new-note}
-(@ref{Creating notes}).
+(@ref{Creating notes, , Creating notes}).
 
 The function @code{org-roam-extras-create-file-for-note} creates a file with
 a slugified name in the specified directory (defaulting to
@@ -412,9 +412,9 @@ a slugified name in the specified directory (defaulting to
 
 @findex org-roam-extras-get-id-of-title
 The function @code{org-roam-extras-get-id-of-title} returns the Org ID of the
-node whose title matches exactly.  When NOCASE is non-@code{nil}, the
+node whose title matches exactly.  When NOCASE is non-@code{nil}@comma{} the
 comparison is case-insensitive.  When DIRS is provided (as a list of
-directory paths or a single path), only nodes within those directories
+directory paths or a single path)@comma{} only nodes within those directories
 are considered.  An error is signaled if no node or multiple nodes match
 the title.
 
@@ -424,7 +424,7 @@ the title.
 @findex org-roam-extras-remove-file-level-properties
 The function @code{org-roam-extras-remove-file-level-properties} is intended
 for @code{org-capture-before-finalize-hook}.  When the capture template key
-is @samp{"r"}, it removes the file-level ``ID'' property and ensures the first
+is @samp{"r"}@comma{} it removes the file-level ``ID'' property and ensures the first
 heading receives an Org ID instead.
 
 @node Recent files
@@ -433,7 +433,7 @@ heading receives an Org ID instead.
 @findex org-roam-extras-recent
 The function @code{org-roam-extras-recent} returns a list of Org Roam files
 modified within the last DAYS@.  An optional LIMIT argument causes the
-function to return the list only if its length is below the limit,
+function to return the list only if its length is below the limit@comma{}
 returning @code{nil} otherwise.  The function excludes files matching
 @code{org-roam-file-exclude-regexp}.  It reads modification times from the
 Org Roam database rather than scanning @code{org-roam-directory} at agenda

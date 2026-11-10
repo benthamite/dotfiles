@@ -66,7 +66,7 @@ Indices
 @samp{doom-modeline-extras.el} extends the @samp{doom-modeline} package with
 custom modeline segments and enhanced handling of GitHub notifications.
 The modeline of agent session buffers is defined by the @samp{agent} package
-itself, in @samp{agent-doom-modeline.el}.
+itself@comma{} in @samp{agent-doom-modeline.el}.
 
 The package defines several modeline segments that surface contextual
 information not provided by the standard @samp{doom-modeline} segments:
@@ -85,7 +85,7 @@ A @strong{Tlon paragraph} segment showing paragraph-level information from
 @code{tlon-paragraphs-mode-line-mode}.
 @end itemize
 
-On the notifications side, the package hooks into Doom Modeline's GitHub
+On the notifications side@comma{} the package hooks into Doom Modeline's GitHub
 notification fetching to automatically pull Forge notifications when new
 GitHub notifications arrive.
 
@@ -103,18 +103,18 @@ GitHub notifications arrive.
 @vindex doom-modeline-extras-tlon-split
 @vindex doom-modeline-extras-ai-context
 The user option @code{doom-modeline-extras-org-roam} controls whether the Org
-Roam backlink count segment is displayed.  When non-@code{nil} (the default),
+Roam backlink count segment is displayed.  When non-@code{nil} (the default)@comma{}
 the backlink count appears in the modeline while visiting an Org mode
 buffer that has backlinks.  Set it to @code{nil} to hide this segment.
 
 The user option @code{doom-modeline-extras-tlon-split} controls whether the
 Tlon split mode indicator is shown.  The default value is @code{t}.  When
-@code{tlon-split-mode} is active and this option is non-@code{nil}, the word
+@code{tlon-split-mode} is active and this option is non-@code{nil}@comma{} the word
 ``split'' appears in the modeline.
 
 The user option @code{doom-modeline-extras-ai-context} controls whether the
 AI context file count is displayed.  The default value is @code{t}.  When
-non-@code{nil} and there are files in the @code{gptel-context--alist}, the count
+non-@code{nil} and there are files in the @code{gptel-context--alist}@comma{} the count
 appears as a sparkle icon with a number.
 
 @node Modeline segments
@@ -176,11 +176,11 @@ non-empty.
 @vindex doom-modeline-extras-github-last-count
 The function @code{doom-modeline-extras-handle-github-notifications} is
 added to @code{doom-modeline-after-github-fetch-notification-hook}.  After
-Doom Modeline fetches the GitHub notification count, this function
+Doom Modeline fetches the GitHub notification count@comma{} this function
 compares the new count against the previously stored count in the
 variable @code{doom-modeline-extras-github-last-count}.
 
-When the count has changed and is greater than zero, the function calls
+When the count has changed and is greater than zero@comma{} the function calls
 @code{forge-extras-pull-notifications} from the @samp{forge-extras} package to
 retrieve full notification details.  It then updates the stored count.
 This provides a bridge between Doom Modeline's lightweight notification
@@ -188,16 +188,16 @@ polling and Forge's detailed notification management.
 
 The function @code{doom-modeline-extras--github-fetch-notifications}
 overrides Doom Modeline's GitHub fetcher.  It keeps the existing
-asynchronous behavior, but the child process returns only the numeric
+asynchronous behavior@comma{} but the child process returns only the numeric
 notification count instead of the full GitHub notification payload.
 It also disables @code{async.el} password prompting for this API poll and
 skips overlapping fetches while one is already in flight.
 
 The in-flight guard tracks the child process itself rather than a
-boolean flag.  Before each poll, the fetcher reaps a child that died
+boolean flag.  Before each poll@comma{} the fetcher reaps a child that died
 without reporting back (a case in which @code{async.el} never invokes the
 completion callback) and kills a child that has run longer than
-@code{doom-modeline-extras--github-fetch-timeout} seconds, such as one
+@code{doom-modeline-extras--github-fetch-timeout} seconds@comma{} such as one
 blocked on synchronous DNS resolution during a network outage.  A
 failed fetch therefore delays the count by at most one timer cycle
 instead of freezing it permanently.
@@ -205,7 +205,7 @@ instead of freezing it permanently.
 The function @code{doom-modeline-extras-refresh-github-after-forge} works in
 the opposite direction: it is installed as @samp{:after} advice on
 @code{forge--ghub-update-notifications} so that after Forge pulls
-notifications, the Doom Modeline GitHub count updates immediately
+notifications@comma{} the Doom Modeline GitHub count updates immediately
 rather than waiting for the next timer cycle.
 
 @node Formatting helpers
@@ -216,21 +216,21 @@ rather than waiting for the next timer cycle.
 @findex doom-modeline-extras--context-face
 @findex doom-modeline-extras--cache-face
 The function @code{doom-modeline-extras--humanize-tokens} formats a token
-count into a compact string using ``k'' and ``M'' suffixes.  For example,
+count into a compact string using ``k'' and ``M'' suffixes.  For example@comma{}
 1500 becomes ``1.5k'' and 2000000 becomes ``2.0M''.
 
 The function @code{doom-modeline-extras--humanize-duration} formats
-milliseconds into a compact time string.  For example, 125000 becomes
+milliseconds into a compact time string.  For example@comma{} 125000 becomes
 ``2m5s'' and 7200000 becomes ``2h0m''.
 
 The function @code{doom-modeline-extras--context-face} returns a face based
-on context usage percentage: @code{doom-modeline-info} below 60%,
-@code{doom-modeline-warning} between 60% and 79%, and @code{doom-modeline-urgent}
+on context usage percentage: @code{doom-modeline-info} below 60%@comma{}
+@code{doom-modeline-warning} between 60% and 79%@comma{} and @code{doom-modeline-urgent}
 at 80% or above.
 
 The function @code{doom-modeline-extras--cache-face} returns a face based on
-cache hit percentage, using the inverse scale: @code{doom-modeline-info} at
-80% or above, @code{doom-modeline-warning} between 50% and 79%, and
+cache hit percentage@comma{} using the inverse scale: @code{doom-modeline-info} at
+80% or above@comma{} @code{doom-modeline-warning} between 50% and 79%@comma{} and
 @code{doom-modeline-urgent} below 50%.
 
 @node Indices

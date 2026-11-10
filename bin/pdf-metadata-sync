@@ -473,7 +473,8 @@ def cmd_sync(args) -> int:
     now = dt.datetime.now().timestamp()
     counts = dict.fromkeys(("missing", "empty", "recent", "unchanged",
                             "known-failure", "matching", "updated",
-                            "repaired", "failed", "encrypted", "deferred"),
+                            "repaired", "failed", "timed-out", "encrypted",
+                            "deferred"),
                            0)
     to_read = []
     for pdf, tags in targets.items():
@@ -517,7 +518,19 @@ def cmd_sync(args) -> int:
             continue
         else:
             writes += 1
-            error, repaired = write_with_repair(pdf, tags)
+            try:
+                error, repaired = write_with_repair(pdf, tags)
+            except subprocess.TimeoutExpired as exc:
+                # A slow file (seen 2026-11-10, probably Drive) is not a
+                # broken one: no repair, no state, so the next run retries
+                # it. Exit 0 but withhold the heartbeat, so a file that
+                # keeps timing out still alerts (alerting.md, "Nothing to
+                # do, no alert").
+                counts["timed-out"] += 1
+                print(f"timed out {entry['_key']}: {pdf}: "
+                      f"{Path(exc.cmd[0]).name} exceeded {exc.timeout:g}s;"
+                      " retrying next run", flush=True)
+                continue
             if error:
                 counts["failed"] += 1
                 record.update(status="write-error", error=error)
@@ -546,7 +559,7 @@ def cmd_sync(args) -> int:
           f"ambiguous={len(notes)}")
     if counts["failed"]:
         return 1
-    if not args.dry_run:
+    if not args.dry_run and not counts["timed-out"]:
         HEARTBEAT_FILE.write_text(dt.datetime.now().isoformat() + "\n")
     return 0
 

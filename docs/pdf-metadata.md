@@ -54,8 +54,11 @@ size, a hash of the wanted tags, and the outcome. A PDF whose file and wanted
 tags are both unchanged is not read again; bump `MAPPING_VERSION` in the
 script when the mapping changes. A failed write is recorded and not retried
 until the file or its entry changes, so the job exits 1, and the launchd audit
-emails, once per new failure. `success` in the same directory is the heartbeat,
-written after every run without a failure. Output goes to
+emails, once per new failure. A write whose exiftool or qpdf call times out is
+not a failure: it is logged as `timed out`, gets no repair and no state, and is
+retried next run, which still exits 0. `success` in the same directory is the
+heartbeat, written after every run without a failure or a timeout, so a file
+that keeps timing out alerts through the stale heartbeat. Output goes to
 `~/Library/Logs/pdf-metadata-sync.{out,err}.log`.
 
 The backfill on 2026-10-25 found 15,759 of 16,095 attached PDFs needing an

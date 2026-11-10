@@ -1502,6 +1502,14 @@ warns; commits made outside agent sessions are not checked.
 The documentation, README, and paired-config commit gates also run from that
 =pre-commit= hook, through =claude/bin/agent-commit-gates=, so they read the
 staged files from the index instead of inferring them from command text.
+The Texinfo freshness gate (=claude/hooks/require-fresh-texinfo.py=) re-exports
+every staged Org manual, and the Org manual of every staged =.texi=, with the
+after-edit hook in a private directory and blocks the commit when the staged
+=.texi= differs: a =.texi= is generated, never hand-edited.
+=claude/bin/regenerate-manual MANUAL.org= regenerates a manual whose Org source
+changed outside Edit or Write. Org 9.7 and later write =@comma{}= and spelled-out
+=@ref= titles; after the Emacs 31.1 upgrade every manual was regenerated once
+(2026-11-10), so later exports change only what the Org edit changed.
 An Elisp support file outside any package tree with its own =doc/=, such as a
 helper under =bin/=, is documented by the =README.org= of its directory or a
 parent; the Codex README gate ignores the project-local =.codex/skills/=
@@ -1670,7 +1678,9 @@ standalone decision logic and the real Claude event path; mutable
 The audit counts a Claude plugin's cached version only if
 =~/.claude/plugins/installed_plugins.json= names it: Claude Code keeps an
 uninstalled or replaced version in the cache, unmarked, while sessions still use
-it, and counting it reported a false duplicate skill on 2026-10-19.
+it, and counting it reported a false duplicate skill on 2026-10-19. A plugin
+installed at both user and project scope can have two named versions until both
+update; the duplicate check counts those as one skill (2026-11-10).
 
 Claude's settings format, event surface, permission model, browser integration,
 and account overlays are genuine tool-specific state. The sync contract records

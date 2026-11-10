@@ -531,6 +531,13 @@
       "note": "Documentation commit gate. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which passes a canonical git commit so the staged files are read from the index."
     },
     {
+      "name": "require-fresh-texinfo.py",
+      "claude": "claude/hooks/require-fresh-texinfo.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Texinfo freshness commit gate. Runs for both agents from the global Git pre-commit hook through claude/bin/agent-commit-gates, which reads the staged files from the index."
+    },
+    {
       "name": "require-readme-update.sh",
       "claude": "claude/hooks/require-readme-update.sh",
       "codex": null,

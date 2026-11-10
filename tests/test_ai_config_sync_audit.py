@@ -3556,6 +3556,26 @@ for name in subprocess.check_output(["git", "ls-files", "-z"], cwd=root).decode(
             self.module.add_enabled_claude_plugin_roots(roots, seen, home)
             self.assertEqual(sorted(root.path.parent.name for root in roots), ["new222", "old111"])
 
+    def test_duplicate_audit_ignores_versions_of_one_plugin(self):
+        def skill(source, version, name="tool"):
+            root = self.module.InteractiveSkillRoot(
+                path=Path("/cache") / version / "skills", tool="claude", source=source, priority=200)
+            return self.module.InteractiveSkillFile(
+                name=name, path=root.path / name / "SKILL.md", root=root)
+
+        cases = [
+            ([skill("claude-plugin-cache:tool@m", "v1"), skill("claude-plugin-cache:tool@m", "v2")], False),
+            ([skill("claude-plugin-cache:tool@m", "v1"), skill("claude-plugin-cache:other@m", "v1")], True),
+            ([skill("claude-plugin-cache:tool@m", "v1"), skill("global", "v1")], True),
+        ]
+        for matches, flagged in cases:
+            with self.subTest(sources=[m.root.source for m in matches]):
+                problems = []
+                with mock.patch.object(self.module, "interactive_skill_files",
+                                       side_effect=lambda root, tool: matches if tool == "claude" else []):
+                    self.module.audit_duplicate_skill_names(problems)
+                self.assertEqual(bool(problems), flagged, problems)
+
 
 if __name__ == "__main__":
     unittest.main()

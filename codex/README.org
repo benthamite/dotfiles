@@ -690,6 +690,12 @@ It handles independent Texinfo/Info names without evaluating Org. Unrelated
 unstaged headers cannot hide outputs; ambiguous pending staging is refused with
 a reason to stage the intended manual separately.
 
+A separate pre-commit gate, =claude/hooks/require-fresh-texinfo.py=, blocks a
+commit whose staged =.texi= differs from a fresh export of its staged Org manual;
+=claude/bin/regenerate-manual MANUAL.org= regenerates one after an Org change
+made outside the patch tool. An auto-export header that is only an =@c=
+comment is accepted.
+
 Automatic manual exports compare source identity and content, allowing
 metadata-only changes during export. Replaced sources, changed contents and
 symlinks remain rejected; generated destinations retain strict state checks.

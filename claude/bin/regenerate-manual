@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Regenerate the Texinfo manual declared by each Org manual given, exactly as
+# the after-edit hook does when an agent edits the file with Edit or Write.
+# Use it when the Org source changed some other way (a script, sed, git).
+#
+# Usage: regenerate-manual MANUAL.org...
+set -euo pipefail
+
+if [ $# -eq 0 ]; then
+  echo "usage: regenerate-manual MANUAL.org..." >&2
+  exit 2
+fi
+
+hook="$(cd -- "$(dirname -- "$0")/../hooks" && pwd)/regenerate-manual-after-edit.sh"
+status=0
+for org in "$@"; do
+  path=$(cd -- "$(dirname -- "$org")" && pwd)/$(basename -- "$org")
+  report=$(jq -n --arg f "$path" '{tool_name: "Edit", tool_input: {file_path: $f}}' |
+             "$hook" | jq -r '.hookSpecificOutput.additionalContext // empty')
+  if [ -z "$report" ]; then
+    echo "$org: not a Texinfo manual (no #+texinfo_filename or .info export name)" >&2
+    status=1
+  else
+    echo "$org: $report"
+    case "$report" in *"Failures: 0"*) ;; *) status=1 ;; esac
+  fi
+done
+exit "$status"

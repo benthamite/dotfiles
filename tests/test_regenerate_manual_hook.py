@@ -180,6 +180,27 @@ fi
                     self.assertFalse(source.with_suffix(".texi").exists())
                     self.assertEqual(source.with_suffix(".info").read_text(), "previous info")
 
+    def test_comment_only_texinfo_header_is_exported(self):
+        for hook in HOOKS:
+            for header in ["#+texinfo_header: @c AUTO-GENERATED from README.org, do not edit manually.",
+                           "#+texinfo_header: @comment generated", "#+texinfo_header: @c"]:
+                with self.subTest(hook=hook, header=header):
+                    source = self.manual(header + "\n")
+                    message = self.run_hook(hook, source)
+                    self.assertIn("Regenerated 1 .texi", message)
+                    self.assertIn(header.split(": ", 1)[1], source.with_suffix(".texi").read_text())
+        self.assert_staging_clean()
+
+    def test_texinfo_header_resembling_a_comment_is_refused(self):
+        for hook in HOOKS:
+            for header in ["#+texinfo_header: @code{x}", "#+texinfo_header: @comma{}",
+                           "#+texinfo_header: @cindex sneaky"]:
+                with self.subTest(hook=hook, header=header):
+                    source = self.manual(header + "\n")
+                    message = self.run_hook(hook, source)
+                    self.assertIn("refused unsupported", message)
+                    self.assertFalse(source.with_suffix(".texi").exists())
+
     def test_literal_directives_in_source_examples_stay_literal(self):
         for hook in HOOKS:
             source = self.manual("#+begin_src text\n#+include: not-a-directive\n@include not-a-directive\n"

@@ -3408,6 +3408,11 @@ def audit_duplicate_skill_names(problems: list[str]) -> None:
         for name, matches in sorted(by_name.items()):
             if len(matches) <= 1:
                 continue
+            # One plugin installed at two scopes (say user and project) can have
+            # two live cache versions until both update; that is one skill.
+            if all(skill.root.source.startswith("claude-plugin-cache:") for skill in matches) and \
+               len({(skill.root.source, skill.path.parent.name) for skill in matches}) == 1:
+                continue
             nested = [
                 f"{display_path(skill.path)} [{skill.root.source}]"
                 for skill in matches

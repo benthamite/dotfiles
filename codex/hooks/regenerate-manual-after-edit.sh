@@ -199,7 +199,15 @@ while IFS= read -r file_path; do
                     (or (eq kind (quote babel-call))
                         (and (eq kind (quote keyword))
                              (or (member key (quote ("MACRO" "BIND" "CALL" "INCLUDE" "SETUPFILE"
-                                                     "TEXINFO_HEADER" "TEXINFO_POST_HEADER")))
+                                                     "TEXINFO_POST_HEADER")))
+                                 ;; A header line that is only a Texinfo comment
+                                 ;; (such as an "auto-generated, do not edit"
+                                 ;; notice) emits nothing that can run.
+                                 (and (equal key "TEXINFO_HEADER")
+                                      (or (string-match-p "\n" value)
+                                          (not (string-match-p
+                                                "\\`[ \t]*@c\\(?:omment\\)?\\(?:[ \t].*\\)?$"
+                                                value))))
                                  (and (equal key "TEXINFO")
                                       (not (string-match-p
                                             "^[ \t]*@printindex[ \t]+\\(?:fn\\|vr\\|cp\\|ky\\|pg\\|tp\\)[ \t]*$"

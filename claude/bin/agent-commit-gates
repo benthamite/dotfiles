@@ -21,6 +21,7 @@ import tempfile
 DOTFILES = Path(__file__).resolve().parents[2]
 GATES = [
     [str(DOTFILES / "claude/hooks/require-doc-update.sh")],
+    [str(DOTFILES / "claude/hooks/require-fresh-texinfo.py")],
     [str(DOTFILES / "claude/hooks/require-readme-update.sh")],
     [str(DOTFILES / "codex/hooks/require-codex-readme-update.sh")],
     [str(DOTFILES / "bin/ai-config-sync"), "guard-commit"],

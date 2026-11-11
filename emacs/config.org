@@ -5683,7 +5683,8 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
   (org-gcal-client-id (auth-source-extras-op-get "org-gcal" "host"))
   (org-gcal-client-secret (auth-source-extras-op-get "org-gcal" "password"))
   (org-gcal-fetch-file-alist `((,(getenv "PERSONAL_GMAIL") . ,paths-file-calendar)
-                               (,(getenv "EPOCH_EMAIL") . ,paths-file-calendar)))
+                               ("pablo@forethought.org" . ,paths-file-calendar)
+                               ("pablostafforini@baish.com.ar" . ,paths-file-calendar)))
   (org-gcal-recurring-events-mode 'top-level)
   (org-gcal-remove-api-cancelled-events nil) ; never remove cancelled events
   (org-gcal-notify-p nil)

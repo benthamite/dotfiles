@@ -67,7 +67,7 @@ This replaces the built-in ~modus-themes-toggle~ (which relies on the static ~mo
 The function ~modus-themes-extras-load-theme-conditionally~ is the main entry point for automatic theme switching. It queries the Emacs distribution using ~simple-extras-get-emacs-distro~ (from =simple-extras.el=) and sets up the appropriate mechanism:
 
 - For the *Emacs Mac port* (~'emacs-mac~), it immediately calls ~modus-themes-extras-load-theme-emacs-mac~ to read the current system appearance and load the matching theme.
-- For *Emacs Plus* (~'emacs-plus~), it adds ~modus-themes-extras-load-theme-emacs-plus~ to the ~ns-system-appearance-change-functions~ hook, which Emacs Plus calls whenever the system appearance changes, and also loads the theme immediately based on the current value of ~ns-system-appearance~. The immediate load ensures the theme is applied even when initialization runs after the hook's initial startup invocation (e.g. on a fresh profile build where elpaca takes time to compile packages).
+- For *Emacs Plus* (~'emacs-plus~), it calls ~modus-themes-extras-follow-appearance-emacs-plus~, which loads the theme for the current value of ~ns-system-appearance~ and starts a timer that loads the other theme whenever that value changes.
 
 You would typically call this function once during initialization:
 
@@ -88,8 +88,14 @@ The command ~modus-themes-extras-load-theme-emacs-mac~ reads the current appeara
 :CUSTOM_ID: h:emacs-plus
 :END:
 
+#+findex: modus-themes-extras-follow-appearance-emacs-plus
+#+vindex: modus-themes-extras-appearance-poll-interval
+The function ~modus-themes-extras-follow-appearance-emacs-plus~ loads the theme matching ~ns-system-appearance~ and then checks that variable every ~modus-themes-extras-appearance-poll-interval~ seconds (default 5), loading the matching theme whenever it changes. Calling it again replaces the timer rather than adding a second one. A theme you pick by hand, e.g. with ~modus-themes-extras-toggle~, stays until the system appearance next changes.
+
+It deliberately does not use Emacs Plus's ~ns-system-appearance-change-functions~ hook, and removes this package's function from it. Emacs Plus runs that hook, followed by a forced redisplay, inside an AppKit callback that fires while Emacs is waiting for input. After a theme load there, Emacs stopped running timers and answering the server until the next input event, so a sunrise switch while the display was off blocked Emacs until the display woke (=emacs/freeze-incidents.org=, 2026-11-11). With the hook empty, Emacs Plus only updates ~ns-system-appearance~ and runs nothing else.
+
 #+findex: modus-themes-extras-load-theme-emacs-plus
-The function ~modus-themes-extras-load-theme-emacs-plus~ is designed for the ~ns-system-appearance-change-functions~ hook in Emacs Plus. It receives the new appearance as a symbol (~'light~ or ~'dark~) and loads the corresponding theme from ~modus-themes-extras-light-theme~ or ~modus-themes-extras-dark-theme~. Because this function is triggered by the hook, the theme switch happens automatically whenever the system appearance changes.
+The function ~modus-themes-extras-load-theme-emacs-plus~ takes an appearance as a symbol (~'light~ or ~'dark~) and loads the corresponding theme from ~modus-themes-extras-light-theme~ or ~modus-themes-extras-dark-theme~.
 
 * Theme customizations
 :PROPERTIES:

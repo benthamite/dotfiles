@@ -43,9 +43,9 @@ the "Already tried" list in place.
 
 * Open
 
-- Appearance-switch freezes (2026-11-11 incident): move the theme switch
-  out of =ns-system-appearance-change-functions= into a timer. Pending
-  Pablo's decision.
+- Appearance-switch freezes (2026-11-11 incident): fix applied, pending the
+  first unattended sunrise switch (~05:46, 2026-11-12). Upstream report to
+  emacs-plus deferred by Pablo until the mechanism is traced.
 - Google Drive's ~23 GB footprint (2026-10-10 finding below). Pablo rejected
   moving large trees (Music, Websites, Dictionaries, Zotero backup) out of
   Drive on 2026-10-10: all that content stays in Drive. Switching My Drive
@@ -90,7 +90,7 @@ the "Already tried" list in place.
 
 * Incidents
 
-** 2026-11-09 → 11-11, daily ~05:47: macOS Auto appearance switch runs the theme hook inside AppKit's callback, and Emacs's wait loop never resumes until the display wakes (investigation, no change yet)
+** 2026-11-09 → 11-11, daily ~05:47: macOS Auto appearance switch runs the theme hook inside AppKit's callback, and Emacs's wait loop never resumes until the display wakes (fixed in modus-themes-extras, pending the next sunrise)
 
 - Outages 11-09 05:48:50 → 06:56:49, 11-10 05:47:03 → 08:30:11, 11-11
   05:47:00 → 06:54:36 (PID 72927, Emacs 31.1 emacs-plus). Each began within
@@ -119,9 +119,10 @@ the "Already tried" list in place.
   input, display wake) ends it. Why it stays parked is inferred, not
   traced in nsterm.m (nested =ns_select= from Lisp or redisplay in the
   callback are the candidates).
-- Candidate fix: keep the hook empty (the patch then returns before
-  running anything) and apply =ns-system-appearance=, which the patch
-  still updates, from an ordinary timer. Pending Pablo's decision.
+- Fix (approved 2026-11-11): =modus-themes-extras= keeps the hook empty
+  (the patch then returns before running anything) and loads the theme
+  from a 5 s timer that watches =ns-system-appearance=, which the patch
+  still updates.
 
 ** 2026-11-07 ~23:50 → 11-08 07:54: main thread parked in a kernel Mach call under host starvation from agent-log-redact scrubbers (investigation, no change here)
 

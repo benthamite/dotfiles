@@ -64,5 +64,45 @@
       (modus-themes-extras-load-theme-emacs-plus 'dark)
       (should (eq loaded-theme 'modus-vivendi)))))
 
+;;;; follow-appearance-emacs-plus
+
+(ert-deftest modus-themes-extras-test-apply-appearance-change-loads-once ()
+  "Load the matching theme on a change and nothing while it stays the same."
+  (let ((modus-themes-extras-light-theme 'modus-operandi)
+        (modus-themes-extras-dark-theme 'modus-vivendi)
+        (modus-themes-extras--applied-appearance 'dark)
+        (ns-system-appearance 'light)
+        (loaded nil))
+    (cl-letf (((symbol-function 'modus-themes-load-theme)
+               (lambda (theme) (push theme loaded))))
+      (modus-themes-extras--apply-appearance-change)
+      (modus-themes-extras--apply-appearance-change)
+      (should (equal loaded '(modus-operandi)))
+      (setq ns-system-appearance 'dark)
+      (modus-themes-extras--apply-appearance-change)
+      (should (equal loaded '(modus-vivendi modus-operandi))))))
+
+(ert-deftest modus-themes-extras-test-follow-appearance-keeps-hook-empty ()
+  "Following the appearance removes the hook function and starts one timer."
+  (let ((ns-system-appearance-change-functions
+         (list #'modus-themes-extras-load-theme-emacs-plus))
+        (ns-system-appearance 'dark)
+        (modus-themes-extras--appearance-timer nil)
+        (modus-themes-extras--applied-appearance nil)
+        (loaded nil))
+    (cl-letf (((symbol-function 'modus-themes-load-theme)
+               (lambda (theme) (push theme loaded))))
+      (unwind-protect
+          (progn
+            (modus-themes-extras-follow-appearance-emacs-plus)
+            (let ((first modus-themes-extras--appearance-timer))
+              (modus-themes-extras-follow-appearance-emacs-plus)
+              (should-not (memq first timer-list)))
+            (should (null ns-system-appearance-change-functions))
+            (should (memq modus-themes-extras--appearance-timer timer-list))
+            (should (equal loaded (list modus-themes-extras-dark-theme
+                                        modus-themes-extras-dark-theme))))
+        (cancel-timer modus-themes-extras--appearance-timer)))))
+
 (provide 'modus-themes-extras-test)
 ;;; modus-themes-extras-test.el ends here

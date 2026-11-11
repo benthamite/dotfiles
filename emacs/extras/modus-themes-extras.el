@@ -44,6 +44,17 @@
   :type 'symbol
   :group 'modus-themes-extras)
 
+(defcustom modus-themes-extras-appearance-poll-interval 5
+  "Seconds between checks of the system appearance in Emacs Plus."
+  :type 'number
+  :group 'modus-themes-extras)
+
+(defvar modus-themes-extras--appearance-timer nil
+  "Timer that applies changes of the system appearance in Emacs Plus.")
+
+(defvar modus-themes-extras--applied-appearance nil
+  "The system appearance whose theme was last loaded, `light' or `dark'.")
+
 ;;;; Functions
 
 ;;;;; Toggle
@@ -67,10 +78,7 @@ those variables take effect immediately."
   "Load themes conditional on the Emacs distribution installed."
   (pcase (simple-extras-get-emacs-distro)
     ('emacs-mac (modus-themes-extras-load-theme-emacs-mac))
-    ('emacs-plus (add-hook 'ns-system-appearance-change-functions
-			   #'modus-themes-extras-load-theme-emacs-plus)
-		 (modus-themes-extras-load-theme-emacs-plus
-		  ns-system-appearance))))
+    ('emacs-plus (modus-themes-extras-follow-appearance-emacs-plus))))
 
 (declare-function mac-application-state nil)
 (defun modus-themes-extras-load-theme-emacs-mac ()
@@ -79,6 +87,31 @@ those variables take effect immediately."
   (pcase (plist-get (mac-application-state) :appearance)
     ("NSAppearanceNameAqua" (modus-themes-load-theme modus-themes-extras-light-theme))
     ("NSAppearanceNameDarkAqua" (modus-themes-load-theme modus-themes-extras-dark-theme))))
+
+(defvar ns-system-appearance)
+(defun modus-themes-extras-follow-appearance-emacs-plus ()
+  "Load the theme for the system appearance now and whenever it changes.
+A timer polls `ns-system-appearance', which Emacs Plus keeps current.
+Functions on `ns-system-appearance-change-functions' run inside an AppKit
+callback nested in Emacs's wait for input, which then stops waking for
+timers and the server until the next input event (see
+emacs/freeze-incidents.org, 2026-11-11), so this keeps that hook empty."
+  (remove-hook 'ns-system-appearance-change-functions
+               #'modus-themes-extras-load-theme-emacs-plus)
+  (when (timerp modus-themes-extras--appearance-timer)
+    (cancel-timer modus-themes-extras--appearance-timer))
+  (setq modus-themes-extras--applied-appearance nil)
+  (modus-themes-extras--apply-appearance-change)
+  (setq modus-themes-extras--appearance-timer
+        (run-with-timer modus-themes-extras-appearance-poll-interval
+                        modus-themes-extras-appearance-poll-interval
+                        #'modus-themes-extras--apply-appearance-change)))
+
+(defun modus-themes-extras--apply-appearance-change ()
+  "Load the theme for `ns-system-appearance' if it changed since last loaded."
+  (unless (eq ns-system-appearance modus-themes-extras--applied-appearance)
+    (setq modus-themes-extras--applied-appearance ns-system-appearance)
+    (modus-themes-extras-load-theme-emacs-plus ns-system-appearance)))
 
 (defun modus-themes-extras-load-theme-emacs-plus (appearance)
   "Load `modus' theme that matches system APPEARANCE."

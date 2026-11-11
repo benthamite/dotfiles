@@ -9735,6 +9735,9 @@ does not exist."
   (agent-alert-on-ready t)
   ;; Start the phone's new-session folder browser among my repositories.
   (agent-remote-new-session-directory "~/repos/")
+  ;; Bookmark the running profile's package checkouts, where packages such
+  ;; as agent.el are edited, so the phone can start a session there.
+  (agent-remote-folder-bookmarks (list elpaca-sources-directory))
   ;; exit-skill-audit audits exit-time skills monthly and writes `held' when its
   ;; proposals await Pablo (claude/context/skill-audits.md).  Its directories
   ;; are the union of its targets' (exit-skill-audit/targets/*/target.json).

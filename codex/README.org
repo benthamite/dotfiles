@@ -683,6 +683,8 @@ cannot leave Lisp, such as forge's and Slack's, may instead probe the host from
 a subprocess with =simple-extras-probe-url=, as a recorded exception.
 Every =.el= file, including a throwaway script loaded into a live Emacs, starts
 with a =lexical-binding= cookie, since Emacs 31 warns on each load without one.
+Code that runs without a command logs routine progress to =*Messages*= only and
+echoes only failures the user may need to act on.
 
 The documentation guard reads generated-output declarations from the proposed
 commit's manual bytes, including explicit selections and inherited amendments.

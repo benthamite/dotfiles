@@ -36,8 +36,9 @@ refreshed.
 - Keep the echo area for things the user must see. Code that runs without a
   command (hooks, timers, sentinels) logs routine progress and success to
   `*Messages*` only, with `inhibit-message` bound to t, and echoes only
-  failures the user may need to act on. A command the user invoked may report
-  its progress normally.
+  failures and requests the user must act on, such as an approval prompt,
+  even when a desktop notification also shows them, since that notification
+  can be hidden. A command the user invoked may report its progress normally.
 - Never wait on the network on the main thread from code that runs without a
   command: timers, sentinels, filters and hooks. `url-retrieve`, a blocking
   `open-network-stream` and `websocket-open` resolve the host and negotiate TLS

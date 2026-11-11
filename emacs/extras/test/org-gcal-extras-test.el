@@ -14,6 +14,30 @@
     (error nil))
   "Non-nil when org-gcal-extras loaded successfully.")
 
+;;;; sync guards
+
+(ert-deftest org-gcal-extras-test-fetch-not-guarded-twice ()
+  "Fetch commands are guarded only through the sync functions they call.
+Guarding `org-gcal-fetch' as well made the guards refuse its inner call
+to `org-gcal-sync', so fetching never ran."
+  (skip-unless org-gcal-extras-test--loadable)
+  (dolist (guard '(org-gcal-extras--prevent-concurrent-sync
+                   org-gcal-extras--prevent-reentrant-sync))
+    (should (advice-member-p guard 'org-gcal-sync))
+    (should (advice-member-p guard 'org-gcal-sync-buffer))
+    (should-not (advice-member-p guard 'org-gcal-fetch))
+    (should-not (advice-member-p guard 'org-gcal-fetch-buffer))))
+
+;;;; event filters
+
+(ert-deftest org-gcal-extras-test-not-working-location-p ()
+  "Working-location events are filtered out; ordinary events are kept."
+  (skip-unless org-gcal-extras-test--loadable)
+  (should-not (org-gcal-extras-not-working-location-p
+               '(:eventType "workingLocation" :summary "Office")))
+  (should (org-gcal-extras-not-working-location-p
+           '(:eventType "default" :summary "Meeting"))))
+
 ;;;; inhibit-modification-hooks
 
 (ert-deftest org-gcal-extras-test-inhibit-hooks-calls-orig-fun ()

@@ -43,12 +43,12 @@ The package addresses both classes with four layers of guards:
 
 #+vindex: org-gcal-extras--sync-active
 #+findex: org-gcal-extras--prevent-reentrant-sync
-*Inner guard (synchronous re-entrancy).* The variable ~org-gcal-extras--sync-active~ is ~let~-bound by ~org-gcal-extras--prevent-reentrant-sync~ around all public =org-gcal= entry points (~org-gcal-sync~, ~org-gcal-fetch~, ~org-gcal-sync-buffer~, ~org-gcal-fetch-buffer~, ~org-gcal-post-at-point~, and ~org-gcal-delete-at-point~). It catches re-entrant calls that fire during the synchronous portion of an ~org-gcal-*~ call (e.g. a timer that fires inside ~accept-process-output~). Subsequent calls during the same synchronous window are silently suppressed.
+*Inner guard (synchronous re-entrancy).* The variable ~org-gcal-extras--sync-active~ is ~let~-bound by ~org-gcal-extras--prevent-reentrant-sync~ around ~org-gcal-sync~, ~org-gcal-sync-buffer~, ~org-gcal-post-at-point~ and ~org-gcal-delete-at-point~. ~org-gcal-fetch~ and ~org-gcal-fetch-buffer~ are not advised: they only call ~org-gcal-sync~ and ~org-gcal-sync-buffer~, so those guards cover them, and guarding both levels would make the guards refuse the inner call. It catches re-entrant calls that fire during the synchronous portion of an ~org-gcal-*~ call (e.g. a timer that fires inside ~accept-process-output~). Subsequent calls during the same synchronous window are silently suppressed.
 
 #+vindex: org-gcal-extras--sync-chain-active
 #+findex: org-gcal-extras--prevent-concurrent-sync
 #+findex: org-gcal-extras--reset-sync-chain
-*Outer guard (chain-spanning).* The variable ~org-gcal-extras--sync-chain-active~ is set with ~setq~ by ~org-gcal-extras--prevent-concurrent-sync~ at the moment a top-level entry point is invoked, and is held until the deferred chain settles (success or error). It is applied only to top-level sync entry points (~org-gcal-sync~, ~org-gcal-fetch~, ~org-gcal-sync-buffer~, ~org-gcal-fetch-buffer~), so that internal calls within the chain --- such as the per-entry ~org-gcal-post-at-point~ that =org-gcal= itself issues at =org-gcal.el:781= --- are not blocked. A concurrent attempt to start a top-level sync while one is in flight raises a ~user-error~. If the flag gets stuck (e.g.~due to an unhandled error), the command ~org-gcal-extras--reset-sync-chain~ clears it manually, and ~org-gcal--sync-unlock~ also clears it via =:after= advice.
+*Outer guard (chain-spanning).* The variable ~org-gcal-extras--sync-chain-active~ is set with ~setq~ by ~org-gcal-extras--prevent-concurrent-sync~ at the moment a top-level entry point is invoked, and is held until the deferred chain settles (success or error). It is applied only to the top-level sync functions (~org-gcal-sync~ and ~org-gcal-sync-buffer~, which the fetch commands call), so that internal calls within the chain --- such as the per-entry ~org-gcal-post-at-point~ that =org-gcal= itself issues at =org-gcal.el:781= --- are not blocked. A concurrent attempt to start a top-level sync while one is in flight raises a ~user-error~. If the flag gets stuck (e.g.~due to an unhandled error), the command ~org-gcal-extras--reset-sync-chain~ clears it manually, and ~org-gcal--sync-unlock~ also clears it via =:after= advice.
 
 #+findex: org-gcal-extras--avoid-prompt-during-sync-chain
 *Prompt suppression.* The function ~org-gcal-extras--avoid-prompt-during-sync-chain~ is added as =:around= advice to ~org-read-date~. When the outer guard is active and ~deferred:worker~ is on the call stack (i.e.~the prompt is being raised from inside the chain rather than from a user keypress), it signals an error instead of prompting. The error propagates back to the chain's existing ~deferred:error~ handler, which logs it and proceeds with the next entry. Direct user calls and ~org-read-date~ invocations outside the chain are unaffected.
@@ -67,6 +67,9 @@ The inner guard is the same pattern used by ~forge-extras--prevent-reentrant-que
 
 #+findex: org-gcal-extras-not-birthday-p
 The predicate ~org-gcal-extras-not-birthday-p~ returns ~nil~ for events whose Google =eventType= is ="birthday"=, the type Google uses for the birthdays and anniversaries it copies from Google Contacts into the primary calendar. Add it to ~org-gcal-fetch-event-filters~ to keep these events out of the Org calendar file, where each would otherwise appear in the agenda as an overdue deadline.
+
+#+findex: org-gcal-extras-not-working-location-p
+The predicate ~org-gcal-extras-not-working-location-p~ returns ~nil~ for events whose =eventType= is ="workingLocation"=, the all-day "Office" or "Home" markers Google Calendar creates from a Workspace user's working-location setting. Add it to ~org-gcal-fetch-event-filters~ to keep them out of the agenda.
 
 * Commands
 :PROPERTIES:

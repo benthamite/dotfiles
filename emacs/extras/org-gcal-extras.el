@@ -72,10 +72,11 @@ synchronous portion of ORIG-FUN (e.g. a timer that fires inside
     (let ((org-gcal-extras--sync-active t))
       (apply orig-fun args))))
 
+;; `org-gcal-fetch' and `org-gcal-fetch-buffer' are not advised: they only
+;; call `org-gcal-sync' and `org-gcal-sync-buffer', whose guards then cover
+;; them.  Advising both levels made each guard refuse the inner call.
 (dolist (fn '(org-gcal-sync
-              org-gcal-fetch
               org-gcal-sync-buffer
-              org-gcal-fetch-buffer
               org-gcal-post-at-point
               org-gcal-delete-at-point))
   (advice-add fn :around #'org-gcal-extras--prevent-reentrant-sync))
@@ -115,9 +116,7 @@ call `org-gcal-extras--reset-sync-chain' if it is stuck")
   (signal (car-safe err) (cdr-safe err)))
 
 (dolist (fn '(org-gcal-sync
-              org-gcal-fetch
-              org-gcal-sync-buffer
-              org-gcal-fetch-buffer))
+              org-gcal-sync-buffer))
   (advice-add fn :around #'org-gcal-extras--prevent-concurrent-sync))
 
 (defun org-gcal-extras--reset-sync-chain ()
@@ -188,6 +187,13 @@ as events whose `eventType' is \"birthday\".  Use this predicate in
 `org-gcal-fetch-event-filters' to keep them out of the Org calendar
 file, where they would show up in the agenda as overdue deadlines."
   (not (equal (plist-get event :eventType) "birthday")))
+
+(defun org-gcal-extras-not-working-location-p (event)
+  "Return non-nil unless EVENT is a Google Calendar working-location event.
+Workspace calendars add an all-day event such as \"Office\" or \"Home\"
+for each working day, with `eventType' \"workingLocation\".  Use this
+predicate in `org-gcal-fetch-event-filters' to keep them out of the agenda."
+  (not (equal (plist-get event :eventType) "workingLocation")))
 
 ;;;; Functions
 

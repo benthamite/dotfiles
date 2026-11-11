@@ -43,6 +43,9 @@ the "Already tried" list in place.
 
 * Open
 
+- Appearance-switch freezes (2026-11-11 incident): move the theme switch
+  out of =ns-system-appearance-change-functions= into a timer. Pending
+  Pablo's decision.
 - Google Drive's ~23 GB footprint (2026-10-10 finding below). Pablo rejected
   moving large trees (Music, Websites, Dictionaries, Zotero backup) out of
   Drive on 2026-10-10: all that content stays in Drive. Switching My Drive
@@ -86,6 +89,39 @@ the "Already tried" list in place.
   file has loaded. Pending Pablo's decision.
 
 * Incidents
+
+** 2026-11-09 → 11-11, daily ~05:47: macOS Auto appearance switch runs the theme hook inside AppKit's callback, and Emacs's wait loop never resumes until the display wakes (investigation, no change yet)
+
+- Outages 11-09 05:48:50 → 06:56:49, 11-10 05:47:03 → 08:30:11, 11-11
+  05:47:00 → 06:54:36 (PID 72927, Emacs 31.1 emacs-plus). Each began within
+  5 s of the system log's "System appearance change" (sunrise switch to
+  light: 05:48:46, 05:46:58, 05:47:00) and ended 10-60 s after "Display is
+  turned on" (06:56:40, 08:29:14, 06:54:24). The display had been off since
+  the night before. The 11-09 20:02:20 sunset switch (display on) gave a
+  one-minute outage; the 11-10 20:04:46 one none. The 11-07 20:01 and
+  11-05 morning/evening outages fit the pattern, but the log no longer
+  holds those switches.
+- Host idle throughout (load ~4, swap flat, no GCs, footprint flat), so not
+  starvation. State file stale from onset: timers stopped.
+- All 30 stacks (three mornings) show the main thread idle in =read_char=
+  → =wait_reading_process_output= → =ns_select_1= → =-[NSApplication run]=
+  → =mach_msg= wait; no Lisp running. Probes turned "refused" after ~55
+  min, most likely the server's listen backlog filling with unaccepted
+  clients (not checked).
+- emacs-plus =patches/emacs-31/system-appearance.patch=: the
+  =effectiveAppearance= KVO callback calls
+  =run_system_appearance_change_hook=, which, when the hook is non-nil,
+  runs =ns-system-appearance-change-functions= (here
+  =modus-themes-extras-load-theme-emacs-plus=, a full theme load) and
+  =Fredisplay= synchronously under =block_input=, nested inside Emacs's
+  own =[NSApp run]= in =ns_select_1=. Afterwards that run loop is not
+  stopped by its timeout or by the fd handler; only a real NS event (any
+  input, display wake) ends it. Why it stays parked is inferred, not
+  traced in nsterm.m (nested =ns_select= from Lisp or redisplay in the
+  callback are the candidates).
+- Candidate fix: keep the hook empty (the patch then returns before
+  running anything) and apply =ns-system-appearance=, which the patch
+  still updates, from an ordinary timer. Pending Pablo's decision.
 
 ** 2026-11-07 ~23:50 → 11-08 07:54: main thread parked in a kernel Mach call under host starvation from agent-log-redact scrubbers (investigation, no change here)
 

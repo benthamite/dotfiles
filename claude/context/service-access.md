@@ -284,10 +284,17 @@ collected or routed (Pablo, 2026-10-24).
   facts or deadlines), **Decisión** (what Pablo has to decide, and the
   recommendation), **Borrador** (the text, as a quote block, in the language it
   will be sent in) and, if any, **Adjuntos** (absolute paths). Under each
-  heading put `<!-- inbox: CONVERSATION_ID after EVENT_ID -->` (the
-  conversation and the latest event the draft answers). Before adding to the
+  heading put a marker naming the conversation where the item's outcome would
+  show (where Pablo would send the message, or where he or the other person
+  would report it done): `<!-- inbox: CONVERSATION_ID after EVENT_ID -->`
+  (the latest event the item answers), or `<!-- inbox: CONVERSATION_ID since
+  YYYY-MM-DD HH:MM -->` for a chat with no event yet (a first message to a new
+  number). Only when no conversation would ever show it done, `<!-- inbox:
+  task -->`, which check lists for confirmation. Never `none` (2026-11-12: an
+  item marked `none` stayed open after Pablo did it). Before adding to the
   file or pointing Pablo to it, run `inbox-drafts check --project PROJECT`: a
-  draft marked ANSWERED is one Pablo already replied to, so retire it. Each
+  draft marked ANSWERED is one Pablo already replied to, so retire it; fix
+  every item that check or sync reports as UNMARKED or INVALID. Each
   section must be decidable on its own, without the chat. Update a section when new
   messages change it. A draft Pablo approved (a "send" comment processed
   with `m p`, or his explicit OK in chat) is sent by the agent, not staged

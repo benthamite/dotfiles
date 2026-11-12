@@ -59,8 +59,15 @@ FORETHOUGHT_STATUS=$?
 # Report each mailbox that synced to the shared heartbeat monitor, which
 # alerts when one has not synced for two hours (claude/context/alerting.md).
 # A failed report is printed but does not change the sync's exit status.
+# Each success also touches ~/.local/state/mail-sync/ACCOUNT.last-success,
+# which inbox-monitor gates its heartbeat on: mbsync leaves .mbsyncstate
+# untouched when a sync changes nothing, so its mtime cannot show that a
+# quiet mailbox is still syncing.
 report_synced() {
     if [ "$2" -eq 0 ]; then
+        mkdir -p "$HOME/.local/state/mail-sync" &&
+            touch "$HOME/.local/state/mail-sync/$1.last-success" ||
+            echo "Failed to record mail-sync-$1 success marker" >&2
         "$HOME/repos/launchd/bin/launchd-heartbeat.py" send "mail-sync-$1" ||
             echo "Failed to report mail-sync-$1 heartbeat" >&2
     fi

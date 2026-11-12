@@ -56,8 +56,8 @@ class CalendarAuthTests(unittest.TestCase):
         self.assertEqual(
             [call.args[0] for call in run.call_args_list],
             [
-                [calendar.auth.BROKER,"@personal", "cache", "forget", "op://Automation/google-workspace-client-id/password"],
-                [calendar.auth.BROKER,"@personal", "cache", "forget", "op://Automation/google-workspace-client-secret/password"],
+                [calendar.auth.BROKER,"cache", "forget", calendar.auth.CLIENT_OP["epoch"][0]],
+                [calendar.auth.BROKER,"cache", "forget", calendar.auth.CLIENT_OP["epoch"][1]],
                 [calendar.auth.BROKER,"cache", "forget", calendar.auth.REFRESH_TOKEN_OP["epoch"]],
             ],
         )

@@ -1,8 +1,8 @@
 """Shared OAuth helper for the gmail.py and sheets.py wrappers.
 
-Each Google Workspace account has its own refresh token. Both accounts share
-the same OAuth client (client_id, client_secret), differing only in which
-account the refresh token authenticates as. Values are resolved from the
+Each Google Workspace account has its own refresh token. The accounts share
+Pablo's personal OAuth client (client_id, client_secret), except Epoch, which
+keeps Epoch's own client (see CLIENT_OP). Values are resolved from the
 account's canonical secret store when the corresponding env var is absent,
 through the broker's cached read (`op-automations cache read`): LaunchAgents
 build credentials every few minutes, and uncached reads exhausted the personal
@@ -34,9 +34,21 @@ TOKEN_URL = "https://oauth2.googleapis.com/token"
 
 CLIENT_ID_ENV = "GOOGLE_WORKSPACE_CLIENT_ID"
 CLIENT_SECRET_ENV = "GOOGLE_WORKSPACE_CLIENT_SECRET"
-# Items in the personal 1Password Automation vault.
+# Items in the personal 1Password Automation vault: the "Pablo Google tools"
+# client in Pablo's personal GCP project, used by every account except those
+# in CLIENT_OP.
 CLIENT_ID_ITEM = "google-workspace-client-id"
 CLIENT_SECRET_ITEM = "google-workspace-client-secret"
+
+# Epoch's Advanced Protection blocks apps outside Epoch's own GCP projects, so
+# the Epoch account keeps Epoch's "Claude Code Gmail" client
+# (claude-code-gmail-490520), read from the Epoch item that already holds it.
+CLIENT_OP = {
+    "epoch": (
+        "op://Automations/Google Admin OAuth - Staff Data/client_id",
+        "op://Automations/Google Admin OAuth - Staff Data/client_secret",
+    ),
+}
 
 # account name -> env var holding that account's refresh token
 REFRESH_TOKEN_ENV = {
@@ -115,9 +127,12 @@ def preflight(account):
 
 def forget_cached_credentials(account):
     """Drop the broker's cached client and ACCOUNT refresh-token values."""
-    for title in (CLIENT_ID_ITEM, CLIENT_SECRET_ITEM, REFRESH_TOKEN_ITEM.get(account)):
+    client_items = () if account in CLIENT_OP else (CLIENT_ID_ITEM, CLIENT_SECRET_ITEM)
+    for title in (*client_items, REFRESH_TOKEN_ITEM.get(account)):
         if title:
             _broker_cache(["@personal"], "forget", _personal_ref(title))
+    for ref in CLIENT_OP.get(account, ()):
+        _broker_cache([], "forget", ref)
     if account in REFRESH_TOKEN_OP:
         _broker_cache([], "forget", REFRESH_TOKEN_OP[account])
 
@@ -162,8 +177,13 @@ def _read_env(account):
     if not refresh_token and account in REFRESH_TOKEN_OP:
         refresh_token = _op_read(REFRESH_TOKEN_OP[account])
 
-    client_id = os.environ.get(CLIENT_ID_ENV) or _personal_automation(CLIENT_ID_ITEM)
-    client_secret = os.environ.get(CLIENT_SECRET_ENV) or _personal_automation(CLIENT_SECRET_ITEM)
+    if account in CLIENT_OP:
+        id_ref, secret_ref = CLIENT_OP[account]
+        client_id = os.environ.get(CLIENT_ID_ENV) or _op_read(id_ref)
+        client_secret = os.environ.get(CLIENT_SECRET_ENV) or _op_read(secret_ref)
+    else:
+        client_id = os.environ.get(CLIENT_ID_ENV) or _personal_automation(CLIENT_ID_ITEM)
+        client_secret = os.environ.get(CLIENT_SECRET_ENV) or _personal_automation(CLIENT_SECRET_ITEM)
 
     missing = []
     if not client_id:

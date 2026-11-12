@@ -39,7 +39,7 @@ before invoking the installed `gcalcli`. It refuses mismatched account identity
 and never falls back to an independently cached grant. Renew the canonical grant
 with `update-gworkspace-refresh-token --account epoch` when it is revoked.
 
-The personal-account OAuth grants are against the same `claude-code-gmail-490520` GCP project as the Epoch one, with `pablo.stafforini@gmail.com` added as a test user on the OAuth consent screen.
+The personal-account OAuth grants are against Pablo's personal GCP project `banded-arcana-514516-q0`, not Epoch's (see "Auth").
 
 For the **email-triage bot** account (`email-triage@epoch.ai`), use
 `gmail.py --account email-triage`. This account is only for email-triage
@@ -204,12 +204,15 @@ through the Google APIs via `gdoc`, never by assuming one command covers both.
 
 ## Auth
 
-`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper resolve credentials as described below. For the human accounts, the OAuth client (id and secret) is shared and only the refresh token differs per account. These variables are not globally exported from `.zshenv-secrets`; the wrappers accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
+**Two OAuth clients (2026-11-12).** The personal, Forethought and BAISH accounts use "Pablo Google tools desktop", a Desktop client in Pablo's personal GCP project "Pablo Google tools" (`banded-arcana-514516-q0`, owned by `pablo.stafforini@gmail.com`, External, In production, unverified). The Epoch account keeps Epoch's "Claude Code Gmail" client in `claude-code-gmail-490520`, because `pablo@epoch.ai` is enrolled in Advanced Protection, which blocks any app outside Epoch's own projects (`Error 400: policy_enforced`). The personal accounts left the Epoch project when Pablo left Epoch, so its owners hold nothing that reaches his personal data. `CLIENT_OP` in `_gworkspace_auth.py` and `update-gworkspace-refresh-token`, and the `epoch` branch of `gmail-maildir-sync`, encode which account uses which client.
+
+`gmail.py`, `sheets.py`, `bin/gmail-maildir-sync`, and the shared `claude/bin/_gworkspace_auth.py` helper resolve credentials as described below. Each account has its own refresh token, minted against its account's client. These variables are not globally exported from `.zshenv-secrets`; the wrappers accept explicit env vars for one-off overrides, but normally resolve values from the stores below:
 
 | Var | Account | Purpose |
 |---|---|---|
-| `GOOGLE_WORKSPACE_CLIENT_ID` | both | OAuth client ID (shared); `password` field of `google-workspace-client-id` in the personal 1Password `Automation` vault |
-| `GOOGLE_WORKSPACE_CLIENT_SECRET` | both | OAuth client secret (shared); `password` field of `google-workspace-client-secret` in the personal 1Password `Automation` vault |
+| `GOOGLE_WORKSPACE_CLIENT_ID` | personal, forethought, baish | OAuth client ID of "Pablo Google tools desktop"; `password` field of `google-workspace-client-id` in the personal 1Password `Automation` vault |
+| `GOOGLE_WORKSPACE_CLIENT_SECRET` | personal, forethought, baish | its secret; `password` field of `google-workspace-client-secret` in the personal 1Password `Automation` vault |
+| `GOOGLE_WORKSPACE_CLIENT_ID` / `_SECRET` | epoch | Epoch's "Claude Code Gmail" client; fields `client_id` and `client_secret` of `op://Automations/Google Admin OAuth - Staff Data` |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault, injected by the local wrappers |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_BAISH` | baish | refresh token authenticated as `pablostafforini@baish.com.ar`, scopes `gmail.modify` and `spreadsheets`; `password` field of `google-workspace-refresh-token-baish` in the personal 1Password `Automation` vault (exception in `secrets.md`), used by `gmail.py` and `sheets.py` |
@@ -226,22 +229,22 @@ authenticate as a different address. Mail lands in `~/Mail/<account>/`. The emai
 bot account uses the existing local OAuth credential file at
 `~/.gmail-mcp-epoch/credentials/email-triage@epoch.ai.json`.
 
-The Epoch refresh token also powers `gdoc --account epoch` (which has its own auth flow but uses the same OAuth client). The personal refresh token is used only by `gmail.py`/`sheets.py`; `gdoc --account personal` has its own token under `~/.config/gdoc/accounts/personal/`.
+`gdoc` keeps its own token per account under `~/.config/gdoc/accounts/<account>/token.json`; each token embeds the client it was minted with. `bin/gdoc` injects the personal client (`GDOC_CLIENT_ID`/`GDOC_CLIENT_SECRET`) for `gdoc auth`, so new grants for personal, Forethought and BAISH land on it (re-minted 2026-11-12). The `epoch` and `claude` gdoc tokens stay on Epoch's client; re-authorizing one of them needs Epoch's client, not the injected one. `~/.config/gdoc/credentials.json` still holds Epoch's client and is no longer read by `gdoc auth`.
 
-**Other copies of this client's secret.** The Epoch item `op://Automations/Google Admin OAuth - Staff Data` (fields `client_id`, `client_secret`) holds its own copy for the CI staff-data refresh. When the client secret is rotated, update that item in the same step and prove it with a token refresh, then retire the old secret in GCP. The 2026-09-30 rotation missed it, and the staff-data refresh failed with `invalid_client` from 2026-10-08, once the old secret stopped working.
+**Other copies of Epoch's client secret.** The Epoch item `op://Automations/Google Admin OAuth - Staff Data` (fields `client_id`, `client_secret`) holds its own copy for the CI staff-data refresh, and the Epoch account's local tools read it from there. When the client secret is rotated, update that item in the same step and prove it with a token refresh, then retire the old secret in GCP. The 2026-09-30 rotation missed it, and the staff-data refresh failed with `invalid_client` from 2026-10-08, once the old secret stopped working.
 
 If a token expires (`invalid_grant` errors), regenerate it with `claude/bin/update-gworkspace-refresh-token --account <epoch|personal|forethought>`. The helper opens the OAuth browser flow (`--no-browser` prints the URL so it can be opened in the matching Chrome profile), refuses to store a token granted for a different address, updates the appropriate backing store (the Epoch `Automations` vault for the Epoch token, the personal 1Password `Automation` vault for the personal and Forethought tokens, creating the item on first grant), and prints only status metadata, never token values. The Forethought grant on 10 October 2026 succeeded without adding a test user, which shows the shared OAuth app is in production (the "test user" note above predates that). The manual recipe under "Generating a new refresh token" remains available for unusual recovery cases.
 
-## Enabled APIs on `claude-code-gmail-490520`
+## Enabled APIs on both projects
 
-These APIs must be enabled for `gmail.py`, `sheets.py`, `gdoc`, and `gcalcli` to work:
+These APIs must be enabled on `banded-arcana-514516-q0` and `claude-code-gmail-490520` for `gmail.py`, `sheets.py`, `gdoc`, and `gcalcli` to work:
 - Gmail API
 - Google Calendar API
 - Google Drive API
 - Google Docs API
 - Google Sheets API
 
-Enable at: Google Cloud Console > APIs & Services > Library (project `claude-code-gmail-490520`).
+Enable at: Google Cloud Console > APIs & Services > Library, in the project of the account's client.
 
 ## Generating a new refresh token
 
@@ -350,10 +353,11 @@ gdoc auth --account personal
 A browser opens; sign in as `pablo.stafforini@gmail.com`. Expect Google's
 "unverified app" warning (Advanced → continue); that is normal for this client.
 
-The shared OAuth client lives in GCP project `claude-code-gmail-490520` (owned by
-`pablo@epoch.ai`) and is published as "In production", so refresh tokens do not
-expire on a 7-day schedule. Do not switch the app to "Internal": the client is shared across epoch and personal accounts, and Internal would
-restrict it to `@epoch.ai` users.
+The personal client lives in GCP project `banded-arcana-514516-q0` ("Pablo Google
+tools", owned by `pablo.stafforini@gmail.com`) and is published as "In
+production", so refresh tokens do not expire on a 7-day schedule. Publishing
+required a home page, privacy-policy link and authorized domain
+(`stafforini.com`).
 
 ### gmail.py reports "ERROR: missing env var"
 

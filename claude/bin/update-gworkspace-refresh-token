@@ -62,9 +62,18 @@ TOKEN_OP_ENTRIES = {
 
 CLIENT_ID_ENV = "GOOGLE_WORKSPACE_CLIENT_ID"
 CLIENT_SECRET_ENV = "GOOGLE_WORKSPACE_CLIENT_SECRET"
-# Items in the personal 1Password Automation vault.
+# Items in the personal 1Password Automation vault: the "Pablo Google tools"
+# client in Pablo's personal GCP project.
 CLIENT_ID_ITEM = "google-workspace-client-id"
 CLIENT_SECRET_ITEM = "google-workspace-client-secret"
+# Epoch's Advanced Protection blocks outside apps, so the Epoch account keeps
+# Epoch's own client; same mapping as CLIENT_OP in _gworkspace_auth.py.
+CLIENT_OP = {
+    "epoch": (
+        "op://Automations/Google Admin OAuth - Staff Data/client_id",
+        "op://Automations/Google Admin OAuth - Staff Data/client_secret",
+    ),
+}
 
 SCOPES = {
     "epoch": [
@@ -118,6 +127,18 @@ def read_personal_automation(title):
     if result.returncode == 0 and result.stdout:
         return result.stdout.splitlines()[0]
     return ""
+
+
+def read_op(ref):
+    """Return the value at the Epoch 1Password reference REF."""
+    result = subprocess.run(
+        ["op-automations", "read", ref],
+        capture_output=True,
+        check=False,
+        text=True,
+        timeout=45,
+    )
+    return result.stdout.strip() if result.returncode == 0 else ""
 
 
 def op_inject(spec, value):
@@ -192,8 +213,13 @@ def main():
     args = parser.parse_args()
 
     var = TOKEN_VARS[args.account]
-    client_id = os.environ.get(CLIENT_ID_ENV) or read_personal_automation(CLIENT_ID_ITEM)
-    client_secret = os.environ.get(CLIENT_SECRET_ENV) or read_personal_automation(CLIENT_SECRET_ITEM)
+    if args.account in CLIENT_OP:
+        id_ref, secret_ref = CLIENT_OP[args.account]
+        client_id = os.environ.get(CLIENT_ID_ENV) or read_op(id_ref)
+        client_secret = os.environ.get(CLIENT_SECRET_ENV) or read_op(secret_ref)
+    else:
+        client_id = os.environ.get(CLIENT_ID_ENV) or read_personal_automation(CLIENT_ID_ITEM)
+        client_secret = os.environ.get(CLIENT_SECRET_ENV) or read_personal_automation(CLIENT_SECRET_ITEM)
     flow = InstalledAppFlow.from_client_config(
         {
             "installed": {

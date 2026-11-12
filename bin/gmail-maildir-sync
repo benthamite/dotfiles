@@ -40,16 +40,20 @@ for arg in "$@"; do
   prev="$arg"
 done
 
-GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(personal_automation google-workspace-client-id)}"
-GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(personal_automation google-workspace-client-secret)}"
 case "$account" in
   epoch)
+    # Epoch's Advanced Protection blocks outside apps, so this account keeps
+    # Epoch's own OAuth client (CLIENT_OP in claude/bin/_gworkspace_auth.py).
+    GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(op_read 'op://Automations/Google Admin OAuth - Staff Data/client_id')}"
+    GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(op_read 'op://Automations/Google Admin OAuth - Staff Data/client_secret')}"
     GMAIL_SYNC_EMAIL="${EPOCH_EMAIL:-pablo@epoch.ai}"
     GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN:-$(op_read 'op://Automations/Google Workspace OAuth - Pablo Epoch/credential')}"
     ;;
   forethought)
     # Personal Automation vault: see the Forethought exception in
     # claude/context/secrets.md.
+    GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(personal_automation google-workspace-client-id)}"
+    GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(personal_automation google-workspace-client-secret)}"
     GMAIL_SYNC_EMAIL=pablo@forethought.org
     GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT:-$(personal_automation google-workspace-refresh-token-forethought)}"
     ;;

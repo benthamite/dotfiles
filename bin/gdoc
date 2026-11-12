@@ -6,4 +6,16 @@ if [ ! -x "$GDOC_PYTHON" ]; then
     echo 'ERR: the uv-managed gdoc Python environment is missing' >&2
     exit 1
 fi
+# `gdoc auth` mints tokens against the same OAuth client as gmail.py and
+# sheets.py (personal 1Password `Automation` vault; see
+# claude/context/google-services.md, "Auth"). Minted tokens embed the client,
+# so other subcommands need no vault read.
+for arg in "$@"; do
+    if [ "$arg" = auth ]; then
+        GDOC_CLIENT_ID="$(op-automations @personal read 'op://Automation/google-workspace-client-id/password')"
+        GDOC_CLIENT_SECRET="$(op-automations @personal read 'op://Automation/google-workspace-client-secret/password')"
+        export GDOC_CLIENT_ID GDOC_CLIENT_SECRET
+        break
+    fi
+done
 exec "$GDOC_PYTHON" "$HOME/repos/dotfiles/claude/bin/gdoc_download.py" "$@"

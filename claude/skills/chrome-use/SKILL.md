@@ -93,9 +93,15 @@ Browser work may run while he is at the machine, but it cleans up after itself:
   opened outside the group, which the browser tools cannot list, may be found
   and closed with read-only AppleScript queries and `close` commands that
   never activate a window, matching only URLs you visited.
+- Leave each site's settings as you found them. A setting a site keeps in the
+  browser (a mode such as Idea Swipe's "View as Will", a filter, a sort order,
+  a theme) outlives your tab and is still on when Pablo next opens the site.
+  Switch back anything you changed before you close the tab.
 
 Origin: on 19 Oct 2026 a corpus-download agent opened about 20 tabs in a row
-and left three open (one in its group, two opened by download links).
+and left three open (one in its group, two opened by download links). On 12
+Nov 2026 an agent switched Idea Swipe to its read-only "View as Will" mode and
+closed its tab, and that morning Pablo could not rate cards.
 
 ## Classify a failure before recovering
 

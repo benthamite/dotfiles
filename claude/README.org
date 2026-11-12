@@ -652,7 +652,7 @@ trigger names services only (Signal, Fireflies and Granola joined it on
 =chrome-use= skill, which loads before any browser step, owns the browser
 rules: background research uses the web tools first and falls back to live Chrome when they fail (since 2026-11-02; before, it never used Chrome), standing authorization for
 logged-in sites, each agent's browser control, closing every tab an agent
-opens (since 2026-10-19, after a download run left tabs in Pablo's windows), never stealing focus (the agent's own
+opens (since 2026-10-19, after a download run left tabs in Pablo's windows) and switching back any site setting it changed before closing its tab (since 2026-11-12, after an agent left Idea Swipe in its read-only "View as Will" mode), never stealing focus (the agent's own
 tab or tab group comes only from the browser tool's own calls, work only in
 those tabs, no other new windows, including visible windows opened by
 Playwright or similar scripts, no activating windows, =chrome-profile-open=

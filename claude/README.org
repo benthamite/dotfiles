@@ -1412,7 +1412,10 @@ composer, recognised by a SHA-256 under =$XDG_STATE_HOME/copy-slack-draft/=;
 other text there is never replaced. Its JSON status distinguishes =refused=
 (unsent text it did not stage; nothing changed) from =uncertain=, and carries a
 =reason= when the failure is one of its own messages. Other Emacs error text is
-withheld because it could quote the composer.
+withheld because it could quote the composer. Since 2026-11-12 every =uncertain=
+result carries a reason: a timeout, the exit code, or the shape of an
+unrecognised reply; error messages are stripped of text properties first,
+because a propertized one printed as =#("…" …)= and lost its reason.
 
 =bin/slack.py= reads each workspace's session credentials through
 =op-automations cache read=, so an agent that runs it hundreds of times spends

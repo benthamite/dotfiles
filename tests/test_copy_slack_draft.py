@@ -605,6 +605,51 @@ class CopySlackDraftTest(unittest.TestCase):
                 self.mod.run_emacs_eval("(ignore)", "/tmp/socket")
         self.assertEqual(caught.exception.reason, "Target was not selected")
 
+    def test_unacknowledged_replies_report_their_shape_not_their_text(self):
+        # 2026-11-12: a thread draft came back "uncertain" with no reason, so
+        # the cause could not be recovered. Every uncertain path names one.
+        cases = [
+            (subprocess.CompletedProcess([], 1, "", "boom"), "emacsclient exited 1"),
+            (subprocess.CompletedProcess([], 0, "", ""), "Emacs returned nothing"),
+            (subprocess.CompletedProcess([], 0, "draft-ring-failed\n", ""), "Emacs returned draft-ring-failed"),
+            (subprocess.CompletedProcess([], 0, '"PRIVATE composer text"', ""), "Emacs returned an unexpected value (withheld)"),
+        ]
+        for completed, reason in cases:
+            with self.subTest(reason=reason), mock.patch.object(self.mod.subprocess, "run", return_value=completed):
+                with self.assertRaises(self.mod.UncertainResult) as caught:
+                    self.mod.run_emacs_eval("(ignore)", "/tmp/socket")
+                self.assertEqual(caught.exception.reason, reason)
+                self.assertNotIn("PRIVATE", caught.exception.reason)
+
+    def test_propertized_error_message_keeps_its_reason(self):
+        # 2026-11-12: an error whose %s argument carried text properties
+        # printed as #("…" …), FAILURE could not parse it, and the reason was
+        # lost. The wrapper now strips properties before printing.
+        with mock.patch.object(self.mod.subprocess, "run", side_effect=lambda argv, **_: subprocess.CompletedProcess(argv, 0, "", "")) as run:
+            with self.assertRaises(self.mod.UncertainResult):
+                self.mod.run_emacs_eval(
+                    "(error \"Slack reply input is not available in %s\" (propertize \"*thread*\" 'face 'bold))",
+                    "/tmp/socket")
+            expression = run.call_args.args[0][-1]
+        printed = subprocess.run(["emacs", "-Q", "--batch", "--eval", f"(prin1 {expression})"],
+                                 capture_output=True, text=True, timeout=10).stdout
+        with mock.patch.object(self.mod.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, printed, "")):
+            with self.assertRaises(self.mod.UncertainResult) as caught:
+                self.mod.run_emacs_eval("(ignore)", "/tmp/socket")
+        self.assertEqual(caught.exception.reason, "Slack reply input is not available in *thread*")
+
+    def test_main_reports_a_timeout_reason(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = pathlib.Path(directory) / "draft"
+            path.write_text("draft")
+            path.chmod(0o600)
+            timeout = subprocess.TimeoutExpired(["emacsclient"], 65)
+            with mock.patch.object(sys, "argv", ["copy", "--socket", "/tmp/socket", "--file", str(path), "--channel", "C12345678"]), mock.patch.object(self.mod, "validate_socket", return_value="/tmp/socket"), mock.patch.object(self.mod.subprocess, "run", side_effect=timeout), mock.patch("sys.stdout", new_callable=io.StringIO) as output:
+                self.assertEqual(self.mod.main(), 1)
+        result = json.loads(output.getvalue())
+        self.assertEqual((result["status"], result["stage"]), ("uncertain", "composer"))
+        self.assertIn("no answer within 65 s", result["reason"])
+
     def test_main_reports_refusal_with_reason(self):
         with tempfile.TemporaryDirectory() as directory:
             path = pathlib.Path(directory) / "draft"

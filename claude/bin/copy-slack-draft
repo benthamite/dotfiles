@@ -44,7 +44,10 @@ FAILURE = re.compile(r'\(draft-stage-failed\s+"((?:[^"\\]|\\.)*)"\)', re.S)
 
 def run_emacs_eval(expr: str, socket: str) -> str:
     expr = ("(let ((debug-on-error nil)) (condition-case err " + expr
-            + " (error (list 'draft-stage-failed (error-message-string err)))))")
+            # A propertized %s argument would print as #("…" …), which FAILURE
+            # cannot parse; the reason was then lost (2026-11-12).
+            + " (error (list 'draft-stage-failed"
+              " (substring-no-properties (error-message-string err))))))")
     try:
         result = subprocess.run(
             ["emacsclient", "--socket-name", socket,
@@ -52,7 +55,10 @@ def run_emacs_eval(expr: str, socket: str) -> str:
             check=False, capture_output=True, text=True, timeout=65,
         )
     except subprocess.TimeoutExpired:
-        raise TimeoutError("Emacs result uncertain; do not retry") from None
+        # Emacs answers server requests whenever it waits for input, so only
+        # Lisp that runs without waiting (or a stalled Slack fetch) gets here.
+        raise TimeoutError("emacsclient got no answer within 65 s; "
+                           "check the composer before retrying") from None
     except (UnicodeError, subprocess.SubprocessError):
         raise UncertainResult("Emacs result could not be decoded") from None
     except OSError:
@@ -70,7 +76,18 @@ def run_emacs_eval(expr: str, socket: str) -> str:
         "draft-composer-cleared", "draft-composer-absent", "draft-composer-kept",
         "draft-sent",
     }:
-        raise UncertainResult("Emacs staging was not acknowledged")
+        # Name the reply's shape, never its text: it could quote the composer.
+        if result.returncode != 0:
+            shape = f"emacsclient exited {result.returncode}"
+        elif not out:
+            shape = "Emacs returned nothing"
+        elif re.fullmatch(r"[a-z][a-z-]*", out):
+            shape = f"Emacs returned {out}"
+        elif out.startswith("(draft-stage-failed"):
+            shape = "Emacs reported an unparsed staging error (withheld)"
+        else:
+            shape = "Emacs returned an unexpected value (withheld)"
+        raise UncertainResult("Emacs staging was not acknowledged", shape)
     return out
 
 
@@ -792,6 +809,13 @@ def main() -> int:
         result["status"] = "uncertain"
         if getattr(error, "reason", None):
             result["reason"] = error.reason
+        elif isinstance(error, TimeoutError):
+            result["reason"] = str(error)
+        elif isinstance(error, KeyboardInterrupt):
+            result["reason"] = "interrupted"
+        else:
+            # Fixed text: a future message could carry draft content.
+            result["reason"] = "Emacs result was not acknowledged"
         return 1
     except (OSError, UnicodeError, ValueError, RuntimeError) as error:
         result["reason"] = str(error)

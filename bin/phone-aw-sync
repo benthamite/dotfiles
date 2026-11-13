@@ -1,0 +1,79 @@
+#!/data/data/com.termux/files/usr/bin/bash
+# phone-aw-sync: copy ActivityWatch for Android's sync folder to the Mac.
+#
+# Runs in Termux on Pablo's phone (installed as ~/bin/aw-sync by
+# phone-aw-sync-install, run by cron every 15 minutes, next to org-sync).
+# ActivityWatch for Android (0.14.3 or later, Sync turned on) writes its data
+# to the folder picked in its Sync settings: /sdcard/ActivityWatchSync, laid
+# out as {hostname}/{device_id}/sync.db. This copies that folder over
+# Tailscale to the Mac's ~/.local/share/aw-phone-sync/, where the time
+# tracker (~/repos/time-tracker) reads it as the phone's app timeline.
+#
+# The Mac being asleep or away is not a failure: sync.db is cumulative, so the
+# next run that reaches the Mac copies everything missed. Such a run is logged
+# and still reports a heartbeat (nothing to do, no alert; see dotfiles
+# claude/context/alerting.md). Any other failure withholds the heartbeat and
+# sends an immediate alert. Monitor: aw-phone-sync, with a token scoped to it
+# (~/.config/aw-sync/heartbeat-token).
+
+set -u
+
+readonly source_dir="/sdcard/ActivityWatchSync"
+readonly mac="$(cat "$HOME/.config/aw-sync/mac" 2>/dev/null)"   # USER@HOST of the Mac on the tailnet; the installer writes it
+readonly dest=".local/share/aw-phone-sync/"
+readonly state_dir="$HOME/.local/state/aw-sync"
+readonly log_file="$state_dir/log"
+readonly lock_dir="$state_dir/lock"
+readonly token_file="$HOME/.config/aw-sync/heartbeat-token"
+readonly heartbeat_url="https://launchd-heartbeat.hingedaily.workers.dev"
+readonly monitor="aw-phone-sync"
+readonly ssh_opts="-o BatchMode=yes -o ConnectTimeout=15"
+
+mkdir -p "$state_dir"
+exec >>"$log_file" 2>&1
+
+log() { printf '%s %s\n' "$(date '+%F %T')" "$*"; }
+
+report() { # report heartbeat | report alert TEXT
+  [ -r "$token_file" ] || return 0
+  local route="$1"; shift
+  curl --silent --show-error --fail --max-time 15 \
+    -X POST -H "Authorization: Bearer $(cat "$token_file")" \
+    -A "launchd-heartbeat-client/1" ${1:+--data-binary "$1"} \
+    "$heartbeat_url/$route/$monitor" >/dev/null ||
+    log "$route could not be sent"
+}
+
+# A lock older than 30 minutes belongs to a run that was killed.
+if ! mkdir "$lock_dir" 2>/dev/null; then
+  if [ -n "$(find "$lock_dir" -maxdepth 0 -mmin +30 2>/dev/null)" ]; then
+    rmdir "$lock_dir" && mkdir "$lock_dir" || exit 0
+    log "removed a stale lock"
+  else
+    exit 0
+  fi
+fi
+trap 'rmdir "$lock_dir"' EXIT
+
+fail() {
+  log "FAILED: $*"
+  report alert "Phone ActivityWatch sync failed: $*. Log: ~/.local/state/aw-sync/log in Termux."
+  exit 1
+}
+
+if [ -z "$(find "$source_dir" -name sync.db 2>/dev/null | head -1)" ]; then
+  fail "$source_dir holds no sync.db: in ActivityWatch, check Sync is on and its folder is ActivityWatchSync"
+fi
+
+if ! ssh $ssh_opts "$mac" true 2>/dev/null; then
+  log "Mac unreachable; skipped (the next run copies what was missed)"
+  report heartbeat
+  exit 0
+fi
+
+rsync -a --partial -e "ssh $ssh_opts" "$source_dir/" "$mac:$dest" ||
+  fail "rsync to the Mac"
+
+log "copied to the Mac"
+touch "$state_dir/success"
+report heartbeat

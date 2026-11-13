@@ -267,7 +267,14 @@ Choose your scopes by what the token will be used for:
   `calendar.calendarlist.readonly`, `spreadsheets`. Calendar writes are limited
   to secondary calendars created by this OAuth application; calendar-list
   access is read-only and prevents duplicate managed calendars after local
-  state loss.
+  state loss. "This OAuth application" means the client ID: moving the
+  personal account to another OAuth client orphans every calendar the old
+  client created (the API returns 404 though the calendar is still listed).
+  When changing the client, delete each such calendar in the Calendar web UI
+  and let its job recreate it; today that is only "Birthdays (managed)"
+  (`bin/sync-google-birthdays`, which also needs its state file's
+  `calendar_id` removed). Origin: the 12 Nov 2026 client move broke that
+  sync on 13 Nov.
 
 ```bash
 SCOPES="https://mail.google.com/ https://www.googleapis.com/auth/spreadsheets"

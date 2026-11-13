@@ -103,8 +103,9 @@ screenshot.
 | 10-27 | Claude Code OAuth token (last 29 characters only) | a | AppleScript read of a Terminal window after `claude setup-token`; the mask caught only the first of the token's two wrapped lines |
 | 11-01 | Guest Wi-Fi password | b | a subagent read a mailbox file while replaying messages through a design |
 | 11-03 | Airtable PAT (regenerated before use) | d | screenshot of the token-created dialog |
+| 11-13 | GitHub CLI OAuth token (base64 in a git auth header) | a | a script's `git clone` timed out and Python's `TimeoutExpired` traceback printed the argv holding the header; the script now passes it through `GIT_CONFIG_*` env vars |
 
-Tally: page/screenshot 10, command output 9, file read 3, **typed literal 0**.
+Tally: page/screenshot 10, command output 10, file read 3, **typed literal 0**.
 
 ## Protection in place (2026-10-01)
 

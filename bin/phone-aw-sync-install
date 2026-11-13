@@ -7,31 +7,38 @@
 # It installs rsync, copies phone-aw-sync from the Mac to ~/bin/aw-sync, fetches
 # the monitor-scoped heartbeat token if the Mac has staged it (see
 # ~/.local/state/aw-phone-sync/heartbeat-token-for-phone on the Mac), adds the
-# cron line, and runs one sync.
+# cron line, and runs one sync. The body is one function called with stdin
+# from /dev/null: bash reads this script from the ssh pipe, so a command that
+# read stdin (ssh, scp) would otherwise swallow the rest of it.
 
 set -eu
 
-readonly mac="${AW_SYNC_MAC:?set AW_SYNC_MAC to USER@HOST of the Mac}"
+main() {
 
-pkg install -y rsync >/dev/null
-mkdir -p "$HOME/bin" "$HOME/.config/aw-sync" &&
+  local mac="${AW_SYNC_MAC:?set AW_SYNC_MAC to USER@HOST of the Mac}"
+
+  pkg install -y rsync >/dev/null
+  mkdir -p "$HOME/bin" "$HOME/.config/aw-sync" &&
     printf '%s\n' "$mac" > "$HOME/.config/aw-sync/mac"
-scp -q "$mac:repos/dotfiles/bin/phone-aw-sync" "$HOME/bin/aw-sync"
-chmod +x "$HOME/bin/aw-sync"
+  scp -q "$mac:repos/dotfiles/bin/phone-aw-sync" "$HOME/bin/aw-sync"
+  chmod +x "$HOME/bin/aw-sync"
 
-if ssh "$mac" test -r .local/state/aw-phone-sync/heartbeat-token-for-phone; then
-  (umask 077; scp -q "$mac:.local/state/aw-phone-sync/heartbeat-token-for-phone" \
-    "$HOME/.config/aw-sync/heartbeat-token")
-  echo "heartbeat token installed"
-else
-  echo "no heartbeat token staged on the Mac yet; syncing without heartbeats"
-fi
+  if ssh "$mac" test -r .local/state/aw-phone-sync/heartbeat-token-for-phone; then
+    (umask 077; scp -q "$mac:.local/state/aw-phone-sync/heartbeat-token-for-phone" \
+      "$HOME/.config/aw-sync/heartbeat-token")
+    echo "heartbeat token installed"
+  else
+    echo "no heartbeat token staged on the Mac yet; syncing without heartbeats"
+  fi
 
-line="*/15 * * * * $HOME/bin/aw-sync"
-if ! crontab -l 2>/dev/null | grep -qF "$HOME/bin/aw-sync"; then
-  (crontab -l 2>/dev/null; echo "$line") | crontab -
-  echo "cron line added"
-fi
+  line="*/15 * * * * $HOME/bin/aw-sync"
+  if ! crontab -l 2>/dev/null | grep -qF "$HOME/bin/aw-sync"; then
+    (crontab -l 2>/dev/null; echo "$line") | crontab -
+    echo "cron line added"
+  fi
 
-"$HOME/bin/aw-sync" && echo "first sync: OK" ||
-  { echo "first sync FAILED:"; tail -3 "$HOME/.local/state/aw-sync/log"; }
+  "$HOME/bin/aw-sync" && echo "first sync: OK" ||
+    { echo "first sync FAILED:"; tail -3 "$HOME/.local/state/aw-sync/log"; }
+}
+
+main </dev/null

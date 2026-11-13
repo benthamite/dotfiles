@@ -1,0 +1,52 @@
+#+title: org-linear-extras: Extensions for org-linear
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: org-linear-extras.info
+#+texinfo_filename: org-linear-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Org Linear Extras: (org-linear-extras)
+#+texinfo_dir_desc: Extensions for org-linear
+
+This manual describes the features and customization options for the Emacs Lisp file =org-linear-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+=org-linear-extras.el= extends =org-linear= with a model-backed merge of description edits. In org-linear's in-place layout, Org is the primary copy of a task, and a description edited in Linear normally replaces the heading's body. When the body holds markup that Markdown cannot carry, such as a source block's header arguments, that replacement would lose it, so org-linear asks ~org-linear-merge-body-function~ to merge the edit instead. This package supplies such a function, which asks a model through =gptel=.
+
+* Merging description edits
+:PROPERTIES:
+:CUSTOM_ID: h:merging
+:END:
+
+#+findex: org-linear-extras-merge-body
+~org-linear-extras-merge-body~ is meant as the value of ~org-linear-merge-body-function~. It sends the model the current Org body, the Markdown the body was last converted to and Linear's new Markdown, and asks for the Org body that applies the edit while keeping the Org-only markup of the passages that did not change. It passes the reply to org-linear, stripped of any code fence around it, or =nil= if the request failed. org-linear uses the reply only if it converts to Linear's text, so a wrong merge leaves both sides as they were and is retried at the next sync.
+
+#+vindex: org-linear-extras-merge-backend
+#+vindex: org-linear-extras-merge-model
+~org-linear-extras-merge-backend~ names the gptel backend that answers, ="Claude"= by default, and ~org-linear-extras-merge-model~ the model, or =nil= for ~gptel-model~. The request uses no tools and no gptel context.
+
+#+vindex: org-linear-extras-merge-system
+The instructions the model gets are in ~org-linear-extras-merge-system~.
+
+* Indices
+:PROPERTIES:
+:CUSTOM_ID: h:indices
+:END:
+
+** Function index
+:PROPERTIES:
+:INDEX: fn
+:CUSTOM_ID: h:function-index
+:END:
+
+** Variable index
+:PROPERTIES:
+:INDEX: vr
+:CUSTOM_ID: h:variable-index
+:END:

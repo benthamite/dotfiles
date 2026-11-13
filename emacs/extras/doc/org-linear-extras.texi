@@ -1,0 +1,82 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename org-linear-extras.info
+@settitle org-linear-extras: Extensions for org-linear
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Org Linear Extras: (org-linear-extras). Extensions for org-linear.
+@end direntry
+
+@finalout
+@titlepage
+@title org-linear-extras: Extensions for org-linear
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top org-linear-extras: Extensions for org-linear
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{org-linear-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Merging description edits::
+* Indices::
+
+@detailmenu
+--- The Detailed Node Listing ---
+
+Indices
+
+* Function index::
+* Variable index::
+
+@end detailmenu
+@end menu
+
+@node Overview
+@chapter Overview
+
+@samp{org-linear-extras.el} extends @samp{org-linear} with a model-backed merge of description edits. In org-linear's in-place layout@comma{} Org is the primary copy of a task@comma{} and a description edited in Linear normally replaces the heading's body. When the body holds markup that Markdown cannot carry@comma{} such as a source block's header arguments@comma{} that replacement would lose it@comma{} so org-linear asks @code{org-linear-merge-body-function} to merge the edit instead. This package supplies such a function@comma{} which asks a model through @samp{gptel}.
+
+@node Merging description edits
+@chapter Merging description edits
+
+@findex org-linear-extras-merge-body
+@code{org-linear-extras-merge-body} is meant as the value of @code{org-linear-merge-body-function}. It sends the model the current Org body@comma{} the Markdown the body was last converted to and Linear's new Markdown@comma{} and asks for the Org body that applies the edit while keeping the Org-only markup of the passages that did not change. It passes the reply to org-linear@comma{} stripped of any code fence around it@comma{} or @samp{nil} if the request failed. org-linear uses the reply only if it converts to Linear's text@comma{} so a wrong merge leaves both sides as they were and is retried at the next sync.
+
+@vindex org-linear-extras-merge-backend
+@vindex org-linear-extras-merge-model
+@code{org-linear-extras-merge-backend} names the gptel backend that answers@comma{} @samp{"Claude"} by default@comma{} and @code{org-linear-extras-merge-model} the model@comma{} or @samp{nil} for @code{gptel-model}. The request uses no tools and no gptel context.
+
+@vindex org-linear-extras-merge-system
+The instructions the model gets are in @code{org-linear-extras-merge-system}.
+
+@node Indices
+@chapter Indices
+
+@menu
+* Function index::
+* Variable index::
+@end menu
+
+@node Function index
+@section Function index
+
+@printindex fn
+
+@node Variable index
+@section Variable index
+
+@printindex vr
+
+@bye

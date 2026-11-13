@@ -238,6 +238,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#org-linear][org-linear]]
+  - [[#org-linear-extras][org-linear-extras]]
   - [[#calfw][calfw]]
   - [[#calfw-org][calfw-org]]
   - [[#calfw-blocks][calfw-blocks]]
@@ -5759,6 +5760,22 @@ I use it for the Autumn Sprint's board. Its background syncs read the Linear key
   (with-eval-after-load 'vulpea-extras
     (add-to-list 'vulpea-extras-agenda-files-base org-linear-file))
   (org-linear-auto-sync-mode))
+#+end_src
+
+** =org-linear-extras=
+:PROPERTIES:
+:ID:       2E617275-327F-409A-B064-BBE98829DB07
+:END:
+/[[file:extras/org-linear-extras.el][org-linear-extras]] collects my extensions for =org-linear=./
+
+It merges, with a model, description edits made in Linear into Org bodies whose markup Markdown cannot carry, for org-linear's in-place layout.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package org-linear-extras
+  :after (org-linear gptel)
+  :demand t
+  :custom
+  (org-linear-merge-body-function #'org-linear-extras-merge-body))
 #+end_src
 
 ** =calfw=

@@ -76,20 +76,6 @@ Matches the pattern `Screenshot YYYY-MM-DD at HH.MM.SS.EXT'.")
 
 ;;;; Functions
 
-;; christiantietze.de/posts/2021/06/emacs-trash-file-macos/
-(defun files-extras-system-move-file-to-trash (filename)
-  "Move file or directory named FILENAME to the recycle bin.
-This function overrides `system-move-file-to-trash' to trash
-files using the `trash' utility.  Deleting files in this way
-supports the \"Put Back\" functionality in macOS."
-  (unless (executable-find "trash")
-    (user-error "`trash' not found; please install it (e.g. `brew install trash')"))
-  (let ((exit-code (call-process "trash" nil nil nil filename)))
-    (unless (zerop exit-code)
-      (error "Failed to trash `%s' (exit code %d)" filename exit-code))))
-
-(advice-add 'system-move-file-to-trash :override #'files-extras-system-move-file-to-trash)
-
 (defun files-extras-save-and-revert-buffer ()
   "Save buffer, then revert it."
   (interactive)

@@ -487,16 +487,15 @@ but commented out by default; uncomment it if you need this behavior.
 :CUSTOM_ID: h:trash-and-autosave
 :END:
 
-#+findex: files-extras-system-move-file-to-trash
 #+findex: files-extras-bury-scratch-buffer
 #+findex: files-extras-auto-save-alert
 #+findex: files-extras-make-hashed-auto-save-file-name-a
 #+findex: files-extras-make-hashed-backup-file-name-a
-The function ~files-extras-system-move-file-to-trash~ overrides
-~system-move-file-to-trash~ (via =:override= advice) to use the
-external =trash= utility on macOS.  This preserves Finder's "Put Back"
-functionality, which the default Emacs trash implementation does not
-support.
+The package leaves trashing to Emacs's built-in macOS
+~system-move-file-to-trash~, which calls the system trash API inside
+Emacs and records Finder's "Put Back" location.  It does not shell out
+to the external =trash= utility: a process that has used the trash API
+can hang while exiting, and Emacs would freeze waiting for it.
 
 The function ~files-extras-bury-scratch-buffer~ is added to
 ~kill-buffer-query-functions~.  It intercepts attempts to kill the

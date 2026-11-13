@@ -26,12 +26,19 @@ per-tool chains in the order the old registrations ran: =Bash= runs
 =dispatcher= (secret leak, untrusted execution, sensitive read, destructive,
 Ahrefs, walk-list, =core.hooksPath=, GitHub write, Elpaca rebuild and
 long-pipeline checks, then output wrapping), =dirty_tree=, =launchagent=,
-=retired_secrets= and =search_root=; =Read= runs =sensitive_read= and
+=retired_secrets=, =search_root= and =elisp_cookie=; =Read= runs =sensitive_read= and
 =walk_list=, and =Grep= adds =search_root=; =Edit=, =Write= and =NotebookEdit=
 run =secret_leak=, =retired_secrets=, =elpaca_dotfiles_edit=, =elisp_skill=,
-=texi_edit=, =walk_list= and =launchagent=; =Glob= runs =walk_list= and
+=texi_edit=, =walk_list=, =launchagent= and =elisp_cookie=; =Glob= runs =walk_list= and
 =search_root=; =SendMessage= runs =stale_team=. A denial from any policy denies, with
 the reasons joined in chain order.
+
+=elisp_cookie= denies writing a new =.el= file (=Write=, a shell heredoc
+redirected with =>= or =tee=, or Codex =apply_patch= =Add File=) whose first
+line, or second after =#!=, lacks a =lexical-binding= cookie. Emacs 31 warns on
+every load of such a file, and agents load scratch =.el= files into Pablo's
+Emacs, so each poll added a warning (2026-11-10 and 2026-11-13). Codex runs it
+on its shell and patch chains too.
 
 The Python classifiers in this directory (=lib-op-policy.py=,
 =lib-process-output-policy.py=, =lib-function-body-policy.py=,

@@ -484,7 +484,9 @@ a subprocess with =simple-extras-probe-url=, as a recorded exception.
 Code that runs without a command logs routine progress to =*Messages*= only and
 echoes only failures and requests the user must act on.
 Every =.el= file, including a throwaway script loaded into a live Emacs, starts
-with a =lexical-binding= cookie, since Emacs 31 warns on each load without one.
+with a =lexical-binding= cookie, since Emacs 31 warns on each load without one. The
+guard policy =elisp_cookie= enforces this for new files, heredocs included
+(=claude/hooks/README.org=).
 
 The documentation guard reads generated-output declarations from the proposed
 commit's manual bytes, including explicit selections and inherited amendments.

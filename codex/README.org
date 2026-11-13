@@ -924,7 +924,7 @@ tools does not apply: Codex has no =Read=, =Grep= or =Glob= tool, so its
 strict =JSON.parse= reading of the top-level =tool_name=, which never runs
 for Codex. Each former guard hook is a policy module in
 =lib/python/agent_guard/policies/= (=secret_leak=, =sensitive_read=,
-=untrusted_execution=, =destructive=, =github_write= and so on), run per tool
+=untrusted_execution=, =destructive=, =github_write=, =elisp_cookie= and so on), run per tool
 in the order the old registrations did. For credential-prone shell commands
 the last policy, =codex_wrap=, returns an =updatedInput= that pipes the output
 through =claude/hooks/redact-secrets.sh=, keeping the exit status. The

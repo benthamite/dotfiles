@@ -27,9 +27,10 @@ the order the old registrations ran. The shell tools (=Bash=, =exec_command=,
 =functions.exec=, =functions.exec_command=) run =sensitive_read=, =secret_leak=,
 =ahrefs=, =github_write=, =destructive=, =walk_list=, =elpaca_rebuild=,
 =dirty_tree=, =launchagent=, =untrusted_execution=, =hookspath=,
-=retired_secrets=, =search_root= and finally =codex_wrap=; =apply_patch=, =Edit= and =Write=
+=retired_secrets=, =search_root=, =elisp_cookie= and finally =codex_wrap=; =apply_patch=, =Edit= and =Write=
 run =secret_leak=, =elpaca_dotfiles_edit=, =texi_edit=, =walk_list=,
-=launchagent= and =retired_secrets=. A denial from any policy denies, with the
+=launchagent=, =retired_secrets= and =elisp_cookie= (new =.el= files need a
+=lexical-binding= cookie; see =claude/hooks/README.org=). A denial from any policy denies, with the
 reasons joined in chain order.
 
 =agent_guard.codex_payload= and =agent_guard.codex_paths= are the engine's

@@ -406,6 +406,7 @@ class CalendarApi:
         headers = {"Authorization": f"Bearer {self.token}"}
         if data is not None:
             headers["Content-Type"] = "application/json"
+        connection_failed = False
         for attempt in range(8):
             request = urllib.request.Request(
                 url, data=data, headers=headers, method=method
@@ -416,6 +417,11 @@ class CalendarApi:
                 return json.loads(raw) if raw else {}
             except urllib.error.HTTPError as error:
                 detail = error.read().decode(errors="replace")
+                # Event IDs are deterministic, so a 409 on an insert retried
+                # after a dropped connection means the first attempt landed;
+                # apply_changes verifies the stored content afterwards.
+                if error.code == 409 and method == "POST" and connection_failed:
+                    return {}
                 retryable = error.code in (429, 500, 502, 503, 504)
                 if error.code == 403:
                     try:
@@ -433,7 +439,15 @@ class CalendarApi:
                         f"Calendar API {method} {path} failed: "
                         f"HTTP {error.code}: {detail}"
                     ) from error
-                time.sleep(min(60, 2 ** attempt) + random.uniform(0, 1))
+            except (urllib.error.URLError, ConnectionError, TimeoutError) as error:
+                # Dropped connections are transient: one used to end a
+                # ~1,270-insert run after a few hundred writes.
+                connection_failed = True
+                if attempt == 7:
+                    raise RuntimeError(
+                        f"Calendar API {method} {path} failed: {error}"
+                    ) from error
+            time.sleep(min(60, 2 ** attempt) + random.uniform(0, 1))
 
     def pages(self, path, params=None):
         """Yield items across all result pages for PATH."""

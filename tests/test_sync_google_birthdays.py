@@ -298,6 +298,41 @@ class BirthdayTests(unittest.TestCase):
             self.assertEqual(api.request("GET", "/test"), {})
         sleep.assert_called_once_with(1)
 
+    def test_dropped_connection_is_retried(self):
+        response = mock.MagicMock()
+        response.__enter__.return_value.read.return_value = b'{"ok": 1}'
+        api = MODULE.CalendarApi("token")
+        dropped = urllib.error.URLError(BrokenPipeError(32, "Broken pipe"))
+        with (
+            mock.patch.object(MODULE.urllib.request, "urlopen",
+                              side_effect=[ConnectionResetError(54), dropped, response]),
+            mock.patch.object(MODULE.time, "sleep"),
+        ):
+            self.assertEqual(api.request("GET", "/test"), {"ok": 1})
+
+    def test_insert_409_after_dropped_connection_counts_as_landed(self):
+        conflict = urllib.error.HTTPError(
+            "https://example.invalid", 409, "Conflict", {}, io.BytesIO(b"{}")
+        )
+        self.addCleanup(conflict.close)
+        api = MODULE.CalendarApi("token")
+        with (
+            mock.patch.object(MODULE.urllib.request, "urlopen",
+                              side_effect=[ConnectionResetError(54), conflict]),
+            mock.patch.object(MODULE.time, "sleep"),
+        ):
+            self.assertEqual(api.request("POST", "/events", body={"id": "x"}), {})
+
+    def test_insert_409_without_dropped_connection_still_fails(self):
+        conflict = urllib.error.HTTPError(
+            "https://example.invalid", 409, "Conflict", {}, io.BytesIO(b"{}")
+        )
+        self.addCleanup(conflict.close)
+        api = MODULE.CalendarApi("token")
+        with mock.patch.object(MODULE.urllib.request, "urlopen", side_effect=[conflict]):
+            with self.assertRaises(RuntimeError):
+                api.request("POST", "/events", body={"id": "x"})
+
     def test_missing_state_adopts_only_marked_existing_calendar(self):
         class Api:
             def pages(self, path, params=None):

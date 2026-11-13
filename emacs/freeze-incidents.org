@@ -90,6 +90,29 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-13 10:38 → ~11:15: org-linear preview visited 2,376 notes files in the live Emacs (self-inflicted; fixed in org-linear =d8be4dd=)
+
+- An agent ran =M-x org-linear-preview= for the new in-place personal profile
+  through =emacsclient=; the client timed out after 290 s and the watchdog
+  logged the server parked in the debugger at 10:38:59 ("entering a
+  function").
+- Cause: the scan's pre-filter regexp, ="^\\*+ +[[:upper:]]+ "=, ran under
+  the default =case-fold-search=, so =[[:upper:]]= matched any heading word
+  and the scan visited 2,376 of 2,454 notes files instead of the 113 with
+  TODO headings, each through =find-file-noselect= with every
+  =find-file-hook=. The old preview also never killed those buffers: Emacs
+  held 2,833 buffers afterwards (554 before).
+- Measured in =emacs -Q --batch= over the same tree: 207 s before the fix;
+  after it, 3 s to read all files plus 8 s to open and index the 113.
+- Fix: org-linear =d8be4dd= (candidate regexp of the open keywords,
+  case-sensitive; files visited with =find-file-hook= and VC off; background
+  syncs never make a profile's first import); =8bbfdb4= (the preview kills
+  the buffers it opened). The 2,391 never-displayed, unmodified buffers were
+  killed by hand at 12:5x. The live preview after the fix took 10 s.
+- Diagnosis error: =pgrep -ix Emacs= matched a batch =emacs= test run and
+  missed the GUI process, so the agent first reported that Emacs had exited.
+  Identify the GUI process by its server reply (=(emacs-pid)=), not by name.
+
 ** 2026-11-09 → 11-11, daily ~05:47: macOS Auto appearance switch runs the theme hook inside AppKit's callback, and Emacs's wait loop never resumes until the display wakes (fixed in modus-themes-extras, pending the next sunrise)
 
 - Outages 11-09 05:48:50 → 06:56:49, 11-10 05:47:03 → 08:30:11, 11-11

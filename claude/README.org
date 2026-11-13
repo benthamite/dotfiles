@@ -178,7 +178,9 @@ restated the open list whenever any item came up, which drip-fed decisions
 across turns (2026-10-01). From approval until the task closes, every reply
 ends with one status line (done, done pending verification, waiting on the
 user, or in progress), because replies after approval often left unclear
-whether anything was still open (2026-10-07).
+whether anything was still open (2026-10-07). A done line comes with a short
+summary of what the session did just above it, so the closing reply says what
+was accomplished without rereading the session (2026-11-13).
 
 Main agents running inside Emacs publish concise current-state descriptions
 through =bin/agent-status= at task boundaries and meaningful phase changes.

@@ -13,6 +13,7 @@
 | =scheduling.md= | A task adds, changes or diagnoses when an automation runs (cron, GitHub =schedule=, launchd timers, retries); the principle is a second trigger from =launchd-heartbeat='s supervisor for jobs that must run on time, and runs that plan from fresh state. |
 | =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
 | =service-access.md= | A task needs an external service (Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, Anna's Archive) or the Forethought Chrome profile; it maps each service to its local tool. Browser rules live in the =chrome-use= skill. |
+| =time-machine.md= | Time Machine backups to the NAS fail or stall, the Mac freezes with unkillable processes, or anything touches the backup volume or =/etc/nsmb.conf=. |
 | =skill-audits.md= | A task adds or changes an exit-time skill (a before-exit chain step) or its audit; the principle is a monthly =exit-skill-audit= target per skill, proposing changes for Pablo's approval. |
 
 These documents are operational context, not general background to load

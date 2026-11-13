@@ -8674,6 +8674,18 @@ debugger entry cleanly instead of nesting, which keeps `debug-on-error' and
       (apply fn args)))
   (advice-add 'debugger-setup-buffer :around #'debug-inhibit-nested-entry)
 
+  (defun debug-allow-interaction (fn &rest args)
+    "Apply FN to ARGS with `inhibit-interaction' off.
+The emacsclient shim runs an agent's evaluation with `inhibit-interaction'
+bound to t.  `debug' does not rebind it, so a debugger entered during that
+evaluation, as SIGUSR2 does to break a stuck one, inherits the binding:
+every command that reads input, in any buffer, then fails with \"User
+interaction while inhibited\" until the debugger exits.  The binding is
+restored when the debugger returns, so continued code still runs with it."
+    (let ((inhibit-interaction nil))
+      (apply fn args)))
+  (advice-add 'debug :around #'debug-allow-interaction)
+
   :bind
   (:map debugger-mode-map
         ("s" . debug-save-backtrace)))

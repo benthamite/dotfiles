@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Argument handling of the emacsclient PATH shim, against a recording fake."""
 
 from __future__ import annotations
@@ -126,6 +127,38 @@ class LiveServerTest(unittest.TestCase):
         result = self.ask("(make-list 3000 (quote abcdef))")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("too large to print safely (21001 chars", result.stderr)
+
+
+class DebuggerInteractionTest(unittest.TestCase):
+    """The debug advice in config.org, so a debugger entered mid-eval can prompt.
+
+    On 2026-11-13 SIGUSR2 broke a stuck agent eval into the debugger, which
+    inherited the shim's `inhibit-interaction' binding: every command that read
+    input failed until the debugger exited.  A probe advice innermost on `debug'
+    reports the binding the real debugger would see, without entering it.
+    """
+
+    START = "(defun debug-allow-interaction"
+    END = "(advice-add 'debug :around #'debug-allow-interaction)"
+
+    def debugger_sees(self, with_fix):
+        text = (DOTFILES / "emacs/config.org").read_text()
+        start = text.index(self.START)
+        fix = text[start:text.index(self.END, start) + len(self.END)]
+        form = ("(progn %s (advice-add 'debug :around (lambda (_fn &rest _) inhibit-interaction)"
+                " '((depth . 100))) (prin1 (list (let ((inhibit-interaction t)) (debug))"
+                " (let ((inhibit-interaction t)) (debug) inhibit-interaction))))"
+                % (fix if with_fix else ""))
+        result = subprocess.run([EMACS, "-Q", "--batch", "--eval", form],
+                                capture_output=True, text=True, check=True, timeout=60)
+        return result.stdout.strip()
+
+    def test_debugger_entered_under_the_shim_binding_can_prompt(self):
+        # Inside the debugger: nil.  After it returns: the caller's t again.
+        self.assertEqual(self.debugger_sees(with_fix=True), "(nil t)")
+
+    def test_without_the_advice_the_binding_leaks(self):
+        self.assertEqual(self.debugger_sees(with_fix=False), "(t t)")
 
 
 if __name__ == "__main__":

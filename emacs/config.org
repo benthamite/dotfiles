@@ -5727,7 +5727,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
 /[[https://github.com/benthamite/org-linear][org-linear]] syncs the issues of Linear teams with an Org file in both directions./
 
-I use it for the Autumn Sprint's board. Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
+I use it for the Autumn Sprint's board, and, through the =personal= profile, for my personal TODOs, which sync in place with my own Linear workspace (=stafforini=, team =PAB=). That profile also leaves out machine-written conversation logs and the published =public/= notes. Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-linear
@@ -5755,6 +5755,29 @@ I use it for the Autumn Sprint's board. Its background syncs read the Linear key
   (org-linear-api-key-forget-command
    '("op-automations" "@personal" "cache" "forget"
      "op://Automation/linear-api-key-forethought/password"))
+  (org-linear-profiles
+   `((personal
+      :layout in-place
+      :teams ("PAB")
+      :directories (,paths-dir-notes ,paths-dir-android)
+      :exclude-files ("/anki\\.org\\'" "/checklists\\.org\\'" "/calendar\\.org\\'"
+                      "/notes/\\(?:gptel\\|chatgpt\\|chatgpt-sync\\|claude-sync\\|public\\)/")
+      :exclude-keywords ("PROJECT")
+      :inbox-file ,paths-file-inbox-mobile
+      :conflict-winner org
+      :keyword-states (("SOMEDAY" . "Backlog") ("MAYBE" . "Backlog") ("LATER" . "Backlog")
+                       ("TODO" . "Todo") ("NEXT" . "Todo") ("IMPORTANT" . "Todo")
+                       ("URGENT" . "Todo") ("DOING" . "In Progress")
+                       ("WAITING" . "In Progress") ("DONE" . "Done")
+                       ("CANCELLED" . "Canceled") ("DELEGATED" . "Canceled"))
+      :state-keywords (("Backlog" . "SOMEDAY") ("Todo" . "TODO") ("In Progress" . "DOING")
+                       ("Done" . "DONE") ("Canceled" . "CANCELLED")
+                       ("Duplicate" . "CANCELLED"))
+      :start-date-label nil
+      :api-key-command ("op-automations" "@personal" "cache" "read"
+                        "op://Automation/linear-api-key-personal/password")
+      :api-key-forget-command ("op-automations" "@personal" "cache" "forget"
+                               "op://Automation/linear-api-key-personal/password"))))
   :config
   (setq org-agenda-skip-function-global #'org-linear-agenda-skip)
   (with-eval-after-load 'vulpea-extras

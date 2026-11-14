@@ -77,7 +77,7 @@ def wrapped_expression(expression: str) -> str:
            `((ok . ,(if (car answer) t :json-false))
              (result . ,result)
              (truncated . ,(if shortened t :json-false))))
-          'utf-8-unix) t))))))'''.replace("ENCODED", encoded)
+          'utf-8-unix) t)))))'''.replace("ENCODED", encoded)
 
 
 def main() -> int:

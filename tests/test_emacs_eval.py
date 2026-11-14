@@ -24,6 +24,17 @@ class BoundedResponses(unittest.TestCase):
                              capture_output=True, text=True, timeout=10, check=True)
         return json.loads(base64.b64decode(run.stdout).decode("utf-8"))
 
+    def test_expression_survives_wrapping_in_another_form(self):
+        # The emacsclient shim wraps an agent's expression in `(let ((v EXPR)) ...)`. One stray
+        # closing paren in EXPR closed that `let` early, so every emacs-eval call from an agent
+        # session failed with "void variable agent-eval--value" (found 2026-11-14).
+        form = "(princ (let ((v " + module.wrapped_expression("(+ 1 2)") + ")) v))"
+        run = subprocess.run(["emacs", "-Q", "--batch", "--eval", form],
+                             capture_output=True, text=True, timeout=10, check=True)
+        result = json.loads(base64.b64decode(run.stdout).decode("utf-8"))
+        self.assertTrue(result["ok"])
+        self.assertEqual(result["result"], "3")
+
     def test_unicode_and_control_characters_roundtrip(self):
         result = self.evaluate('(list t "Valéry’s Cahiers" "line\\nnext\\r")')
         self.assertTrue(result["ok"])

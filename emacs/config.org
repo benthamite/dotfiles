@@ -9857,7 +9857,10 @@ does not exist."
      ("~/repos/fias-notes/" . ((claude-code . "fias")))))
 
   :bind
-  ("H-e" . agent-menu)
+  (("H-e" . agent-menu)
+   :map agent-session-keys-mode-map
+   ("H-<" . agent-effort-decrease)
+   ("H->" . agent-effort-increase))
 
   :config
   (with-eval-after-load 'debug

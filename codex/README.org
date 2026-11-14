@@ -292,6 +292,8 @@ tabs a download link opens outside their tab group, and to work through lists
 of pages in one tab. Since 2026-11-12 it also has them switch back any site
 setting they changed (a mode, filter or theme the site keeps in the browser)
 before closing their tab.
+Since 2026-11-13 it also has them check which account a "Continue with
+Google"-style sign-in uses before creating anything under it.
 
 Named-profile runtime settings and effective Chrome availability are inspected
 through the CLI's profile-aware diagnostics; installation metadata uses the

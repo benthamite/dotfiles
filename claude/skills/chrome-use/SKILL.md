@@ -42,6 +42,23 @@ this, so do not ask for it. When a form needs one of them, say so at the start,
 fill in everything else, leave it unsubmitted, and tell Pablo which tab and
 Chrome profile window to finish it in.
 
+## Sign in as the intended account
+
+Before you click "Continue with Google", "Sign in with GitHub" or any other
+sign-in through another account provider, work out which of Pablo's accounts
+the task needs (the accounts table in
+`/Users/pablostafforini/repos/dotfiles/claude/context/google-services.md`;
+for personal use it is `pablo.stafforini@gmail.com`). If the provider shows an
+account chooser, pick that account. If it signs in without asking, read the
+signed-in email from the site's profile or settings page before you create
+anything there. If it is the wrong account, sign out and stop before creating
+a workspace, key or other resource under it.
+
+Origin: on 13 Nov 2026 an agent created Pablo's personal Linear workspace
+through "Continue with Google", which signed in as `stafforini@gmail.com`.
+The agent never checked the account, so the workspace and the org-linear API
+key belonged to that account instead of `pablo.stafforini@gmail.com`.
+
 ## Never steal focus
 
 Pablo is working at the same machine. Never bring Chrome or one of its windows

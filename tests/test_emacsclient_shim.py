@@ -78,6 +78,25 @@ class ShimTest(unittest.TestCase):
         out = self.run_shim(["--eval", "(foo)"], CLAUDECODE="1", EMACSCLIENT_EVAL_MAX_PRINT="50")
         self.assertIn("(> agent-eval--size 50)", out[-1])
 
+    def run_slow(self, sleep, code=0, **env):
+        slow = self.dir / "slow"
+        slow.write_text(f"#!/bin/sh\nsleep {sleep}\nexit {code}\n")
+        slow.chmod(0o755)
+        base = {"PATH": os.environ["PATH"], "EMACSCLIENT_SHIM_REAL": str(slow),
+                "EMACS_SOCKET_NAME": "/sock"}
+        return subprocess.run([str(SHIM), "--eval", "(foo)"], env={**base, **env},
+                              capture_output=True)
+
+    def test_slow_agent_eval_warns_and_keeps_exit_status(self):
+        result = self.run_slow(2, code=3, CLAUDECODE="1", EMACSCLIENT_EVAL_WARN="1")
+        self.assertEqual(result.returncode, 3)
+        self.assertIn(b"blocked Pablo's live Emacs for about", result.stderr)
+
+    def test_fast_or_unwatched_evals_do_not_warn(self):
+        self.assertEqual(self.run_slow(0, CLAUDECODE="1").stderr, b"")
+        self.assertEqual(self.run_slow(2, EMACSCLIENT_EVAL_WARN="1").stderr, b"")
+        self.assertEqual(self.run_slow(2, CLAUDECODE="1", EMACSCLIENT_EVAL_WARN="0").stderr, b"")
+
     def test_outside_agents_nothing_changes(self):
         self.assertEqual(self.run_shim(["--eval", "(foo)"]), ["--eval", "(foo)"])
 

@@ -5755,7 +5755,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
 /[[https://github.com/benthamite/org-linear][org-linear]] syncs the issues of Linear teams with an Org file in both directions./
 
-I use it for the Autumn Sprint's board, and, through the =personal= profile, for my personal TODOs, which sync in place with my own Linear workspace (=stafforini=, team =PAB=). That profile also leaves out machine-written conversation logs and the published =public/= notes. Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
+I use it for the Autumn Sprint's board, and, through the =personal= profile, for my personal TODOs, which sync in place with my own Linear workspace (=stafforini=, team =PAB=). That profile also leaves out machine-written conversation logs and the published =public/= notes. Its =PROJECT= headings sync as Linear projects, its =MILESTONE= headings as their milestones, and a TODO nested under another as a sub-issue (since 15 Nov 2026, for =steward=). Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-linear
@@ -5790,7 +5790,8 @@ I use it for the Autumn Sprint's board, and, through the =personal= profile, for
       :directories (,paths-dir-notes ,paths-dir-android)
       :exclude-files ("/anki\\.org\\'" "/checklists\\.org\\'" "/calendar\\.org\\'"
                       "/notes/\\(?:gptel\\|chatgpt\\|chatgpt-sync\\|claude-sync\\|public\\)/")
-      :exclude-keywords ("PROJECT")
+      :project-keywords ("PROJECT")
+      :milestone-keywords ("MILESTONE")
       :inbox-file ,paths-file-inbox-mobile
       :assign-new-issues t
       :conflict-winner org

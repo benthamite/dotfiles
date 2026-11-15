@@ -104,7 +104,7 @@ screenshot.
 | 11-01 | Guest Wi-Fi password | b | a subagent read a mailbox file while replaying messages through a design |
 | 11-03 | Airtable PAT (regenerated before use) | d | screenshot of the token-created dialog |
 | 11-13 | GitHub CLI OAuth token (base64 in a git auth header) | a | a script's `git clone` timed out and Python's `TimeoutExpired` traceback printed the argv holding the header; the script now passes it through `GIT_CONFIG_*` env vars; rotated 11-13 (grant revoked, new login) |
-| 11-15 | Slack websocket reconnect parameter (`frt`) of an Emacs Slack connection (its `token` parameter was masked) | a | an `emacsclient` read of `process-list` names in Pablo's Emacs, during an org-linear diagnosis, printed the websocket URL; the output hook masks `token=` but not `frt=` |
+| 11-15 | Slack websocket reconnect parameter (`frt`) of an Emacs Slack connection (its `token` parameter was masked) | a | an `emacsclient` read of `process-list` names in Pablo's Emacs, during an org-linear diagnosis, printed the websocket URL; the output hook masked `token=` (by its `xoxc-` shape) but not `frt=`. Closed by masking credential-bearing URL parameters by name in `redact-secrets.sh`, both runtimes, 1d5d909c3 |
 
 Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
 
@@ -132,6 +132,11 @@ Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
   stored somewhere the index does not read (the Keychain, browser storage)
   are recognised only by shape.
 - A secret glued to the end of a word (`abcSECRET`) is not found.
+- TODO (2026-11-15): redactors outside this repository do not yet mask
+  credential URL parameters by name as `redact-secrets.sh` does (1d5d909c3):
+  agent-log's `agent-log-redact` (rendered logs and its JSONL scrubber of
+  session logs) and emacs-slack's `slack-ws--redact-url`, which masks only
+  `token=`.
 - Each guarded tool call costs ~85 ms CPU in the engine (the shell guards
   used ~800 ms). Under 50 ms would need a resident process, rejected because
   it would keep enforcing old rules after a guard edit until restarted.

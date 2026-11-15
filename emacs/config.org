@@ -9922,10 +9922,13 @@ does not exist."
   :ensure (:host github
                  :repo "benthamite/steward")
   :after (agent org)
+  :demand t
   :custom
   (steward-directories (list paths-dir-notes))
   (steward-claude-config-directory (expand-file-name "~/.claude-personal"))
-  (steward-default-mode "off"))
+  (steward-default-mode "off")
+  :config
+  (steward-mode))
 #+end_src
 
 ** =monet=

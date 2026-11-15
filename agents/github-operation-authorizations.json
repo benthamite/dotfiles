@@ -16,22 +16,6 @@
       "created_at": "2026-10-06T21:20:16.747614+00:00",
       "expires_at": "2026-10-07T01:20:16.747614+00:00",
       "body_sha256": "bb766418e5995d6b2ab7edac54a379f18331818e905c17f5cba5cb0f5c390348"
-    },
-    {
-      "command": "gh repo fork lizqwerscott/mcp.el --clone=false",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session cf90dbec on 2026-11-15: approved forking mcp.el, pushing the fix branch and opening the upstream PR",
-      "created_at": "2026-11-15T19:06:26.883971+00:00",
-      "expires_at": "2026-11-15T23:06:26.883971+00:00",
-      "body_sha256": null
-    },
-    {
-      "command": "gh pr create --repo lizqwerscott/mcp.el --base master --head benthamite:fix/stop-ends-server-process --title \"Kill the server process before jsonrpc-shutdown in mcp-stop-server\" --body-file /private/tmp/claude-501/-Users-pablostafforini-repos-dotfiles/cf90dbec-5a24-4d60-8aa7-64bef418351f/scratchpad/mcp-pr-body.md",
-      "account": "benthamite",
-      "authorization": "Pablo in Claude session cf90dbec on 2026-11-15: approved forking mcp.el, pushing the fix branch and opening the upstream PR",
-      "created_at": "2026-11-15T19:06:27.400309+00:00",
-      "expires_at": "2026-11-15T23:06:27.400309+00:00",
-      "body_sha256": "57d647097cce9bcce7ec0cbce20a4cbfd9d486aa0a428cba8c5b4c65c4065c33"
     }
   ]
 }

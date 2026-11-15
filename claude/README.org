@@ -207,7 +207,7 @@ notes workspaces were the last exception, with working trees in Drive and git
 directories in =~/git-dirs/<name>=, until they moved on 2026-11-06. A repository the phone needs reaches it through git, never Drive (added
 2026-11-09): the move took =~/repos/android= out of Drive, which silently broke
 the phone's DriveSync path to Orgzly, so the phone now keeps a Termux clone of
-it (=bin/phone-org-sync=) and both sides sync with GitHub. Nothing
+it (=bin/phone-org-sync=) and both sides sync with GitHub. That first instance was retired on 2026-11-15: the personal todos sync with Linear (=org-linear=, profile =personal=), whose phone app replaced Orgzly, so the script, the Termux clone and the launchd job =com.stafforini.android-org-sync= were removed; the principle stays for the next such repository. Nothing
 under the Drive sync root may hold dependencies, builds, caches, virtual environments, or worktrees, and
 every linked worktree lives under =~/repos/.worktrees/<repo>/<name>=. Drive
 folder names follow a two-tier rule added on 2026-11-08: lowercase for

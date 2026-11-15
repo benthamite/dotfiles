@@ -53,7 +53,7 @@ For Gmail, Google Sheets/Calendar/Docs/Drive, Slack, Signal, Fireflies, Granola,
 - Every git repository lives under `~/repos/`, with its `.git` directory inside it. An organization's notes workspace is `~/repos/<org>-notes` (e.g. `epoch-notes`, `forethought-notes`, `fias-notes`). `~/My Drive/` holds only documents and data, never a repository, and Google-native files (`.gdoc`, `.gsheet`) stay there because moving one out trashes the document. Never create dependencies, builds, caches, virtual environments, or worktrees anywhere under the Drive sync root.
 - Drive folder names: lowercase for folders that tools read by path (`library-pdf`, `anki`, `tlon`, …; never rename these without updating every reference, including the shared `babel-refs` bibliography); sentence case (`Self-improvement`) for folders I browse. Retired material goes in `Archived` (`archive` holds org archive files).
 - All linked worktrees: `~/repos/.worktrees/<repo>/<name>`.
-- A repository whose files the phone needs reaches it through git, never through Drive: the phone keeps a clone (Termux) and both sides sync with GitHub (first instance: `~/repos/android` for Orgzly, `bin/phone-org-sync` and the launchd job `com.stafforini.android-org-sync`).
+- A repository whose files the phone needs reaches it through git, never through Drive: the phone keeps a clone (Termux) and both sides sync with GitHub (no instance at present).
 
 ## Version control
 

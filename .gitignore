@@ -32,6 +32,11 @@ claude/context/personal-details.md
 !/.claude/skills/**
 !/.claude/programmatic-skills/
 !/.claude/programmatic-skills/**
+# Subproject skill directories (macos/, emacs/) are tracked; their other .claude state is not.
+!/*/.claude/
+/*/.claude/*
+!/*/.claude/skills/
+/*/.claude/skills/**/__pycache__/
 claude/skills/*/node_modules
 claude/settings.json
 !CLAUDE.md

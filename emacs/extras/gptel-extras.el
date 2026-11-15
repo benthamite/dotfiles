@@ -1023,12 +1023,56 @@ string describing the tools (e.g., \"web search tools\")."
 	 :description ,additive-desc
 	 :tools ',(list :append normalized-tools)))))
 
-(declare-function gptel-mcp-connect "gptel-integrations")
+;;;;;; MCP servers
+
+(declare-function auth-source-extras-op-get "auth-source-extras")
+(declare-function mcp--server-running-p "mcp")
+(declare-function mcp-hub-start-all-server "mcp-hub")
+(defvar mcp-server-connections)
+
 ;;;###autoload
-(defun gptel-extras-connect-to-all-servers ()
-  "Connect to all MCP servers, but do not activate any tools."
-  (gptel-mcp-connect)
-  (gptel--apply-preset 'tools-clear))
+(defun gptel-extras-mcp-secret (item field &optional account)
+  "Return a function that reads FIELD of ITEM from 1Password.
+Use it for a credential in an MCP server's `:env' in `mcp-hub-servers', so
+that the credential is read when the server starts, not when the
+configuration loads; `gptel-extras-mcp-resolve-env' calls it.  The function
+signals an error when the credential cannot be read, so the server does not
+start without it.  ITEM, FIELD and ACCOUNT are as in
+`auth-source-extras-op-get'."
+  (lambda ()
+    (or (auth-source-extras-op-get item field account)
+        (error "Cannot read `%s' from 1Password" item))))
+
+;;;###autoload
+(defun gptel-extras-mcp-resolve-env (args)
+  "Return ARGS of `mcp-connect-server' with the functions in its `:env' called.
+`mcp-connect-server' formats every `:env' value as a string.  As
+`:filter-args' advice, this replaces each value that is a function with what
+it returns, so a credential is read when its server starts."
+  (if-let* ((env (plist-get (cdr args) :env)))
+      (cons (car args)
+            (plist-put (copy-sequence (cdr args)) :env
+                       (gptel-extras--mcp-call-env-functions env)))
+    args))
+
+(defun gptel-extras--mcp-call-env-functions (env)
+  "Return plist ENV with each function value replaced by its return value."
+  (cl-loop for (key value) on env by #'cddr
+           append (list key (if (functionp value) (funcall value) value))))
+
+(defun gptel-extras--with-mcp-server (name function)
+  "Call FUNCTION with the connection of MCP server NAME, starting it if needed.
+When the server does not start, report that instead."
+  (require 'mcp-hub)
+  (if (mcp--server-running-p name)
+      (funcall function (gethash name mcp-server-connections))
+    (message "Starting MCP server `%s'..." name)
+    (mcp-hub-start-all-server
+     (lambda ()
+       (if (mcp--server-running-p name)
+           (funcall function (gethash name mcp-server-connections))
+         (message "MCP server `%s' did not start" name)))
+     (list name))))
 
 ;;;;;; Robustify gptel :append specs
 
@@ -1642,12 +1686,12 @@ this prompt."
 (declare-function mu4e-message-at-point "mu4e-message")
 (declare-function mu4e-message-field "mu4e-message")
 (declare-function mcp-call-tool "mcp")
-(defvar mcp-server-connections)
 
 ;;;###autoload
 (defun gptel-extras-email-to-calendar ()
   "Extract events from the email at point and add them to Google Calendar.
-Uses the `google-calendar' MCP server to create events with per-field timezones."
+Uses the `google-calendar' MCP server, starting it if needed, to create events
+with per-field timezones."
   (interactive)
   (unless (or (derived-mode-p 'mu4e-view-mode)
 	      (derived-mode-p 'mu4e-headers-mode))
@@ -1681,31 +1725,36 @@ Uses the `google-calendar' MCP server to create events with per-field timezones.
 		(if (null events)
 		    (message "No events found in email.")
 		  (when (y-or-n-p (format "Create %s in Google Calendar? " summary))
-		    (let ((connection (or (gethash "google-calendar" mcp-server-connections)
-					 (user-error "MCP server `google-calendar' not connected")))
-			  (calendar-id (getenv "PERSONAL_GMAIL"))
-			  (created 0))
-		      (dolist (event events)
-			(let* ((title (alist-get 'title event))
-			       (start (alist-get 'start event))
-			       (end (alist-get 'end event))
-			       (start-tz (alist-get 'startTimeZone event))
-			       (end-tz (alist-get 'endTimeZone event))
-			       (start-val (json-encode
-					   `((dateTime . ,start) (timeZone . ,start-tz))))
-			       (end-val (json-encode
-					 `((dateTime . ,end) (timeZone . ,end-tz)))))
-			  (mcp-call-tool
-			   connection "create-event"
-			   `(:calendarId ,calendar-id
-			     :summary ,title
-			     :start ,start-val
-			     :end ,end-val
-			     :sendUpdates "none"))
-			  (cl-incf created)))
-		      (message "Created %s in Google Calendar." summary)))))
+		    (gptel-extras--with-mcp-server
+		     "google-calendar"
+		     (lambda (connection)
+		       (gptel-extras--create-calendar-events connection events summary))))))
 	    (error
 	     (message "Failed to parse response: %s\nRaw: %s" err response))))))))
+
+(defun gptel-extras--create-calendar-events (connection events summary)
+  "Create EVENTS in Google Calendar through MCP CONNECTION.
+EVENTS is the list of event alists extracted from the email, and SUMMARY
+describes them in the final message."
+  (let ((calendar-id (getenv "PERSONAL_GMAIL")))
+    (dolist (event events)
+      (let* ((title (alist-get 'title event))
+	     (start (alist-get 'start event))
+	     (end (alist-get 'end event))
+	     (start-tz (alist-get 'startTimeZone event))
+	     (end-tz (alist-get 'endTimeZone event))
+	     (start-val (json-encode
+			 `((dateTime . ,start) (timeZone . ,start-tz))))
+	     (end-val (json-encode
+		       `((dateTime . ,end) (timeZone . ,end-tz)))))
+	(mcp-call-tool
+	 connection "create-event"
+	 `(:calendarId ,calendar-id
+	   :summary ,title
+	   :start ,start-val
+	   :end ,end-val
+	   :sendUpdates "none"))))
+    (message "Created %s in Google Calendar." summary)))
 
 ;;;;; Misc
 

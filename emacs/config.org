@@ -9959,6 +9959,13 @@ does not exist."
 Ensure nvm's default Node.js is on =exec-path= so that =npx= calls from MCP
 servers use the correct version.
 
+Servers start when first used (=gptel-mcp-connect= in the =gptel-tools= menu,
+or =gptel-extras-email-to-calendar=), not when this package loads, and read
+their credentials when they start (=gptel-extras-mcp-secret=). Starting them at
+load once ran all sixteen in a maintenance wake with the lid closed and no
+network, where they timed out and stayed down for the rest of the session
+(2026-11-13).
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
@@ -9990,7 +9997,7 @@ servers use the correct version.
           ("brave-search" . (:command "npx"
                                       :args ("-y" "@brave/brave-search-mcp-server")
                                       :env (:BRAVE_API_KEY
-                                            ,(auth-source-extras-op-get (concat "brave.com/" (getenv "PERSONAL_EMAIL")) "key"))))
+                                            ,(gptel-extras-mcp-secret (concat "brave.com/" (getenv "PERSONAL_EMAIL")) "key"))))
           ("fetch" . (:command "npx" :args ("mcp-fetch-server")))
           ("filesystem" . (:command "npx"
                                     :args ("-y" "@modelcontextprotocol/server-filesystem"
@@ -10007,7 +10014,7 @@ servers use the correct version.
            (:command "npx"
                      :args ("-y" "@modelcontextprotocol/server-github")
                      :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-                           ,(auth-source-extras-op-get "tlon-ai-github-token" "password"))))
+                           ,(gptel-extras-mcp-secret "tlon-ai-github-token" "password"))))
           ;; ("graphiti-stdio" .
           ;; (:command "python"
           ;; :args ("-u" "-m" "graphiti_mcp_server" "--transport" "stdio")
@@ -10024,12 +10031,15 @@ servers use the correct version.
                                              :args ("-y" "@modelcontextprotocol/server-sequential-thinking")))
           ("slack-ae-racionalidad" . (:command "npx"
                                                :args ("-y" "@modelcontextprotocol/server-slack")
-                                               :env (:SLACK_BOT_TOKEN ,(auth-source-extras-op-get "slack.com/ae-racionalidad" "bot-token")
+                                               :env (:SLACK_BOT_TOKEN ,(gptel-extras-mcp-secret "slack.com/ae-racionalidad" "bot-token")
                                                                       :SLACK_TEAM_ID "T04EYQYHG74")))
           ("slack-ea-translations" . (:command "npx"
                                                :args ("-y" "@modelcontextprotocol/server-slack")
-                                               :env (:SLACK_BOT_TOKEN ,(auth-source-extras-op-get "slack.com/ea-translations" "bot-token" 'tlon)
-                                                                      :SLACK_TEAM_ID "CA0JVRT5K")))))
+                                               :env (:SLACK_BOT_TOKEN ,(gptel-extras-mcp-secret "slack.com/ea-translations" "bot-token" 'tlon)
+                                                                      :SLACK_TEAM_ID "CA0JVRT5K")))
+          ("home-assistant" . (:command "mcp-proxy"
+                                        :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
+                                                       :API_ACCESS_TOKEN ,(gptel-extras-mcp-secret "home-assistant.io/stafforini" "ha-mcp"))))))
 
   (when (string= (system-name) "Pablos-MacBook-Pro.local")
     (setq mcp-hub-servers
@@ -10043,21 +10053,14 @@ servers use the correct version.
                      (:command "npx"
                                :args ("-y" "@modelcontextprotocol/server-github")
                                :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-                                     ,(auth-source-extras-op-get "github.com/benthamite" "github-mcp-owner-benthamite"))))
+                                     ,(gptel-extras-mcp-secret "github.com/benthamite" "github-mcp-owner-benthamite"))))
                     ("github-benthamite-owner-tlon-team" .
                      (:command "npx"
                                :args ("-y" "@modelcontextprotocol/server-github")
                                :env (:GITHUB_PERSONAL_ACCESS_TOKEN
-                                     ,(auth-source-extras-op-get "github.com/benthamite" "github-mcp-owner-tlon-team"))))))))
+                                     ,(gptel-extras-mcp-secret "github.com/benthamite" "github-mcp-owner-tlon-team"))))))))
 
-  (when (simple-extras-connected-to-network-p "Pablo-mesh")
-    (setq mcp-hub-servers
-          (append mcp-hub-servers
-                  `(("home-assistant" . (:command "mcp-proxy"
-                                                  :env (:SSE_URL "http://homeassistant.local:8123/mcp_server/sse"
-                                                                 :API_ACCESS_TOKEN ,(auth-source-extras-op-get "home-assistant.io/stafforini" "ha-mcp"))))))))
-
-  (mcp-hub-start-all-server #'gptel-extras-connect-to-all-servers))
+  (advice-add 'mcp-connect-server :filter-args #'gptel-extras-mcp-resolve-env))
 #+end_src
 
 ** =dall-e-shell=

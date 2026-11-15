@@ -1253,5 +1253,85 @@ function has to run once that text is already in the query buffer."
       (should (> (cl-position 'gptel-extras-redact-secrets-in-query hook)
                  (cl-position 'gptel--transform-add-context hook))))))
 
+;;;; MCP servers
+
+(defvar mcp-server-connections)
+
+(ert-deftest gptel-extras-test-mcp-resolve-env-calls-functions ()
+  "Function values in `:env' are called; other values and arguments stay."
+  (let* ((calls 0)
+         (env (list :TOKEN (lambda () (cl-incf calls) "secret") :DIR "/tmp"))
+         (args (list "server" :command "npx" :env env :timeout 5))
+         (resolved (gptel-extras-mcp-resolve-env args)))
+    (should (equal resolved '("server" :command "npx"
+                              :env (:TOKEN "secret" :DIR "/tmp") :timeout 5)))
+    (should (= calls 1))
+    (should (functionp (plist-get (plist-get (cdr args) :env) :TOKEN)))))
+
+(ert-deftest gptel-extras-test-mcp-resolve-env-without-env ()
+  "Arguments without `:env' are returned unchanged."
+  (let ((args (list "server" :command "npx" :args '("-y" "pkg"))))
+    (should (eq (gptel-extras-mcp-resolve-env args) args))))
+
+(ert-deftest gptel-extras-test-mcp-secret-reads-on-call ()
+  "The credential is read when the returned function is called."
+  (let ((reads nil))
+    (cl-letf (((symbol-function 'auth-source-extras-op-get)
+               (lambda (item field account)
+                 (push (list item field account) reads)
+                 "value")))
+      (let ((secret (gptel-extras-mcp-secret "item" "password" 'tlon)))
+        (should (null reads))
+        (should (equal (funcall secret) "value"))
+        (should (equal reads '(("item" "password" tlon))))))))
+
+(ert-deftest gptel-extras-test-mcp-secret-errors-when-unreadable ()
+  "An unreadable credential stops the server instead of passing nil."
+  (cl-letf (((symbol-function 'auth-source-extras-op-get) #'ignore))
+    (should-error (funcall (gptel-extras-mcp-secret "item" "password"))
+                  :type 'error)))
+
+(ert-deftest gptel-extras-test-with-mcp-server-running ()
+  "A running server's connection is used without starting anything."
+  (let ((mcp-server-connections (make-hash-table :test #'equal))
+        (started nil)
+        (received nil))
+    (puthash "calendar" 'connection mcp-server-connections)
+    (cl-letf (((symbol-function 'require) #'ignore)
+              ((symbol-function 'mcp--server-running-p) (lambda (_) t))
+              ((symbol-function 'mcp-hub-start-all-server)
+               (lambda (&rest _) (setq started t))))
+      (gptel-extras--with-mcp-server "calendar" (lambda (c) (setq received c))))
+    (should (eq received 'connection))
+    (should-not started)))
+
+(ert-deftest gptel-extras-test-with-mcp-server-starts-stopped-server ()
+  "A stopped server is started alone, and FUNCTION runs once it is up."
+  (let ((mcp-server-connections (make-hash-table :test #'equal))
+        (running nil)
+        (start-args nil)
+        (received nil))
+    (puthash "calendar" 'connection mcp-server-connections)
+    (cl-letf (((symbol-function 'require) #'ignore)
+              ((symbol-function 'mcp--server-running-p) (lambda (_) running))
+              ((symbol-function 'mcp-hub-start-all-server)
+               (lambda (callback servers)
+                 (setq start-args servers running t)
+                 (funcall callback))))
+      (gptel-extras--with-mcp-server "calendar" (lambda (c) (setq received c))))
+    (should (equal start-args '("calendar")))
+    (should (eq received 'connection))))
+
+(ert-deftest gptel-extras-test-with-mcp-server-reports-failed-start ()
+  "When the server does not start, FUNCTION is not called."
+  (let ((mcp-server-connections (make-hash-table :test #'equal))
+        (received nil))
+    (cl-letf (((symbol-function 'require) #'ignore)
+              ((symbol-function 'mcp--server-running-p) #'ignore)
+              ((symbol-function 'mcp-hub-start-all-server)
+               (lambda (callback _servers) (funcall callback))))
+      (gptel-extras--with-mcp-server "calendar" (lambda (c) (setq received c))))
+    (should-not received)))
+
 (provide 'gptel-extras-test)
 ;;; gptel-extras-test.el ends here

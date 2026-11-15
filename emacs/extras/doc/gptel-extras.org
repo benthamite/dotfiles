@@ -348,14 +348,6 @@ The command ~gptel-extras-warn-when-context~ checks whether the =gptel= context 
 
 This function is called by ~gptel-extras-mu4e-draft-reply~ ([[#h:mu4e-integration][Email drafting with mu4e]]) and ~gptel-extras-search-and-ask-model~ ([[#h:search][Search integration]]).
 
-*** Connecting to MCP servers
-:PROPERTIES:
-:CUSTOM_ID: h:connect-servers
-:END:
-
-#+findex: gptel-extras-connect-to-all-servers
-The command ~gptel-extras-connect-to-all-servers~ connects to all configured MCP (Model Context Protocol) servers via ~gptel-mcp-connect~, then immediately applies the =tools-clear= preset to deactivate all tools. This is useful during initialization: it establishes the server connections so that tools are available on demand, without activating any tools by default.
-
 * Functions
 :PROPERTIES:
 :CUSTOM_ID: h:functions
@@ -576,6 +568,19 @@ The operation retains its original key, database and entry identity across callb
 To include a staged PDF, create an operation with ~(ebib-extras-make-operation KEY DB t)~, supply it as the fifth argument of ~ebib-extras-attach-file~, and then as the fourth argument of ~gptel-extras--process-bib-entry-headless~. Store and save the verified language before starting. Do not reload the database between these calls.
 
 The result contains =:operation-id=, the final key, bibliography filename, attachment paths, =:status= (~complete~, ~pending~ or ~blocked~), =:pending= task count and =:errors=. Query a timed-out operation with ~ebib-extras-operation-status-for-id~. Waiting is bounded by =timeout= (45 seconds by default); timeout does not cancel its tasks. An existing PDF does not mark pending abstract, rendering or OCR work complete. After a blocked operation drains, resolve its cause and create a new operation for the same existing entry; do not import it again. Verify document identity separately from processing status.
+
+** MCP servers
+:PROPERTIES:
+:CUSTOM_ID: h:mcp-servers
+:END:
+
+MCP (Model Context Protocol) servers are meant to start when first used, not when the configuration loads: ~gptel-mcp-connect~ (in the =gptel-tools= menu) starts the ones whose tools it adds, and ~gptel-extras-email-to-calendar~ starts the =google-calendar= server if it is not running.
+
+#+findex: gptel-extras-mcp-secret
+The function ~gptel-extras-mcp-secret~ returns a function that reads a credential from a 1Password automation vault with ~auth-source-extras-op-get~. Use it for each credential in a server's =:env= in ~mcp-hub-servers~, so that the credential is read when the server starts rather than when the configuration loads. When the credential cannot be read, the function signals an error and that server does not start, instead of starting without it.
+
+#+findex: gptel-extras-mcp-resolve-env
+The function ~gptel-extras-mcp-resolve-env~ is meant as =:filter-args= advice on ~mcp-connect-server~. =mcp= formats every =:env= value as a string, so this advice calls each value that is a function and passes on what it returns.
 
 ** Robustifying tool presets
 :PROPERTIES:

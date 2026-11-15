@@ -77,7 +77,6 @@ General convenience commands
 * Fixing garbled characters::
 * Adding a buffer as context::
 * Context warning::
-* Connecting to MCP servers::
 
 Functions
 
@@ -98,6 +97,7 @@ Tools
 
 * Filesystem tools::
 * Bib@TeX{} tools::
+* MCP servers::
 * Robustifying tool presets::
 * Redacting credentials from queries::
 
@@ -407,7 +407,6 @@ This is useful for quick research where you want both traditional web results an
 * Fixing garbled characters::
 * Adding a buffer as context::
 * Context warning::
-* Connecting to MCP servers::
 @end menu
 
 @node Toggling default major mode
@@ -451,12 +450,6 @@ This is useful when you want the LLM to consider the full content of a file or b
 The command @code{gptel-extras-warn-when-context} checks whether the @samp{gptel} context is non-empty and@comma{} if so@comma{} prompts for confirmation before proceeding. If the user declines@comma{} the command offers to clear the context entirely. This prevents accidentally sending a request with stale or irrelevant context.
 
 This function is called by @code{gptel-extras-mu4e-draft-reply} (@ref{Email drafting with mu4e, , Email drafting with mu4e}) and @code{gptel-extras-search-and-ask-model} (@ref{Search integration, , Search integration}).
-
-@node Connecting to MCP servers
-@subsection Connecting to MCP servers
-
-@findex gptel-extras-connect-to-all-servers
-The command @code{gptel-extras-connect-to-all-servers} connects to all configured MCP (Model Context Protocol) servers via @code{gptel-mcp-connect}@comma{} then immediately applies the @samp{tools-clear} preset to deactivate all tools. This is useful during initialization: it establishes the server connections so that tools are available on demand@comma{} without activating any tools by default.
 
 @node Functions
 @chapter Functions
@@ -631,6 +624,7 @@ timer and any discovery request; it does not restore previous setting values.
 @menu
 * Filesystem tools::
 * Bib@TeX{} tools::
+* MCP servers::
 * Robustifying tool presets::
 * Redacting credentials from queries::
 @end menu
@@ -677,6 +671,17 @@ The operation retains its original key@comma{} database and entry identity acros
 To include a staged PDF@comma{} create an operation with @code{(ebib-extras-make-operation KEY DB t)}@comma{} supply it as the fifth argument of @code{ebib-extras-attach-file}@comma{} and then as the fourth argument of @code{gptel-extras--process-bib-entry-headless}. Store and save the verified language before starting. Do not reload the database between these calls.
 
 The result contains @samp{:operation-id}@comma{} the final key@comma{} bibliography filename@comma{} attachment paths@comma{} @samp{:status} (@code{complete}@comma{} @code{pending} or @code{blocked})@comma{} @samp{:pending} task count and @samp{:errors}. Query a timed-out operation with @code{ebib-extras-operation-status-for-id}. Waiting is bounded by @samp{timeout} (45 seconds by default); timeout does not cancel its tasks. An existing PDF does not mark pending abstract@comma{} rendering or OCR work complete. After a blocked operation drains@comma{} resolve its cause and create a new operation for the same existing entry; do not import it again. Verify document identity separately from processing status.
+
+@node MCP servers
+@section MCP servers
+
+MCP (Model Context Protocol) servers are meant to start when first used@comma{} not when the configuration loads: @code{gptel-mcp-connect} (in the @samp{gptel-tools} menu) starts the ones whose tools it adds@comma{} and @code{gptel-extras-email-to-calendar} starts the @samp{google-calendar} server if it is not running.
+
+@findex gptel-extras-mcp-secret
+The function @code{gptel-extras-mcp-secret} returns a function that reads a credential from a 1Password automation vault with @code{auth-source-extras-op-get}. Use it for each credential in a server's @samp{:env} in @code{mcp-hub-servers}@comma{} so that the credential is read when the server starts rather than when the configuration loads. When the credential cannot be read@comma{} the function signals an error and that server does not start@comma{} instead of starting without it.
+
+@findex gptel-extras-mcp-resolve-env
+The function @code{gptel-extras-mcp-resolve-env} is meant as @samp{:filter-args} advice on @code{mcp-connect-server}. @samp{mcp} formats every @samp{:env} value as a string@comma{} so this advice calls each value that is a function and passes on what it returns.
 
 @node Robustifying tool presets
 @section Robustifying tool presets

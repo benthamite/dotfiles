@@ -74,18 +74,6 @@ See `simple-extras-probe-url'."
 
 ;;;; Functions
 
-;;;;; Personal
-
-(defun simple-extras-connected-to-network-p (network)
-  "Check if connected to home WiFi NETWORK."
-  (let ((ssid (string-trim
-               (shell-command-to-string
-                (pcase system-type
-                  ('darwin "ipconfig getsummary en0 | awk -F': ' '/^ *SSID/ {print $2}'")
-                  ('gnu/linux "iwgetid -r")
-                  (_ ""))))))
-    (string= ssid network)))
-
 ;;;;; Editing
 
 (defmacro simple-extras-delete-instead-of-kill (&rest body)

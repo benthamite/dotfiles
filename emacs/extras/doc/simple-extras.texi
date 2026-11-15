@@ -77,7 +77,6 @@ Functions
 * Text conversion via Pandoc::
 * Asciifying strings::
 * Slug helpers::
-* Network detection::
 * Network reachability::
 * Reaping closed server clients::
 * Server connection queue::
@@ -438,7 +437,6 @@ The command @code{simple-extras-set-python-virtual-environment} creates a Python
 * Text conversion via Pandoc::
 * Asciifying strings::
 * Slug helpers::
-* Network detection::
 * Network reachability::
 * Reaping closed server clients::
 * Server connection queue::
@@ -509,12 +507,6 @@ The function @code{simple-extras-asciify-string} takes a string and returns a ne
 
 @findex simple-extras-slug-hyphenate
 The function @code{simple-extras-slug-hyphenate} replaces spaces@comma{} underscores@comma{} and dots with hyphens in a string@comma{} collapses multiple consecutive hyphens into one@comma{} and strips leading and trailing hyphens. It is used internally by @code{simple-extras-slugify} (@ref{Slugifying strings, , Slugifying strings}).
-
-@node Network detection
-@section Network detection
-
-@findex simple-extras-connected-to-network-p
-The function @code{simple-extras-connected-to-network-p} checks whether the system is connected to a specific WiFi network by name. On macOS@comma{} it queries the network SSID via @samp{ipconfig getsummary}; on GNU/Linux@comma{} it uses @samp{iwgetid -r}. It returns @code{t} if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g.@comma{} a home or office network).
 
 @node Network reachability
 @section Network reachability

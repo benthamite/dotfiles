@@ -434,14 +434,6 @@ The function ~simple-extras-asciify-string~ takes a string and returns a new str
 #+findex: simple-extras-slug-hyphenate
 The function ~simple-extras-slug-hyphenate~ replaces spaces, underscores, and dots with hyphens in a string, collapses multiple consecutive hyphens into one, and strips leading and trailing hyphens. It is used internally by ~simple-extras-slugify~ ([[#h:slugify][Slugifying strings]]).
 
-** Network detection
-:PROPERTIES:
-:CUSTOM_ID: h:network-detection
-:END:
-
-#+findex: simple-extras-connected-to-network-p
-The function ~simple-extras-connected-to-network-p~ checks whether the system is connected to a specific WiFi network by name. On macOS, it queries the network SSID via =ipconfig getsummary=; on GNU/Linux, it uses =iwgetid -r=. It returns ~t~ if the current SSID matches the given NETWORK argument. This can be used in configuration to conditionally enable features that depend on being connected to a particular network (e.g., a home or office network).
-
 ** Network reachability
 :PROPERTIES:
 :CUSTOM_ID: h:network-reachability

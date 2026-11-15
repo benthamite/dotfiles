@@ -149,6 +149,11 @@ Inspect profile metadata only, never cookies or session databases.
   from a demonstrated restore. A restore test belongs to explicitly authorized
   remediation/verification in a disposable destination; never overwrite live
   data. Consider whether the same compromised account can delete every copy.
+  Check that at least one copy is offline: not mounted, not on a share the
+  Mac reaches with stored credentials, and not deletable through a signed-in
+  sync client. A network share the Mac mounts on a schedule is reachable by
+  malware running as Pablo. If every copy is reachable from the Mac, report
+  Medium.
 - Assess backup integrity separately from freshness and encryption: available
   historical versions, their provenance, and whether a compromised host/account
   could alter retained copies or contaminate new ones. After an established
@@ -158,6 +163,25 @@ Inspect profile metadata only, never cookies or session databases.
   reuse. A successful restore or clean malware scan alone does not rule out
   persistence. Unknown compromise timing or unavailable integrity evidence remains
   a recovery gap; do not mount, execute, or restore suspect backups during an audit.
+
+## Other devices on Pablo's network
+
+The Mac is not the only way in. A router, camera or home hub that no longer
+gets updates sits on the same network. Ask Pablo for an inventory of
+always-on devices: router and mesh points, NAS or backup target, cameras,
+smart-home hub, printers and the like. The second-factor phone belongs to
+[accounts](accounts.md). For each device, record:
+
+- make and model, and whether the vendor still ships security updates for it,
+  from the vendor's current support or end-of-life page;
+- whether updates install automatically;
+- whether its admin account still uses the default password or a reused one,
+  and whether remote administration from the internet is on.
+
+Do not log in to a device or scan the network during the audit. A router or
+other internet-facing device that no longer gets updates is High; a device
+reachable only from the home network is Medium. The remedy is to replace or
+unplug it.
 
 ## Reference maintenance
 
@@ -176,6 +200,9 @@ commands or Settings paths differ; do not substitute undocumented defaults keys.
 - [Extension permissions](https://developer.chrome.com/docs/extensions/develop/concepts/declare-permissions)
 - [FIDO passkeys](https://fidoalliance.org/passkeys/)
 - [Advanced Protection compatibility](https://support.google.com/accounts/answer/7539956)
+
+Added 2026-11-15: the offline backup copy and other devices on the network,
+informed by [The Hackening](https://thehackening.vercel.app/#advice).
 
 Added 2026-09-15: recovery integrity, informed by backup poisoning described in
 [Anthropic's September 2026 report](https://www.anthropic.com/threat-intelligence-report-september-2026), p. 35.

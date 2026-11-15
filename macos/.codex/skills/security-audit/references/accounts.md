@@ -42,6 +42,11 @@ higher of its billing and data exposure.
   factors it accepts. The finding is the shortest takeover path: a single phone
   number or mailbox that reaches everything, a cycle in which each account can
   recover the other, or a recovery address on a lapsed or shared domain.
+- Ask where each root account's backup codes are kept, by kind of place only.
+  Codes in the same vault as the password are no independent way back in if
+  the vault is lost or taken. Codes in a file in a synced folder make that
+  cloud account a path to every account whose codes it holds: add the edge to
+  the graph. Paper kept apart from the phone is the independent copy.
 - A domain whose registrar account is taken over means the attacker controls
   mail for that domain and can reset every account that uses it. Check registrar
   2FA and transfer lock where Pablo's own account pages show them. Find the
@@ -146,20 +151,38 @@ Check these after the root accounts, in tier order, from Pablo's own settings
 pages or his answers:
 
 - **Money:** second factor and its method, the recovery email and phone (they
-  belong in the reset graph), and whether the password is unique. For cloud and
-  AI providers, also API keys by name and age, spend limits or alerts, and
-  connected apps.
+  belong in the reset graph), and whether the password is unique. Also:
+  - alerts for sign-ins, transfers, and changes to contact details or payees:
+    on, and delivered where Pablo sees them. A mail filter that files them
+    away disables them;
+  - per-day and per-transfer limits, and how much sits in payment apps that
+    move money instantly. Money that moves slowly limits what a takeover can
+    drain;
+  - every app, aggregator, AI tool or automation connected to the account,
+    Pablo's own included, and whether its access can move money or only read.
+    A connection that can move money and does not need to is High.
+
+  For cloud and AI providers, also API keys by name and age, spend limits or
+  alerts, and connected apps.
 - **AI providers:** the same, plus who else is in the organization or workspace
   and which connectors reach Pablo's mail, drive or code.
 - **Identity:** whether the national tax and identity portals use a second
   factor, and which phone or email recovers them. In Argentina, ARCA's Clave
   Fiscal level 4 adds the Token ARCA app as a second factor; Mi Argentina
   documents none, so its password and recovery address carry it alone.
+- **Credit files:** ask Pablo in which countries he has a credit file. For
+  each, check on the regulator's or bureaus' current pages what the country
+  offers against credit opened in his name (a freeze, a fraud alert,
+  monitoring) and whether it is on. Argentina offers no freeze (see account
+  discovery). A free freeze left off is Medium.
 - **Communication:** second factor and recovery for each social account.
   WhatsApp two-step verification (now a password; older accounts may still
   have a 6-digit PIN) and its recovery email, and Signal's Registration Lock.
   Without them, whoever receives the SMS registration code, for instance after
-  a SIM swap, takes over the account and its contacts.
+  a SIM swap, takes over the account and its contacts. As optional hardening,
+  ask whether Pablo and his family have agreed how to verify an urgent request
+  for money or codes by phone or message, such as calling back on a known
+  number or a code word: a cloned voice makes a familiar voice no proof.
 
 ## The second-factor phone
 
@@ -169,6 +192,9 @@ second factors. Its settings cannot be read from the Mac. Ask Pablo for each
 item below; one he cannot answer is not checked, and an unchecked phone goes in
 the summary as an unverified high-risk item.
 
+- **Updates:** the phone still gets security updates (the maker's current
+  support page gives the end date) and installs them; one that no longer does
+  is High, as it holds the second factors.
 - **Screen lock:** a PIN of six or more digits or a password. Google recommends
   either over a pattern, which has fewer combinations and is easier to guess.
 - **Theft protection** (Android: Settings > Google > All services > Theft
@@ -222,20 +248,27 @@ path open.
 - High: a root account whose only second factor or recovery path is SMS, a
   compromised-website item for a root account that has not changed since the
   breach, an account Pablo did not open, the 1Password account password used
-  elsewhere, or a second-factor phone with no screen lock.
+  elsewhere, a second-factor phone with no screen lock or past its last
+  security update, or a connection that can move money without needing to.
 - Medium: a reused password shared with a root account, a breached non-root
   account with an unchanged password and no second factor, a money account
-  without a second factor, lock-screen notifications that show SMS codes, a
-  pattern lock or theft protection off on the second-factor phone, or WhatsApp
-  or Signal without two-step verification or Registration Lock.
+  without a second factor or with its alerts off or filtered away, root-account
+  backup codes in a synced file, a free credit freeze left off, lock-screen
+  notifications that show SMS codes, a pattern lock or theft protection off on
+  the second-factor phone, or WhatsApp or Signal without two-step verification
+  or Registration Lock.
 - Low or optional hardening: breach data classes without credentials, weak
   passwords on throwaway accounts, a dormant low-value account left open, no
-  SIM PIN, Advanced Protection not enrolled.
+  SIM PIN, transfer limits or payment-app balances above need, no agreed way
+  to verify money requests, Advanced Protection not enrolled.
 
 ## Reference maintenance
 
 Checked 2026-10-17; tiers, discovery, the second-factor phone, other account
-tiers and carrier questions checked 2026-11-15.
+tiers and carrier questions checked 2026-11-15. Money-account alerts, limits
+and connections, backup-code storage, credit files and money-request
+verification added 2026-11-15, informed by
+[The Hackening](https://thehackening.vercel.app/#advice).
 
 - [Have I Been Pwned API v3](https://haveibeenpwned.com/API/v3)
 - [1Password Watchtower](https://support.1password.com/watchtower/)

@@ -20,7 +20,8 @@ entry points before running them; related repository suites include live checks.
 
 An optional directory scopes secrets and dependency checks to that directory.
 Without one, use the current directory plus configuration locations relevant
-only to the selected domains. Machine checks concern the current Mac; agent checks
+only to the selected domains. Machine checks concern the current Mac and, from
+Pablo's answers, the other always-on devices on his network; agent checks
 cover installed agents, their active account/profile configurations, and the
 current project's overrides; account checks cover the online accounts and email
 addresses resolved under [accounts](references/accounts.md). State these roots before scanning; do not silently
@@ -32,7 +33,7 @@ Read the selected domain references completely before running their checks:
 |---|---|
 | Secrets and credential incidents | [secrets](references/secrets.md) |
 | Dependencies and other executable supply chains | [supply chain](references/supply-chain.md) |
-| macOS controls, isolation, and recovery | [machine](references/machine.md) |
+| macOS controls, isolation, recovery, and other devices on the network | [machine](references/machine.md) |
 | Claude, Codex, MCP, plugins, and browser automation | [agents](references/agents.md) |
 | Online accounts, the second-factor phone, breach exposure, and recovery paths | [accounts](references/accounts.md) |
 

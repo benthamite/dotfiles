@@ -8629,11 +8629,11 @@ opens another debugger, which resizes them again, without end."
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/emacs-lisp/backtrace.el][backtrace]] provides generic facilities for displaying backtraces./
 
+Keep Emacs's default limit on how much of each frame the backtrace prints. With no limit, the debugger printed every argument in full before showing anything, and printing a long list gets much slower as the list grows (21 s for an 8,000-element list in a test). On 2026-11-15 an argument holding 14,274 LanguageTool matches kept the debugger drawing until Emacs had to be interrupted. Truncated parts stay available: =.= in =*Backtrace*= expands them.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature backtrace
-  :defer t
-  :custom
-  (backtrace-line-length nil))
+  :defer t)
 #+end_src
 
 ** =debug=

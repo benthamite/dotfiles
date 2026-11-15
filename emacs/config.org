@@ -9988,7 +9988,8 @@ network, where they timed out and stayed down for the rest of the session
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package mcp
   :ensure (:host github
-                 :repo "lizqwerscott/mcp.el"
+                 :repo "benthamite/mcp.el"
+                 :branch "fix/stop-ends-server-process" ; awaiting PR merge: https://github.com/lizqwerscott/mcp.el/pull/90
                  :build (:not elpaca-check-version))
   :after gptel
   :config

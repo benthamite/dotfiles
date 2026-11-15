@@ -116,7 +116,11 @@ summary of what the session did just above it, so the closing reply says what
 was accomplished without rereading the session (2026-11-13). Whenever a reply mentions decisions still pending, including in a waiting-on-you status line,
 it lists all of them again in full, numbered from 1, rather than pointing to numbers in an earlier
 message, because Pablo could not find where earlier lists were (2026-11-13). This differs from the
-rule replaced on 2026-10-01: it re-lists the whole set, so decisions are still asked for together.
+rule replaced on 2026-10-01: it re-lists the whole set, so decisions are still asked for together. An
+in-progress line is allowed only when a background task or scheduled wake-up
+the agent started will resume it, because agents wrote "in progress" and then
+stopped, so Pablo believed work was continuing when nothing was running
+(2026-11-14). It is a rule only: Pablo declined an enforcing hook.
 
 Main agents running inside Emacs publish concise current-state descriptions
 through =bin/agent-status= at task boundaries and meaningful phase changes.

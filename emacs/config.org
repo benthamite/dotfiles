@@ -5763,7 +5763,7 @@ I use it for the Autumn Sprint's board, and, through the =personal= profile, for
       :directories (,paths-dir-notes ,paths-dir-android)
       :exclude-files ("/anki\\.org\\'" "/checklists\\.org\\'" "/calendar\\.org\\'"
                       "/notes/\\(?:gptel\\|chatgpt\\|chatgpt-sync\\|claude-sync\\|public\\)/")
-      :exclude-keywords ("PROJECT")
+      :exclude-keywords ("PROJECT" "MILESTONE")
       :inbox-file ,paths-file-inbox-mobile
       :assign-new-issues t
       :conflict-winner org
@@ -9910,6 +9910,24 @@ does not exist."
   (agent-log-auto-redact-sessions t))
 #+end_src
 
+** =steward=
+:PROPERTIES:
+:ID:       B1637A19-0D7A-4D18-AAC5-BE2554CE5ACE
+:END:
+
+/[[https://github.com/benthamite/steward][steward]] runs my projects: each project's orchestrator proposes its next step, I approve or reject it in one queue, and the work happens in =agent= sessions. It is private until it works; the design is =~/repos/protean/docs/orchestration-spec.md=. A project is off unless its heading, or an ancestor's, sets =STEWARD_MODE=./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package steward
+  :ensure (:host github
+                 :repo "benthamite/steward")
+  :after (agent org)
+  :custom
+  (steward-directories (list paths-dir-notes))
+  (steward-claude-config-directory (expand-file-name "~/.claude-personal"))
+  (steward-default-mode "off"))
+#+end_src
+
 ** =monet=
 :PROPERTIES:
 :ID:       CEC68940-F806-43C7-BC2E-121AA2BC3A0E
@@ -10391,6 +10409,7 @@ fixed stale element-cache state after edits inside lists
                "MAYBE(m)"
                "WAITING(w)"
                "PROJECT(p)"
+               "MILESTONE(M)"
                "NEXT(n)"
                "LATER(l)"
                "|"

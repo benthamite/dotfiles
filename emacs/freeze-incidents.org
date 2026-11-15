@@ -105,6 +105,26 @@ the "Already tried" list in place.
 - Fix: one table of visited names, truenames and file numbers per scan;
   live: 0.7 s for all files, 0 mismatches against =find-buffer-visiting=.
 
+** 2026-11-15: interrupted runs left timers and org-linear syncs dead (fixed: dotfiles =97a36d5cd=; org-linear =14639b4=)
+
+- Aftermath of the day's quits and debugger exits, not a freeze.
+- =timer-event-handler= clears a repeating timer's triggered mark only when
+  its function returns; a quit or a throw out of a debugger left it set, so
+  Emacs skipped the timer for good. Dead: =agent-claude--read-status= (since
+  15:51) and org-linear's personal sync (since 16:25). Marks cleared by hand;
+  advice =timer-extras-unmark-after-abnormal-exit= now clears them
+  (reproduced in =emacs -Q=, verified live).
+- org-linear ended a sync only on an error, so the 16:25 =C-g= left
+  =org-linear--busy= set and every later sync only queued. The default
+  (Forethought) profile was also busy with nothing in flight; how long is
+  unknown. Both ended through =org-linear--fail= at 16:47 and synced
+  afterwards; =org-linear--ending-sync-on-failure= now ends a sync on any
+  non-local exit (verified live).
+- Agent evaluations: the =emacsclient= shim's =with-timeout= cannot stop
+  Lisp that keeps computing, so the steward scan ran unchecked. The shim now
+  warns the agent when an evaluation blocked Emacs 3 s or more
+  (=008e3145c=, verified live).
+
 ** 2026-11-15 ~15:30 → 16:00: debugger stuck printing 14,274 LanguageTool matches (fixed: dotfiles =69af9843a=; flycheck-languagetool =dcbfa4c=, =f204bd3=)
 
 - Symptom: "Entering debugger..." and nothing else; Emacs at 100% CPU.

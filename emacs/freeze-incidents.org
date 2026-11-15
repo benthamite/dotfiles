@@ -90,6 +90,38 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-15 ~15:30 → 16:00: debugger stuck printing 14,274 LanguageTool matches (fixed: dotfiles =69af9843a=; flycheck-languagetool fork pending)
+
+- Symptom: "Entering debugger..." and nothing else; Emacs at 100% CPU.
+- Samples (=/tmp/emacs-freeze.Ok6113=): =url-http= filter →
+  =flycheck-languagetool--read-results= → =--check-all= → quit →
+  =debug= → =debugger-setup-buffer= → =backtrace-print= → =cl-prin1=,
+  with a second =debug= nested inside the first render.
+- Chain: LanguageTool returned 14,274 matches for some Markdown buffer
+  (not identified; not the 9 KB weekly-update file). =--check-all= calls
+  =line-number-at-pos= per match, so Emacs stayed busy; a quit landed there
+  with =debug-on-quit= on; =backtrace-line-length= was nil, so the
+  debugger printed the whole result list, and =cl-print= on a long list
+  grows faster than linearly (batch test: 4,000 elements 5.8 s, 8,000
+  21 s, 0.00 s with the 5,000 default). Further quits and SIGUSR2 nested
+  more debuggers: SIGUSR2 sets =debug-on-next-call=, which the
+  =debug-inhibit-nested-entry= advice (=inhibit-debugger=) does not stop.
+- One SIGUSR2 (approved) did not help; Pablo's emacsk ended it.
+- Fix: =backtrace-line-length= back to the default (=69af9843a=, live:
+  14,274-element list prints in under 1 ms). flycheck-languagetool fork:
+  one-pass line mapping and a buffer-size cap (pending).
+
+** 2026-11-15 ~16:05: agent eval of =steward-model-scan= blocked the main thread (no change)
+
+- Pablo's saved backtrace (=~/Downloads/backtrace.el=) shows an
+  =emacsclient= evaluation from session 14d6ffaf (directory
+  =elpaca/sources/agent/=) running =(steward-model-scan)= under the
+  120 s agent eval limit; emacsk's SIGUSR2 broke in through
+  =debug-on-next-call= despite the eval's =inhibit-debugger t=.
+- Asked that session (agent-send, delivery unconfirmed) to run the scan in
+  batch Emacs, not the live one. Whether the scan itself is slow on real
+  data is unknown.
+
 ** 2026-11-13 23:28 → 23:44: Epoch forge pull and garbage collection on the main thread (investigation, no change)
 
 - Watchdog outage 23:29:15 → recovered 23:44:23: "runs timers but did not

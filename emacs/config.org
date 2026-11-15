@@ -7404,8 +7404,12 @@ Using my fork while awaiting merge of [[https://github.com/emacs-languagetool/fl
                 "--port" (format "%s" flycheck-languagetool-server-port)))
 
   (defun flycheck-languagetool-enable ()
-    "Enable `flycheck-languagetool' in selected buffers."
-    (unless (or (derived-mode-p 'forge-post-mode
+    "Enable `flycheck-languagetool' in selected buffers.
+Skip buffers the checker refuses, such as those over
+`flycheck-languagetool-max-buffer-size': `flycheck-select-checker'
+pops up a *Flycheck checker* report and signals an error for them."
+    (unless (or (not (flycheck-may-use-checker 'languagetool))
+                (derived-mode-p 'forge-post-mode
                                 'gfm-mode
                                 'mhtml-mode
                                 'flycheck-error-message-mode

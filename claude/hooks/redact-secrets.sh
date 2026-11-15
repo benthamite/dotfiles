@@ -31,6 +31,27 @@ SED_BIN=$(command -v gsed || command -v sed)
 # Second layer: this machine's actual secret values (bin/secret-index), for
 # secrets with no recognisable shape. Streams line by line. Callers that run
 # the index themselves (redact-tool-output.py) set REDACT_SKIP_INDEX=1.
+#
+# Credential-bearing URL parameters (the rule right after the PEM block) are
+# masked by name, whatever the value's shape: on 2026-11-15 a process listing
+# printed a Slack websocket URL whose `token` was masked by its `xoxc-` shape
+# but whose `frt` reconnect token, which has no known shape, was not
+# (docs/secret-guard.md). A parameter is a name below after `?`, `&`, `;`
+# (`&amp;`), their percent or JSON escapes (a URL nested in another), or at
+# the start of a line (form-encoded bodies such as OAuth token responses),
+# followed by `=` or `%3D` and a value of 12 or more URL characters; the
+# value ends at `&`, `%26`, `#`, whitespace, a control character (the output
+# hooks join strings with one), a quote or a bracket, so code
+# that builds such a URL (`?token={token}`, `"?token=" + t`, `${TOKEN}`) is
+# left alone. Names: `token` and its `access_`, `refresh_`, `id_`, `auth_`,
+# `session_`, `oauth_`, `api_` and `X-Amz-Security-` forms; `api_key`,
+# `apikey`, `api-key`; `client_secret`, `secret` (otpauth TOTP seeds);
+# `password`, `passwd`; `sig`, `signature`, `X-Amz-Signature`,
+# `X-Goog-Signature` (signed URLs grant access until they expire);
+# `ticket` (Slack Socket Mode, CAS); `frt` (Slack); `jwt`. Left out because
+# they mostly carry non-secrets: `key` (issue and sort keys; Google API keys
+# have their own shape rule), `code` (error and country codes), `pwd` (Zoom
+# join links), `state`, and pagination tokens (`pageToken`, `next_token`).
 INDEX_PASS=(python3 -B "$(dirname "$0")/../../bin/secret-index" mask --stream)
 [ "${REDACT_SKIP_INDEX:-}" = 1 ] && INDEX_PASS=(cat)
 set -o pipefail
@@ -38,6 +59,7 @@ set -o pipefail
 LC_ALL=C "$SED_BIN" -E --unbuffered \
   ${EXTRA_FILE[@]+"${EXTRA_FILE[@]}"} \
   -e '/-----BEGIN [A-Z ]*PRIVATE KEY-----/{:a; /-----END [A-Z ]*PRIVATE KEY-----/!{$!{N;ba}}; s/-----BEGIN [A-Z ]*PRIVATE KEY-----[^-]*-----END [A-Z ]*PRIVATE KEY-----/[PRIVATE_KEY_REDACTED]/g}' \
+  -e 's/(^|[?&;]|%3F|%26|\\u0026|\\u003F)((access_|refresh_|id_|auth_|session_|oauth_|api_|x-amz-security-)?token|api[_-]?key|client_secret|secret|passw(or)?d|(x-amz-|x-goog-|oauth_)?sig(nature)?|ticket|frt|jwt)(=|%3D)(%[013-9A-Fa-f][0-9A-Fa-f]|%2[0-57-9A-Fa-f]|\\\/|[^]%&#;,[:space:][:cntrl:]"'\''`<>(){}[\$|]){12,}/\1\2\7[URL_CREDENTIAL_REDACTED]/gI' \
   -e 's/gg_pat_[A-Za-z0-9_-]{40,80}/[GG_PAT_REDACTED]/g' \
   -e 's/AIza[0-9A-Za-z_-]{35}/[GOOGLE_API_KEY_REDACTED]/g' \
   -e 's/GOCSPX-[A-Za-z0-9_-]{20,}/[GOOGLE_OAUTH_CLIENT_SECRET_REDACTED]/g' \

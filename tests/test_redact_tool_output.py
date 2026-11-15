@@ -25,6 +25,16 @@ CLAUDE = "sk-" + "ant-" + "oat01-" + "Zx9_" * 20
 SUBSTACK = "s%" + "3A" + "Qw8." * 12
 # Public MusicBrainz recording: Carlos Gardel, El barbijo.
 MBID = '27311990-9142-4478-8766-f0fdea1caa40'
+# A URL credential with no known shape, like the 2026-11-15 Slack `frt`.
+OPAQUE = "Qw8Zx" * 6
+SLACK_SESSION = "xox" + "c-" + "1234-" * 6 + "ab"
+# The websocket URL emacs-slack opens (slack-websocket.el, slack-ws-open), as
+# websocket.el names its process, with the `frt` a reconnect URL adds.
+SLACK_WS = ("websocket to wss://wss-primary.slack.com/?token=" + SLACK_SESSION
+            + "&sync_desync=1&slack_client=desktop&start_args=%3Fagent%3Dclient%26org_wide_aware%3Dtrue"
+            + "%26agent_version%3D1730299661&no_query_on_subscribe=1&flannel=3&lazy_channels=1"
+            + "&gateway_server=T0SYNTH-4&batch_presence_aware=1&frt=" + OPAQUE + "&dp=1")
+URL_MASK = "[URL_CREDENTIAL_REDACTED]"
 
 
 def bash(stdout, stderr=""):
@@ -33,6 +43,14 @@ def bash(stdout, stderr=""):
 
 def mcp(text):
     return {"tool_name": "mcp__claude-in-chrome__find", "tool_response": [{"type": "text", "text": text}]}
+
+
+def codex_hook():
+    codex_spec = importlib.util.spec_from_file_location(
+        "codex_redact_tool_output", HOOK.parents[2] / "codex/hooks/redact-tool-output.py")
+    codex = importlib.util.module_from_spec(codex_spec)
+    codex_spec.loader.exec_module(codex)
+    return codex
 
 
 class RedactToolOutputTest(unittest.TestCase):
@@ -66,11 +84,79 @@ class RedactToolOutputTest(unittest.TestCase):
         # Longer digit runs (tweet ids, timestamps) are not 16-digit numbers.
         self.assertIsNone(M.replacement(bash("x.com/a/status/1790549176458123456 at 1790549176458\n")))
 
+    def test_slack_websocket_url_parameters_are_masked_in_both_runtimes(self):
+        # 2026-11-15: an emacsclient read of process names printed this URL;
+        # `token` was masked by its xoxc shape, `frt` (no known shape) was not.
+        event = bash(f'("{SLACK_WS}" "*slack-log*")\n')
+        claude = M.replacement(event)["updatedToolOutput"]["stdout"]
+        codex = codex_hook().decision(event)["reason"]
+        for output in (claude, codex):
+            self.assertNotIn(OPAQUE, output)
+            self.assertNotIn(SLACK_SESSION, output)
+            self.assertIn("&frt=" + URL_MASK + "&dp=1", output)
+            self.assertIn("?token=" + URL_MASK + "&sync_desync=1", output)
+            # The connection's ordinary parameters stay readable.
+            for kept in ("slack_client=desktop", "start_args=%3Fagent%3Dclient%26org_wide_aware%3Dtrue%26agent_version",
+                         "flannel=3", "gateway_server=T0SYNTH-4", "batch_presence_aware=1"):
+                self.assertIn(kept, output)
+
+    def test_credential_url_parameters_are_masked(self):
+        totp_seed = "JBSW" + "Y3DP" * 4
+        for name in ("token", "access_token", "refresh_token", "id_token", "auth_token", "session_token",
+                     "oauth_token", "api_token", "api_key", "apikey", "API-KEY", "client_secret", "secret",
+                     "password", "passwd", "sig", "signature", "X-Amz-Signature", "X-Amz-Security-Token",
+                     "X-Goog-Signature", "oauth_signature", "ticket", "frt", "jwt"):
+            output = M.replacement(bash(f"https://h.example/p?a=1&{name}={OPAQUE}&b=2\n"))["updatedToolOutput"]["stdout"]
+            self.assertEqual(output, f"https://h.example/p?a=1&{name}={URL_MASK}&b=2\n", name)
+        cases = {
+            # Socket Mode connection URL (apps.connections.open).
+            "wss://wss-primary.slack.com/link/?ticket=" + OPAQUE + "&app_id=A0SYNTH":
+                "wss://wss-primary.slack.com/link/?ticket=" + URL_MASK + "&app_id=A0SYNTH",
+            "otpauth://totp/Example:me?secret=" + totp_seed + "&issuer=Example":
+                "otpauth://totp/Example:me?secret=" + URL_MASK + "&issuer=Example",
+            # Percent-escapes inside a value (base64 `+` and `=`) are part of it.
+            "?sv=2022-11-02&sp=r&sig=" + OPAQUE[:10] + "%2B" + OPAQUE[10:] + "%3D":
+                "?sv=2022-11-02&sp=r&sig=" + URL_MASK,
+            # A URL nested in another, percent-encoded; the value ends at %26.
+            "next=https%3A%2F%2Fh.example%2Fcb%3Faccess_token%3D" + OPAQUE + "%26state%3Dok":
+                "next=https%3A%2F%2Fh.example%2Fcb%3Faccess_token%3D" + URL_MASK + "%26state%3Dok",
+            # JSON-escaped (Slack's API escapes `/` and some JSON encoders `&`).
+            '{"url":"wss:\\/\\/h\\/?a=1\\u0026frt=' + OPAQUE[:12] + "\\/" + OPAQUE[12:] + '\\u0026b=2"}':
+                '{"url":"wss:\\/\\/h\\/?a=1\\u0026frt=' + URL_MASK + '\\u0026b=2"}',
+            "<a href=\"/x?a=1&amp;frt=" + OPAQUE + "&amp;b=2\">": "<a href=\"/x?a=1&amp;frt=" + URL_MASK + "&amp;b=2\">",
+            # A form-encoded body, such as an OAuth token response.
+            "access_token=" + OPAQUE + "&token_type=bearer&scope=repo":
+                "access_token=" + URL_MASK + "&token_type=bearer&scope=repo",
+        }
+        codex = codex_hook()
+        for text, expected in cases.items():
+            self.assertEqual(M.replacement(bash(text))["updatedToolOutput"]["stdout"], expected, text)
+            self.assertNotIn(OPAQUE[:12], codex.decision(bash(text))["reason"], text)
+        # A value that ends one string stops at the separator the hooks join
+        # strings with, instead of swallowing the next string.
+        masked = M.replacement(bash("?frt=" + OPAQUE, stderr="warning: x"))["updatedToolOutput"]
+        self.assertEqual((masked["stdout"], masked["stderr"]), ("?frt=" + URL_MASK, "warning: x"))
+
+    def test_ordinary_url_parameters_are_left_alone(self):
+        codex = codex_hook()
+        for text in (
+            "https://api.github.com/repos/o/r/issues?page=2&per_page=100&q=is%3Aopen&sort=updated&state=open",
+            # Names that merely contain a credential name, and pagination tokens.
+            f"https://h.example/?signal={OPAQUE}&tokenizer={OPAQUE}&secretary={OPAQUE}",
+            f"https://www.googleapis.com/drive/v3/files?pageToken={OPAQUE}&nextPageToken={OPAQUE}&next_token={OPAQUE}",
+            "https://b.s3.amazonaws.com/k?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Expires=900"
+            "&X-Amz-Credential=ASIDEXAMPLE%2F20261115%2Fus-east-1%2Fs3%2Faws4_request",
+            # Values too short to be credentials.
+            "?token=abc123&sig=short&ticket=PROJ-1234",
+            # Code that builds such a URL.
+            'url = f"https://h/?token={token}"; u = "?token=" + token; v = "?token=${SLACK_TOKEN}"',
+            '(concat "wss://h/?token=" (slack-team-token team) "&frt=" frt)',
+        ):
+            self.assertIsNone(M.replacement(bash(text + "\n")), text)
+            self.assertIsNone(codex.decision(bash(text + "\n")), text)
+
     def test_numeric_uuid_prefix_survives_both_output_hooks(self):
-        codex_spec = importlib.util.spec_from_file_location(
-            "codex_redact_tool_output", HOOK.parents[2] / "codex/hooks/redact-tool-output.py")
-        codex = importlib.util.module_from_spec(codex_spec)
-        codex_spec.loader.exec_module(codex)
+        codex = codex_hook()
         for value in (MBID, MBID.upper()):
             event = bash(json.dumps({"mbid": value}))
             self.assertIsNone(M.replacement(event))

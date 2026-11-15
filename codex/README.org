@@ -1417,7 +1417,10 @@ whose per-account profile that hook reopens.
 through the same two layers (shape patterns and the known-value index).
 The shared numeric filter preserves complete UUID tokens while still masking
 standalone sixteen-digit numbers and malformed UUID lookalikes. Contextual
-credential patterns and known-secret fingerprints still apply to UUIDs. Codex
+credential patterns and known-secret fingerprints still apply to UUIDs. The
+shared patterns also mask credential-bearing URL parameters (=token=, =sig=,
+=frt=, =ticket=, =api_key= and the like) by name, whatever the value's shape
+(see Claude's README). Codex
 has no field that rewrites a result, so when masking changes anything the hook
 returns =decision: "block"= with the masked output as the reason, which the
 model sees instead; images from credential pages are dropped the same way, and on those pages browser text has credential-like strings masked (=credential_pages.mask_opaque=).

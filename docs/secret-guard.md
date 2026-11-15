@@ -104,8 +104,9 @@ screenshot.
 | 11-01 | Guest Wi-Fi password | b | a subagent read a mailbox file while replaying messages through a design |
 | 11-03 | Airtable PAT (regenerated before use) | d | screenshot of the token-created dialog |
 | 11-13 | GitHub CLI OAuth token (base64 in a git auth header) | a | a script's `git clone` timed out and Python's `TimeoutExpired` traceback printed the argv holding the header; the script now passes it through `GIT_CONFIG_*` env vars; rotated 11-13 (grant revoked, new login) |
+| 11-15 | Slack websocket reconnect parameter (`frt`) of an Emacs Slack connection (its `token` parameter was masked) | a | an `emacsclient` read of `process-list` names in Pablo's Emacs, during an org-linear diagnosis, printed the websocket URL; the output hook masks `token=` but not `frt=` |
 
-Tally: page/screenshot 10, command output 10, file read 3, **typed literal 0**.
+Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
 
 ## Protection in place (2026-10-01)
 

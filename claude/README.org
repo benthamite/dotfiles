@@ -1642,7 +1642,11 @@ separate self-edit guard.
 The =dotfiles-context= and =elisp-conventions= workflows prepare a local topic
 branch, PR draft and retention plan for external-package fixes even when no PR
 was requested. Diagnosis-only and explicitly local-only tasks retain their scope;
-publication and profile activation still require applicable authorization.
+publication and profile activation still require applicable authorization. The
+fix branch lives in the package's registered Elpaca checkout, the only place
+commit evidence comes from. When upstream's docs do not describe the changed
+behavior, that branch may defer the manual guard (branch-local
+=deferDocUpdates=) rather than carry an invented edit to upstream's README.
 
 Scoped fork and PR-creation grants use
 [[file:../agents/github-operation-authorizations.md][the operation authorization procedure]] and a shared checker. Only committed,

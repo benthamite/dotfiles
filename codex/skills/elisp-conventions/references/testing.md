@@ -124,3 +124,12 @@ milestone is complete and before merge. The guard ignores this setting on
 an appropriate place to defer. Detached HEAD has no branch-local deferral.
 This is not a routine bypass for ordinary commits or a substitute for resolving
 a genuine documentation-policy conflict.
+
+An upstream-fix branch may use the same setting (Pablo, 2026-11-15): a topic
+branch carrying a fix meant for a package another author maintains, when that
+package's documentation does not describe the behavior the fix changes. The
+guard cannot tell upstream's README from a manual of Pablo's, so it would
+otherwise demand an invented edit to someone else's README. The PR still
+follows upstream's own documentation conventions; update upstream's docs
+whenever the fix changes something they describe. Leave the setting on that
+branch until it is merged or abandoned.

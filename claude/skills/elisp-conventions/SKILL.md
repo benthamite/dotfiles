@@ -175,4 +175,4 @@ generated/machine-owned file such as `lockfile.el`, `*-autoloads.el`, or
 (a job title in a signature, say) when no manual quotes the replaced text; the
 guard checks both. Read [references/testing.md](references/testing.md) before
 using the branch-local documentation deferral for a deliberate multi-commit
-refactor.
+refactor or for a branch carrying a fix meant for another author's package.

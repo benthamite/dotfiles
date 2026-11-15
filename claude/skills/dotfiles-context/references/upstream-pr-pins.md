@@ -22,6 +22,13 @@ applicable package checks and requested behavior verification before presenting
 the contribution for approval. If the original issue remains unverified or the
 change addresses only a separate confirmed defect, say so in the PR draft.
 
+For an Elpaca-managed package, make the topic branch in its registered
+checkout: commit evidence comes from `batch-test.sh`, which tests only that
+checkout, so a commit from a separate worktree is refused. The manual guard
+applies there too; when upstream's docs do not describe the changed behavior,
+use the branch-local deferral in `elisp-conventions` (`references/testing.md`)
+instead of inventing an edit to upstream's README.
+
 Prepare a PR title/body and identify the existing recipe and temporary fork
 branch needed to retain the change locally. When that requires configuration
 changes, prepare a reviewable patch before asking to activate it. Do not wait

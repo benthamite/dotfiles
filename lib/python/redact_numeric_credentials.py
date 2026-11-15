@@ -1,4 +1,4 @@
-"""Mask sixteen-digit credentials without corrupting complete UUID tokens.
+"""Mask sixteen-digit credentials without corrupting complete UUID tokens or decimal fractions.
 
 Only the numeric shape heuristic exempts UUIDs. The surrounding pipeline still
 applies contextual credential patterns and known-secret fingerprints.
@@ -11,7 +11,10 @@ import sys
 PATTERN = re.compile(
     r"(?P<uuid>(?<![\w-])[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-"
     r"[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?![\w-]))"
-    r"|(?a:\b[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}\b)"
+    # A run right after a decimal point is the fraction of a number (replay gain,
+    # probabilities), not a card or account number: masking it corrupted
+    # agents' numeric output (TangoDB worker audit, 15 Nov 2026).
+    r"|(?a:(?<![.\d])\b[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}[ -]?[0-9]{4}\b)"
 )
 
 

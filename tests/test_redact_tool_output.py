@@ -86,6 +86,14 @@ class RedactToolOutputTest(unittest.TestCase):
             self.assertNotIn(MBID, output)
             self.assertIn("[REDACTED]", output)
 
+    def test_decimal_fractions_are_left_alone(self):
+        fraction = "1234567" * 2 + "89"  # 16 digits after a decimal point
+        for value in (f"-3.{fraction}", f"0.{fraction}", f"replaygain: 1.{fraction} dB"):
+            self.assertIsNone(M.replacement(bash(value + "\n")))
+        # A bare 16-digit run is still masked, even next to a fraction.
+        output = M.replacement(bash(f"0.5 {MULLVAD}"))["updatedToolOutput"]["stdout"]
+        self.assertNotIn(MULLVAD, output)
+
     def test_malformed_uuid_does_not_exempt_numeric_prefix(self):
         for value in (MBID[:-1], MBID + "0", MBID[:-1] + "z", MBID + "-suffix"):
             output = M.replacement(bash(value))["updatedToolOutput"]["stdout"]

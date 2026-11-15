@@ -524,6 +524,8 @@ The function @code{simple-extras-call-when-reachable} takes a URL@comma{} a func
                      "https://api.github.com/" #'forge-extras-pull-notifications)
 @end lisp
 
+A timer whose job needs the network but connects from a subprocess can use it too@comma{} to skip runs while the network is down. Idle time includes the time the Mac sleeps@comma{} so an idle timer fires in the first maintenance wake after the lid closes@comma{} when the network is often not yet up. Elfeed's update timer is gated this way.
+
 @node Reaping closed server clients
 @section Reaping closed server clients
 

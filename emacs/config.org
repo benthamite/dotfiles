@@ -14725,13 +14725,19 @@ CLOCK: [2021-04-08 Thu 21:19]--[2021-04-08 Thu 21:50] =>  0:31
 
 If the lines are breaking at the wrong places, set ~shr-width~ to the right value.
 
+The idle update runs only when the network answers. Idle time includes sleep, so
+the timer fires in the first maintenance wake after the lid closes, when the
+network is often down; its first run also loads =elfeed-ai= and with it =gptel=,
+whose credential reads then time out (2026-11-13).
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package elfeed
   :ensure (:host github
                  :repo "emacs-elfeed/elfeed")
   :defer t
   :init
-  (run-with-idle-timer (* 5 60) t #'elfeed-extras-update)
+  (run-with-idle-timer (* 5 60) t #'simple-extras-call-when-reachable
+                       "https://www.google.com/generate_204" #'elfeed-extras-update)
 
   :custom
   (elfeed-curl-timeout 5)

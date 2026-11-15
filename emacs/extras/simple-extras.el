@@ -1344,10 +1344,11 @@ running, start none and return nil; otherwise return the probe process."
 ;;;###autoload
 (defun simple-extras-call-when-reachable (url function &rest args)
   "Call FUNCTION with ARGS if URL answers, without blocking Emacs until then.
-Use this for timers whose FUNCTION connects to URL's host from Lisp: see
-`simple-extras-probe-url', which does the check.  When URL does not answer,
-skip the call and log that in *Messages* only.  A call made while the
-previous probe for the same URL and FUNCTION still runs is dropped."
+Use this for timers whose FUNCTION connects to URL's host from Lisp, and for
+timers whose FUNCTION needs the network at all, so that they skip runs while
+it is down: see `simple-extras-probe-url', which does the check.  When URL
+does not answer, skip the call and log that in *Messages* only.  A call made
+while the previous probe for the same URL and FUNCTION still runs is dropped."
   (simple-extras-probe-url
    url (list url function)
    (lambda (reachable)

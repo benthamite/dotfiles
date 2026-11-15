@@ -565,6 +565,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#spofy][spofy]]
 - [[#misc][misc]]
   - [[#epoch][epoch]]
+  - [[#forethought][forethought]]
   - [[#calc][calc]]
   - [[#calc-ext][calc-ext]]
   - [[#alert][alert]]
@@ -5764,6 +5765,7 @@ I use it for the Autumn Sprint's board, and, through the =personal= profile, for
                       "/notes/\\(?:gptel\\|chatgpt\\|chatgpt-sync\\|claude-sync\\|public\\)/")
       :exclude-keywords ("PROJECT")
       :inbox-file ,paths-file-inbox-mobile
+      :assign-new-issues t
       :conflict-winner org
       :keyword-states (("SOMEDAY" . "Backlog") ("MAYBE" . "Backlog") ("LATER" . "Backlog")
                        ("TODO" . "Todo") ("NEXT" . "Todo") ("IMPORTANT" . "Todo")

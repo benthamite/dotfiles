@@ -34,7 +34,12 @@ Read the selected domain references completely before running their checks:
 | Dependencies and other executable supply chains | [supply chain](references/supply-chain.md) |
 | macOS controls, isolation, and recovery | [machine](references/machine.md) |
 | Claude, Codex, MCP, plugins, and browser automation | [agents](references/agents.md) |
-| Online accounts, breach exposure, and recovery paths | [accounts](references/accounts.md) |
+| Online accounts, the second-factor phone, breach exposure, and recovery paths | [accounts](references/accounts.md) |
+
+Before authorized remediation of an online account, also read
+[remediation](references/remediation.md). It lists vendor steps with
+easy-to-miss side effects: revoked connectors, a second factor left in place,
+keys a password change does not rotate.
 
 Independent domains may use subagents. Give each the resolved scope, relevant
 reference, and all safety boundaries below. Deduplicate findings that cross
@@ -143,3 +148,20 @@ were unavailable.
 End with the material risk and coverage limits, plus prioritized do/skip/defer
 recommendations. If remediation was authorized, perform it within that scope
 and verify the reported behavior before claiming it resolved.
+
+## Tracking and cadence
+
+A finding that lives only in a report or session log gets lost: the 2026-10-17
+accounts run left three open items in its log and nowhere else. Before ending
+a run, give every finding and deferred remediation step not resolved and
+verified in the session a `** TODO` heading in Pablo's TODO inbox,
+`~/repos/android/inbox-desktop.org`, which syncs to his Linear. Order them by
+severity and, within accounts, by the account tiers in the accounts reference.
+The heading names the account or control and the action; evidence stays in
+the private report. Then compare the report's findings with the TODOs one by
+one, and in the report name any finding left without a TODO on purpose, with
+the reason.
+
+Two repeating TODOs in the same file carry the schedule: a quarterly accounts
+check and a yearly comprehensive audit. When a run covers one of them, mark it
+done so it repeats.

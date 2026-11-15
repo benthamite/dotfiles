@@ -90,7 +90,22 @@ the "Already tried" list in place.
 
 * Incidents
 
-** 2026-11-15 ~15:30 → 16:00: debugger stuck printing 14,274 LanguageTool matches (fixed: dotfiles =69af9843a=; flycheck-languagetool fork pending)
+** Since 2026-11-13, every 10 min: org-linear personal sync blocks Emacs ~14 s (fixed in org-linear =4470c56=)
+
+- Watchdog timeouts on 2026-11-15 at 07:24, 11:54, 13:44, 14:15, 14:35,
+  15:34, matching the personal profile's 10-minute timer (log entries at
+  xx:x5:15); state file up to 22 s stale. Stack
+  =20261115-072455-timeout.txt=: =org-linear-in-place--scan= →
+  =--scan-file= → =find-buffer-visiting= (1,274 of 1,422 samples).
+- =find-buffer-visiting= walks the buffer list on every call; once per
+  file over 5,248 files and 915 buffers measured 2.7 ms per file, ~14 s.
+- Pablo's =C-g= during these stalls opened the debugger at 16:25 because
+  =debug-on-quit= was still on from the day's SIGUSR2s; set back to nil
+  (its configured default).
+- Fix: one table of visited names, truenames and file numbers per scan;
+  live: 0.7 s for all files, 0 mismatches against =find-buffer-visiting=.
+
+** 2026-11-15 ~15:30 → 16:00: debugger stuck printing 14,274 LanguageTool matches (fixed: dotfiles =69af9843a=; flycheck-languagetool =dcbfa4c=, =f204bd3=)
 
 - Symptom: "Entering debugger..." and nothing else; Emacs at 100% CPU.
 - Samples (=/tmp/emacs-freeze.Ok6113=): =url-http= filter →
@@ -109,7 +124,7 @@ the "Already tried" list in place.
 - One SIGUSR2 (approved) did not help; Pablo's emacsk ended it.
 - Fix: =backtrace-line-length= back to the default (=69af9843a=, live:
   14,274-element list prints in under 1 ms). flycheck-languagetool fork:
-  one-pass line mapping and a buffer-size cap (pending).
+  one-pass line mapping and a 200,000-character buffer cap (=dcbfa4c=, =f204bd3=, live).
 
 ** 2026-11-15 ~16:05: agent eval of =steward-model-scan= blocked the main thread (no change)
 

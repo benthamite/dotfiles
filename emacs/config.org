@@ -4530,6 +4530,16 @@ them later handed raw bytes to Copilot's =textDocument/didOpen=, which
 =json-serialize= rejected.  No timer legitimately depends on an inherited coding
 binding, so every timer runs with both variables reset.
 
+A repeating timer is marked as running before its function is called, and
+=timer-event-handler= clears that mark only when the function returns. If the
+run ends by a non-local exit instead (a =C-g=, or =q= or =top-level= from a
+debugger opened inside it), the mark stays, Emacs skips the timer from then on,
+and the timer silently never runs again. On 2026-11-15 this left the agent
+status poll dead for 45 minutes and org-linear's personal sync dead after one
+=C-g=. So the mark is also cleared when a run of an ordinary repeating timer
+exits abnormally. Idle timers are left alone: for them the mark means "already
+ran in this idle period" and Emacs clears it when the idle period ends.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature timer
   :config
@@ -4542,7 +4552,24 @@ arrive as raw bytes with a permanent `binary' explicit coding."
     (let ((coding-system-for-read nil)
           (coding-system-for-write nil))
       (funcall fn timer)))
-  (advice-add 'timer-event-handler :around #'timer-extras-run-with-default-coding))
+  (advice-add 'timer-event-handler :around #'timer-extras-run-with-default-coding)
+
+  (defun timer-extras-unmark-after-abnormal-exit (fn timer)
+    "Apply FN to TIMER, and unmark TIMER if the run exits non-locally.
+`timer-event-handler' marks a repeating TIMER as triggered before calling
+its function and clears the mark only on return, so a quit or a throw out
+of a debugger would leave TIMER skipped forever.  Idle timers keep their
+mark, which Emacs clears when the idle period ends."
+    (let ((returned nil))
+      (unwind-protect
+          (prog1 (funcall fn timer)
+            (setq returned t))
+        (when (and (not returned)
+                   (timer--repeat-delay timer)
+                   (not (timer--idle-delay timer))
+                   (memq timer timer-list))
+          (setf (timer--triggered timer) nil)))))
+  (advice-add 'timer-event-handler :around #'timer-extras-unmark-after-abnormal-exit))
 #+end_src
 
 ** =dired=

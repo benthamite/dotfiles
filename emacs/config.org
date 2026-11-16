@@ -9979,6 +9979,9 @@ does not exist."
   (steward-directories (list paths-dir-notes))
   (steward-claude-config-directory (expand-file-name "~/.claude-personal"))
   (steward-default-mode "off")
+  ;; Read Protean's assessments: every project's messages become Org tasks
+  ;; (since 16 Nov 2026, protean/docs/plan-2026-11-16-project-context.md).
+  (steward-protean-intake t)
   :config
   (steward-mode))
 #+end_src

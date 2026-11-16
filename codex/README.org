@@ -528,7 +528,9 @@ permissions, collaboration mode, multi-agent role and mode instructions), and th
 other preamble keeps the run pending. As the one exception to the submitted-turn rule, a Codex reviewer whose submitted turn ended with a recorded
 =usage_limit_exceeded= error and no output, followed by exactly =continue=, is
 certified from that continuation turn and recorded as such; any later user turn
-still refuses.
+still refuses. Between the two turns only bookkeeping may appear, including the
+harness's =configuration_update= (reasoning effort) and =additional_tools=
+records in their observed shapes.
 Its watcher returns as soon as the reviewer awaits input and names the next command, because only =finish-review= or =reconcile-submission= advance the run. Closing the run-owned reviewer is a
 required numbered step before the report, through =agent-kill-session-buffer=
 in the reviewer's own buffer; cleanup protects active, reused and unowned

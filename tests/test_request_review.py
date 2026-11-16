@@ -834,6 +834,59 @@ class CrossReviewRunTests(unittest.TestCase):
                     self.cli("finish-review")
                 self.assertEqual(self.state()["status"], "review-active")
 
+    # Shape of the real codex-cli transcript of 2026-11-16: the submitted turn
+    # records a harness-authored reasoning-effort update before the limit, and
+    # the resumed turn re-declares tools before "continue".
+    def configuration_update(self, effort="xhigh"):
+        self.append({"type": "response_item", "payload": {
+            "type": "configuration_update", "reasoning": {"effort": effort}},
+            "metadata": {"client_authored": False, "harness_authored_configuration": True}})
+
+    def tools_update(self):
+        self.append({"type": "response_item", "payload": {
+            "type": "additional_tools", "role": "developer", "tools": [{"type": "function"}]}})
+
+    def test_continuation_tolerates_configuration_and_tool_updates(self):
+        self.create_run()
+        self.cli("submit-review")
+        self.echo(self.prompt)
+        self.configuration_update()
+        self.usage_limited()
+        self.append({"type": "event_msg", "payload": {"type": "thread_settings_applied", "thread_settings": {}}})
+        self.append({"type": "event_msg", "payload": {"type": "task_started", "turn_id": "fixture-resumed"}})
+        self.tools_update()
+        self.resume()
+        self.output()
+        self.append({"type": "custom-title", "customTitle": "Fixture", "sessionId": "fixture-session"})
+        self.assertIn("REVIEW OUTCOME: complete", self.cli("finish-review"))
+        self.assertEqual(self.state()["return_evidence"]["via"], "usage-limit-continuation")
+
+    def test_only_exact_configuration_and_tool_update_shapes_are_bookkeeping(self):
+        valid_config = {"type": "configuration_update", "reasoning": {"effort": "xhigh"}}
+        valid_tools = {"type": "additional_tools", "role": "developer", "tools": [{"type": "function"}]}
+        for payload in (valid_config, valid_tools):
+            self.assertTrue(reviewer._turn_bookkeeping({"type": "response_item", "payload": payload}, None))
+        for payload in ({**valid_config, "model": "other"}, {**valid_config, "reasoning": {}},
+                        {**valid_config, "reasoning": {"effort": "high", "summary": "x"}},
+                        {**valid_config, "reasoning": {"effort": ""}}, {**valid_config, "reasoning": "high"},
+                        {**valid_tools, "role": "user"}, {**valid_tools, "tools": [{}]},
+                        {**valid_tools, "text": "user words"}):
+            with self.subTest(payload=payload):
+                self.assertFalse(reviewer._turn_bookkeeping({"type": "response_item", "payload": payload}, None))
+
+    def test_unrecognized_configuration_update_still_refuses_continuation(self):
+        self.create_run()
+        self.cli("submit-review")
+        self.echo(self.prompt)
+        self.append({"type": "response_item", "payload": {
+            "type": "configuration_update", "reasoning": {"effort": "xhigh"}, "model": "other"}})
+        self.usage_limited()
+        self.resume()
+        self.output()
+        with self.assertRaisesRegex(SystemExit, "no terminal return"):
+            self.cli("finish-review")
+        self.assertEqual(self.state()["status"], "review-active")
+
     def test_claude_reviewer_has_no_continuation_path(self):
         self.actor["backend"] = "claude-code"
         self.create_run(**{"caller-backend": "codex"})

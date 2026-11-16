@@ -507,6 +507,33 @@ def init_review(args):
     print(session.json_for_display(state))
 
 
+def _tool_declarations(payload):
+    """Recognize a Codex additional_tools record: declarations, no text or output.
+
+    codex-cli 0.164.0 persists the session's tool declarations first
+    (protocol/src/models.rs ResponseItem::AdditionalTools; observed
+    2026-10-25), and again as an incremental update when a later turn starts.
+    """
+    tools = payload.get("tools")
+    return (set(payload) <= {"type", "id", "role", "tools"} and payload.get("type") == "additional_tools"
+            and payload.get("role") == "developer" and isinstance(tools, list)
+            and all(isinstance(tool, dict) and _text(tool.get("type")) for tool in tools))
+
+
+def _configuration_update(payload):
+    """Recognize a harness-authored Codex reasoning-effort update.
+
+    codex-cli writes {"type": "configuration_update", "reasoning": {"effort":
+    ...}} right after the user message of a turn whose effort differs from the
+    thread's default (observed 2026-11-16, 486 records, always this shape). It
+    carries no user text and no output; any other shape refuses.
+    """
+    reasoning = payload.get("reasoning")
+    return (set(payload) == {"type", "reasoning"} and payload.get("type") == "configuration_update"
+            and isinstance(reasoning, dict) and set(reasoning) == {"effort"}
+            and _text(reasoning.get("effort")))
+
+
 def _codex_preamble(item, live):
     """Recognize the reviewed upstream first-turn context, not ordinary input.
 
@@ -567,13 +594,7 @@ def _codex_preamble(item, live):
                         for key in ("started_at", "model_context_window"))
                 and payload.get("collaboration_mode_kind", "default") in ("default", "plan"))
     if item.get("type") == "response_item" and payload.get("type") == "additional_tools":
-        # codex-cli 0.164.0 persists the session's tool declarations first
-        # (protocol/src/models.rs ResponseItem::AdditionalTools; observed
-        # 2026-10-25). Declarations only: no user text, no output.
-        tools = payload.get("tools")
-        return (set(payload) <= {"type", "id", "role", "tools"} and payload.get("role") == "developer"
-                and isinstance(tools, list)
-                and all(isinstance(tool, dict) and _text(tool.get("type")) for tool in tools))
+        return _tool_declarations(payload)
     if item.get("type") != "response_item" or payload.get("type") != "message":
         return False
     # codex-cli 0.164.0 also persists the base instructions as a developer
@@ -617,7 +638,8 @@ def _turn_bookkeeping(item, user_text):
     if item.get("type") in {"world_state", "turn_context"}:
         return True
     if item.get("type") == "response_item":
-        return payload.get("type") == "message" and payload.get("role") == "developer"
+        return (payload.get("type") == "message" and payload.get("role") == "developer"
+                or _tool_declarations(payload) or _configuration_update(payload))
     if item.get("type") != "event_msg":
         return False
     kind = payload.get("type")

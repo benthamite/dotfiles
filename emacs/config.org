@@ -4540,6 +4540,14 @@ status poll dead for 45 minutes and org-linear's personal sync dead after one
 exits abnormally. Idle timers are left alone: for them the mark means "already
 ran in this idle period" and Emacs clears it when the idle period ends.
 
+A timer also runs in whatever buffer is current, so a process it starts
+inherits that buffer's =default-directory= as its working directory. When that
+directory has since been deleted, =make-process= signals =file-missing= and the
+timer's run fails. On 2026-11-16 the forge notification poll's reachability
+probe failed this way because the current buffer belonged to a removed project
+directory. No timer depends on a directory that no longer exists, so every
+timer runs from the home directory in that case.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature timer
   :config
@@ -4569,7 +4577,18 @@ mark, which Emacs clears when the idle period ends."
                    (not (timer--idle-delay timer))
                    (memq timer timer-list))
           (setf (timer--triggered timer) nil)))))
-  (advice-add 'timer-event-handler :around #'timer-extras-unmark-after-abnormal-exit))
+  (advice-add 'timer-event-handler :around #'timer-extras-unmark-after-abnormal-exit)
+
+  (defun timer-extras-run-from-existing-directory (fn timer)
+    "Apply FN to TIMER from the home directory if the current one is gone.
+Timers run in whatever buffer is current, and a process they start takes
+that buffer's `default-directory' as its working directory, so a deleted
+directory makes `make-process' signal `file-missing'."
+    (let ((default-directory (if (file-directory-p default-directory)
+                                 default-directory
+                               (expand-file-name "~/"))))
+      (funcall fn timer)))
+  (advice-add 'timer-event-handler :around #'timer-extras-run-from-existing-directory))
 #+end_src
 
 ** =dired=

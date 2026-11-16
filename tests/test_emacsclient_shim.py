@@ -13,13 +13,19 @@ import unittest
 DOTFILES = Path(__file__).resolve().parents[1]
 SHIM = DOTFILES / "shell/shims/emacsclient"
 LIMIT_FORM = ('(let ((inhibit-interaction t) (inhibit-debugger t) (inhibit-debug-on-entry t)) '
-              '(let ((agent-eval--value (with-timeout (120 (error "Agent evaluation exceeded '
-              'EMACSCLIENT_EVAL_LIMIT (%ss)" 120)) {}))) (if (or (stringp agent-eval--value) '
+              '(let* ((agent-eval--source "{}") (agent-eval--read (read-from-string '
+              'agent-eval--source))) (condition-case nil (progn (read-from-string '
+              'agent-eval--source (cdr agent-eval--read)) (error "Agent evaluation must be '
+              'exactly one Lisp expression, but text follows it")) (end-of-file nil) '
+              '(invalid-read-syntax (error "Agent evaluation must be exactly one balanced Lisp '
+              'expression, but unbalanced text follows it"))) (let ((agent-eval--value '
+              '(with-timeout (120 (error "Agent evaluation exceeded EMACSCLIENT_EVAL_LIMIT (%ss)" '
+              '120)) (eval (car agent-eval--read) t)))) (if (or (stringp agent-eval--value) '
               '(numberp agent-eval--value) (symbolp agent-eval--value)) agent-eval--value '
               '(let ((agent-eval--size (length (prin1-to-string agent-eval--value)))) '
               '(if (> agent-eval--size 4000) (error "Agent evaluation result too large to print '
               'safely (%d chars, limit EMACSCLIENT_EVAL_MAX_PRINT); return a string or a narrower '
-              'value" agent-eval--size) agent-eval--value)))))')
+              'value" agent-eval--size) agent-eval--value))))))')
 EMACS = "/opt/homebrew/bin/emacs"
 REAL_CLIENT = "/opt/homebrew/bin/emacsclient"
 
@@ -97,6 +103,37 @@ class ShimTest(unittest.TestCase):
         self.assertEqual(self.run_slow(2, EMACSCLIENT_EVAL_WARN="1").stderr, b"")
         self.assertEqual(self.run_slow(2, CLAUDECODE="1", EMACSCLIENT_EVAL_WARN="0").stderr, b"")
 
+    def test_expression_is_quoted_as_a_lisp_string(self):
+        out = self.run_shim(["--eval", '(message "a\\\\b")'], CLAUDECODE="1")
+        self.assertIn('(agent-eval--source "(message \\"a\\\\\\\\b\\")")', out[-1])
+
+    def test_agent_eval_loading_an_init_file_is_refused(self):
+        # 2026-11-16: an agent loaded the profile's init.el into the live session.
+        for form in ['(load "~/.config/emacs-profiles/9.0.2-dev/init.el")',
+                     '(load (expand-file-name "~/x/init.el") nil)',
+                     "(load-file user-init-file)",
+                     '(load "early-init.el")',
+                     '(load-file "/p/late-init.elc")']:
+            with self.subTest(form=form):
+                result = subprocess.run(
+                    [str(SHIM), "--eval", form],
+                    env={"PATH": os.environ["PATH"], "EMACSCLIENT_SHIM_REAL": str(self.fake),
+                         "EMACS_SOCKET_NAME": "/sock", "CLAUDECODE": "1"},
+                    capture_output=True)
+                self.assertEqual(result.returncode, 1)
+                self.assertEqual(result.stdout, b"")
+                self.assertIn(b"refused", result.stderr)
+
+    def test_other_loads_and_init_mentions_pass(self):
+        for form in ['(load "simple-extras")',
+                     "(init-build-profile (file-name-directory user-init-file))",
+                     '(load "my-init.el.bak-notes")',
+                     '(find-file "init.el")']:
+            with self.subTest(form=form):
+                self.assertEqual(self.run_shim(["--eval", form], CLAUDECODE="1")[-1],
+                                 LIMIT_FORM.format(form.replace("\\", "\\\\")
+                                                   .replace('"', '\\"')))
+
     def test_outside_agents_nothing_changes(self):
         self.assertEqual(self.run_shim(["--eval", "(foo)"]), ["--eval", "(foo)"])
 
@@ -139,6 +176,26 @@ class LiveServerTest(unittest.TestCase):
     def test_small_values_print_as_before(self):
         self.assertEqual(self.ask('(list 1 "a" (quote b))').stdout.strip(), '(1 "a" b)')
         self.assertEqual(self.ask('"str"').stdout.strip(), '"str"')
+
+    def test_quotes_backslashes_and_newlines_survive(self):
+        self.assertEqual(self.ask('(concat "a\\"b" "\\\\"\n "c")').stdout.strip(),
+                         '"a\\"b\\\\c"')
+
+    def test_extra_closing_paren_is_an_error_and_nothing_runs(self):
+        # 2026-11-16: one paren too many closed the spliced wrapper early, so
+        # the client saw "agent-eval--value is void" and the code escaped it.
+        result = self.ask("(setq shim-test-ran t))")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("unbalanced text follows it", result.stderr)
+        self.assertEqual(self.ask("(boundp (quote shim-test-ran))").stdout.strip(), "nil")
+
+    def test_second_expression_is_an_error(self):
+        result = self.ask("(+ 1 2) (+ 3 4)")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("text follows it", result.stderr)
+
+    def test_trailing_comment_is_allowed(self):
+        self.assertEqual(self.ask("(+ 1 2) ; note").stdout.strip(), "3")
 
     def test_oversized_result_is_an_error_that_returns(self):
         # 2026-11-04: pretty-printing a large result hung the server, and an

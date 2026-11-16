@@ -9986,6 +9986,22 @@ does not exist."
   (steward-mode))
 #+end_src
 
+** =protean=
+:PROPERTIES:
+:ID:       7E3F4B2A-5C1D-4E8F-9A6B-2D0C8E1F3A47
+:END:
+
+/[[file:~/repos/protean/README.md][protean]] reads every incoming message and routes it to its project, whose agent decides what it needs; steward turns that into Org tasks. Its queue holds only what no project owns: messages that fit no project, strangers' messages, and Forethought's until Peter agrees./
+
+#+begin_src emacs-lisp
+(use-package protean
+  :ensure nil
+  :load-path "~/repos/protean/emacs/"
+  :commands (protean-queue)
+  :config
+  (protean-mode-line-mode))
+#+end_src
+
 ** =monet=
 :PROPERTIES:
 :ID:       CEC68940-F806-43C7-BC2E-121AA2BC3A0E

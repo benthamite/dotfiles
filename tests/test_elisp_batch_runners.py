@@ -214,6 +214,40 @@ else:
         self.assertIn("Registry source changed", result.stderr)
         self.assertNotIn("recorded test evidence", result.stdout)
 
+    def add_worktree(self, value):
+        worktree = self.root / "worktrees/example/feature"
+        self.git("worktree", "add", "-q", "-b", "feature", str(worktree))
+        (worktree / "example-helper.el").write_text(
+            f"(defun example-value () '{value})\n(provide 'example-helper)\n")
+        return worktree
+
+    def test_batch_tests_and_records_a_linked_worktree(self):
+        worktree = self.add_worktree("feature")
+        result = self.run_helper(self.batch, "--worktree", str(worktree), "example",
+                                 "(unless (eq (example-value) 'feature) (error \"Loaded checkout\"))")
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertIn(f"recorded test evidence for example in {worktree.resolve()}", result.stdout)
+        canonical = self.run_helper(self.batch, "example",
+                                    "(unless (eq (example-value) 'current) (error \"Loaded worktree\"))")
+        self.assertEqual(canonical.returncode, 0, canonical.stderr + canonical.stdout)
+
+    def test_ert_tests_a_linked_worktree(self):
+        worktree = self.add_worktree("current")
+        (self.source / "example-helper.el").write_text(
+            "(defun example-value () 'canonical)\n(provide 'example-helper)\n")
+        result = self.run_helper(self.ert, "--worktree", str(worktree), "example", str(self.test_file))
+        self.assertEqual(result.returncode, 0, result.stderr + result.stdout)
+        self.assertIn(f"recorded test evidence for example in {worktree.resolve()}", result.stdout)
+
+    def test_worktree_of_another_repository_is_refused(self):
+        other = self.root / "other"
+        other.mkdir()
+        subprocess.run(["git", "init", "-q", str(other)], env=self.env, check=True)
+        result = self.run_helper(self.batch, "--worktree", str(other), "example")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("is not a worktree of", result.stderr)
+        self.assertNotIn("recorded test evidence", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

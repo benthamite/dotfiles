@@ -217,7 +217,15 @@ class ElispEvidenceTest(unittest.TestCase):
         self.write(worktree, "pkg.el", "(provide 'pkg) ;; untested\n")
         result = self.git(worktree, "commit", "-q", "-am", "untested", check=False)
         self.assertNotEqual(result.returncode, 0)
-        self.assertRegex(result.stderr, r"batch-test\.sh'? pkg")
+        self.assertIn(f"batch-test.sh --worktree {worktree} pkg", result.stderr)
+        self.record_test(worktree, "pkg")
+        self.git(worktree, "commit", "-q", "-am", "untested")
+
+    def test_main_checkout_hint_does_not_name_a_worktree(self) -> None:
+        repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n"})
+        self.write(repo, "pkg.el", "(provide 'pkg) ;; changed\n")
+        result = self.git(repo, "commit", "-q", "-am", "change", check=False)
+        self.assertNotIn("--worktree", result.stderr)
 
     def test_temporary_repositories_are_not_checked(self) -> None:
         repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n"})

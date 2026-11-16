@@ -87,6 +87,10 @@ unless they also change production code or user documentation.
      library name. The runner resolves the package ID internally. An unmanaged
      package uses its documented clean batch/compile/test workflow; do not
      register or install it just to satisfy this skill.
+   - When the edit lives in a linked Git worktree of the checkout (for
+     example `~/repos/.worktrees/<repo>/<name>`), add `--worktree DIR` before
+     `PACKAGE` in `batch-test.sh` or `elisp-ert`, so the runner loads and
+     records that worktree's files rather than the checkout's.
    - A load-only check proves loadability, not the changed behavior. Exercise
      the relevant assertion and required project checks as well.
    - For non-package Elisp, run the owning project's clean batch or compile

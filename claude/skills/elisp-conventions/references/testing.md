@@ -43,6 +43,13 @@ batch loader requires one unambiguous `<registry-id>.el` at the source root or
 layout. ERT loads the explicit test file and returns its status; a successful run
 records commit evidence just as the batch loader does.
 
+`--worktree DIR`, given before `PACKAGE` to either runner, tests a linked Git
+worktree of the resolved checkout (or of the dotfiles repository, for an extra)
+in place of the checkout itself. `DIR` must be that worktree's top level and
+share the checkout's Git repository. Dependencies still come from the active
+registry; the package's own files, and the evidence recorded, come from `DIR`.
+The commit hook names this form when it blocks a commit made in a worktree.
+
 For non-package Elisp, replace `RELATIVE-PATH` with the staged path relative to
 the repository root and replace `PROJECT-CHECK` with the owning project's
 actual batch, compile, or test command. The wrapper records evidence only when

@@ -365,13 +365,22 @@ def extras_test_package(label: str) -> str | None:
     return match.group(1) if match else None
 
 
+def linked_worktree(root: Path) -> bool:
+    """Return non-nil when ROOT is a linked worktree, not its main checkout."""
+    own = git(root, "rev-parse", "--absolute-git-dir").decode().strip()
+    return Path(own).resolve() != common_dir(root)
+
+
 def test_command(root: Path, label: str) -> str:
+    # The package runners test the registry's checkout unless told to test
+    # this linked worktree instead.
+    where = f" --worktree {shlex.quote(str(root))}" if linked_worktree(root) else ""
     if package := extras_test_package(label):
         test_file = root / label.removeprefix("file:")
-        return f"{shlex.quote(str(TOOL_DIR / 'elisp-ert'))} {shlex.quote(package)} {shlex.quote(str(test_file))}"
+        return f"{shlex.quote(str(TOOL_DIR / 'elisp-ert'))}{where} {shlex.quote(package)} {shlex.quote(str(test_file))}"
     if label.startswith("file:"):
         return f"{shlex.quote(str(TOOL_DIR / 'elisp-check-evidence'))} {shlex.quote(label)} -- PROJECT-CHECK"
-    return f"{shlex.quote(str(TOOL_DIR / 'batch-test.sh'))} {shlex.quote(label)}"
+    return f"{shlex.quote(str(TOOL_DIR / 'batch-test.sh'))}{where} {shlex.quote(label)}"
 
 
 def missing_test_message(root: Path, labels: list[str]) -> str:

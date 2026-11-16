@@ -1,15 +1,26 @@
 #!/usr/bin/env bash
 # Clean batch loading or ERT run of canonical Elisp.  A successful run
 # records test evidence bound to the exact Elisp contents it covered.
-# Usage: batch-test.sh PACKAGE [ELISP-EXPRESSION...]
+# Usage: batch-test.sh [--worktree DIR] PACKAGE [ELISP-EXPRESSION...]
+# --worktree DIR tests a linked Git worktree of the package's checkout
+# instead of the checkout itself, and records evidence for DIR's contents.
 # The private --ert mode shares source/dependency setup with elisp-ert.
 
 set -euo pipefail
 
 ERT_MODE=false
-if [ "${1:-}" = --ert ]; then ERT_MODE=true; shift; fi
+WORKTREE=""
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    --ert) ERT_MODE=true; shift ;;
+    --worktree)
+      [ "$#" -ge 2 ] && [ -n "$2" ] || { echo "--worktree needs a directory" >&2; exit 2; }
+      WORKTREE=$2; shift 2 ;;
+    *) break ;;
+  esac
+done
 if [ "$#" -lt 1 ] || { [ "$ERT_MODE" = true ] && { [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; }; }; then
-  echo "Usage: batch-test.sh PACKAGE [ELISP-EXPRESSION...]" >&2
+  echo "Usage: batch-test.sh [--worktree DIR] PACKAGE [ELISP-EXPRESSION...]" >&2
   exit 2
 fi
 IDENTIFIER=$1
@@ -118,6 +129,29 @@ if { [ "$SOURCE_REPO" != "$CANONICAL_DOTFILES" ] ||
    [ "$RUNTIME_SOURCE" != "$SOURCE_DIR" ]; then
   echo "Registry source changed while resolving dependency paths" >&2
   exit 1
+fi
+# A linked worktree replaces the checkout only after the registry check
+# above, so dependencies still come from the active registry.  It must share
+# the checkout's Git repository; its own files are loaded and recorded.
+if [ -n "$WORKTREE" ]; then
+  if ! WORKTREE=$(cd -- "$WORKTREE" 2>/dev/null && pwd -P) ||
+     [ "$(git -C "$WORKTREE" rev-parse --show-toplevel 2>/dev/null)" != "$WORKTREE" ]; then
+    echo "--worktree must be the top level of a Git worktree" >&2
+    exit 1
+  fi
+  common_dir() {
+    (cd -- "$(git -C "$1" rev-parse --path-format=absolute --git-common-dir)" && pwd -P)
+  }
+  if [ "$(common_dir "$WORKTREE")" != "$(common_dir "$SOURCE_REPO")" ]; then
+    echo "--worktree is not a worktree of $SOURCE_REPO" >&2
+    exit 1
+  fi
+  SOURCE_DIR=$WORKTREE${SOURCE_DIR#"$SOURCE_REPO"}
+  SOURCE_REPO=$WORKTREE
+  if [ ! -d "$SOURCE_DIR" ]; then
+    echo "Package source is missing from the worktree: $SOURCE_DIR" >&2
+    exit 1
+  fi
 fi
 # Exclude the package's own build entirely, not just its main library.
 DEPENDENCIES=$(printf '%s' "$CONTEXT" | jq -c '

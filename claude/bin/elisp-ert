@@ -1,11 +1,17 @@
 #!/usr/bin/env bash
 # Run focused ERT with the canonical source-first batch setup.
-# Usage: elisp-ert PACKAGE TEST-FILE [TEST-NAME]
+# Usage: elisp-ert [--worktree DIR] PACKAGE TEST-FILE [TEST-NAME]
+# --worktree DIR tests a linked Git worktree of the package's checkout.
 
 set -euo pipefail
+worktree=()
+if [ "${1:-}" = --worktree ] && [ "$#" -ge 2 ]; then
+  worktree=(--worktree "$2")
+  shift 2
+fi
 if [ "$#" -lt 2 ] || [ "$#" -gt 3 ]; then
-  echo "Usage: elisp-ert PACKAGE TEST-FILE [TEST-NAME]" >&2
+  echo "Usage: elisp-ert [--worktree DIR] PACKAGE TEST-FILE [TEST-NAME]" >&2
   exit 2
 fi
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd -P)
-exec "$script_dir/batch-test.sh" --ert "$@"
+exec "$script_dir/batch-test.sh" --ert ${worktree[@]+"${worktree[@]}"} "$@"

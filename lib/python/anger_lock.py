@@ -79,15 +79,17 @@ be stopped whenever he writes in anger, for his own well-being. Decide whether \
 the user's OWN words in this message show any of:
 - swearing or profanity (e.g. "fuck", "shit", "damn it", including mild or \
   self-directed swearing and swearing in Spanish or any other language);
-- anger, rage or exasperation (e.g. shouting in capitals, "for fuck's sake", \
-  "how many times do I have to tell you", "are you kidding me", repeated \
-  exclamation marks used in frustration);
+- heated anger or rage (e.g. shouting in capitals, "how many times do I have \
+  to tell you", "are you kidding me", sarcasm or mockery aimed at the agent, \
+  repeated exclamation marks used in fury);
 - insults, contempt or abuse toward the agent (e.g. "you idiot", "useless", \
   "pathetic").
 
 Do NOT flag:
-- calm, blunt criticism of the work ("that's wrong, re-check it", "this \
-  doesn't work", "no, I said X");
+- blunt, firm or impatient criticism and demands without the markers above, \
+  even when the user is clearly dissatisfied ("that's wrong, re-check it", \
+  "this doesn't work", "no, I said X", "5 minutes is unacceptable", "it's \
+  just not usable, you need to propose a solution", "come on");
 - text the user is quoting or pasting that someone else wrote (emails, logs, \
   documents, messages inside <pasted_content> tags, quoted passages), unless \
   the user's own surrounding words meet the criteria;
@@ -95,9 +97,9 @@ Do NOT flag:
   want a hook that detects when I swear");
 - messages relayed from other agent sessions or tools.
 
-The text may come from dictation and contain transcription errors. When the \
-user's own words are genuinely ambiguous between frustration and calm \
-criticism, flag it: the user prefers a false alarm to a missed one.
+The text may come from dictation and contain transcription errors. Flag only \
+when the user's own words clearly show one of the markers above; \
+dissatisfaction alone is not anger.
 
 If you flag the message, also write `suggestion`: one or two short sentences \
 the user will read while locked out for a few minutes. Be creative and \

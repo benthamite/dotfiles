@@ -9904,6 +9904,10 @@ does not exist."
   (agent-codex-accounts (pablo/agent-accounts 'codex))
   ;; Each organization's directories always run under its own account,
   ;; whatever account is currently selected.
+  ;; A TODO under a project heading starts its session in the project's
+  ;; directory, and a task Protean made from a message is a ready brief.
+  (agent-todo-directory-property "PROTEAN_DIRECTORY")
+  (agent-todo-submit-property "PROTEAN_SOURCE")
   (agent-account-directory-rules
    `((,(file-name-concat paths-dir-personal-repos "epoch/")
       . ((claude-code . "epoch") (codex . "epoch")))
@@ -9979,19 +9983,16 @@ does not exist."
   :ensure (:host github
                  :repo "benthamite/protean"
                  :files ("emacs/*.el"))
-  :after (agent org)
+  :after org
   :demand t
   :custom
   (protean-directories (list paths-dir-notes))
-  (protean-claude-config-directory (expand-file-name "~/.claude-personal"))
-  (protean-default-mode "off")
-  ;; Read the engine's assessments: every project's messages become Org tasks
-  ;; (since 16 Nov 2026, protean/docs/plan-2026-11-16-project-context.md).
-  (protean-intake t)
   ;; Forethought's projects are the Linear-project headings of sprint.org, and
   ;; every task made there is Pablo's alone (Pablo, 17 Nov 2026).
   (protean-linear-mirror-files
    (list (file-name-concat paths-dir-personal-repos "forethought-notes/sprint.org")))
+  (protean-archives
+   (list (file-name-concat paths-dir-personal-repos "forethought-notes/sprint-archive.org")))
   (protean-exported-task-tags '("pablo"))
   :config
   (protean-mode))

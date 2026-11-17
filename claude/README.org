@@ -1577,6 +1577,9 @@ after-edit hook in a private directory and blocks the commit when the staged
 changed outside Edit or Write. Org 9.7 and later write =@comma{}= and spelled-out
 =@ref= titles; after the Emacs 31.1 upgrade every manual was regenerated once
 (2026-11-10), so later exports change only what the Org edit changed.
+The hook stages each export in =/tmp= and copies it beside its destination
+before replacing it, so a manual on another volume (a worktree under
+=/Volumes/AgentScratch=) regenerates too.
 An Elisp support file outside any package tree with its own =doc/=, such as a
 helper under =bin/=, is documented by the =README.org= of its directory or a
 parent; the Codex README gate ignores the project-local =.codex/skills/=

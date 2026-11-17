@@ -89,7 +89,7 @@ PY
 
 publish_artifact() {
   python3 - "$1" "$2" "$3" <<'PY'
-import json, os, stat, sys
+import json, os, shutil, stat, sys, tempfile
 source, destination, expected = sys.argv[1:]
 try:
     entry = os.lstat(destination)
@@ -100,9 +100,24 @@ except FileNotFoundError:
     current = "missing"
 if current != expected:
     sys.exit(1)
-if current != "missing":
-    os.chmod(source, stat.S_IMODE(entry.st_mode))
-os.replace(source, destination)
+# Staging may be on another volume (a worktree under /Volumes), where
+# os.replace cannot cross: copy beside the destination, then replace.
+fd, local = tempfile.mkstemp(prefix=".manual-export-", dir=os.path.dirname(destination))
+os.close(fd)
+try:
+    shutil.copyfile(source, local)
+    if current != "missing":
+        os.chmod(local, stat.S_IMODE(entry.st_mode))
+    else:
+        mask = os.umask(0)
+        os.umask(mask)
+        os.chmod(local, 0o666 & ~mask)
+    os.replace(local, destination)
+except BaseException:
+    if os.path.exists(local):
+        os.unlink(local)
+    raise
+os.unlink(source)
 PY
 }
 

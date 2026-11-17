@@ -9962,44 +9962,29 @@ does not exist."
   (agent-log-auto-redact-sessions t))
 #+end_src
 
-** =steward=
-:PROPERTIES:
-:ID:       B1637A19-0D7A-4D18-AAC5-BE2554CE5ACE
-:END:
-
-/[[https://github.com/benthamite/steward][steward]] runs my projects: each project's orchestrator proposes its next step, I approve or reject it in one queue, and the work happens in =agent= sessions. It is private until it works; the design is =~/repos/protean/docs/orchestration-spec.md=. A project is off unless its heading, or an ancestor's, sets =STEWARD_MODE=./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package steward
-  :ensure (:host github
-                 :repo "benthamite/steward")
-  :after (agent org)
-  :demand t
-  :custom
-  (steward-directories (list paths-dir-notes))
-  (steward-claude-config-directory (expand-file-name "~/.claude-personal"))
-  (steward-default-mode "off")
-  ;; Read Protean's assessments: every project's messages become Org tasks
-  ;; (since 16 Nov 2026, protean/docs/plan-2026-11-16-project-context.md).
-  (steward-protean-intake t)
-  :config
-  (steward-mode))
-#+end_src
-
 ** =protean=
 :PROPERTIES:
 :ID:       7E3F4B2A-5C1D-4E8F-9A6B-2D0C8E1F3A47
 :END:
 
-/[[file:~/repos/protean/README.md][protean]] reads every incoming message and routes it to its project, whose agent decides what it needs; steward turns that into Org tasks. Its queue holds only what no project owns: messages that fit no project, strangers' messages, and Forethought's until Peter agrees./
+/[[file:~/repos/protean/README.md][Protean]] turns incoming messages into work in my projects. Its engine (a launchd daemon) collects every channel, routes each message to a project and has the project's agent decide what it needs; this front end is the only place I look: projects and tasks in Org, one queue (=protean-queue=) of what waits for me and has no task, sessions (=protean-run-task=), and one counter, =Protean: N to do=. A project's planning agent runs only if its heading, or an ancestor's, sets =PROTEAN_MODE=. Manual: =~/repos/protean/emacs/README.org=; the system in one page: =~/repos/protean/docs/map.md=./
 
-#+begin_src emacs-lisp
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package protean
-  :ensure nil
-  :load-path "~/repos/protean/emacs/"
-  :commands (protean-queue)
+  :ensure (:host github
+                 :repo "benthamite/protean"
+                 :files ("emacs/*.el"))
+  :after (agent org)
+  :demand t
+  :custom
+  (protean-directories (list paths-dir-notes))
+  (protean-claude-config-directory (expand-file-name "~/.claude-personal"))
+  (protean-default-mode "off")
+  ;; Read the engine's assessments: every project's messages become Org tasks
+  ;; (since 16 Nov 2026, protean/docs/plan-2026-11-16-project-context.md).
+  (protean-intake t)
   :config
-  (protean-mode-line-mode))
+  (protean-mode))
 #+end_src
 
 ** =monet=

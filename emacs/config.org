@@ -10004,7 +10004,10 @@ does not exist."
     (add-hook 'agent-auto-eligible-functions #'protean-auto-eligible-p))
   (with-eval-after-load 'agent
     (require 'agent-auto)
-    (agent-auto-mode 1)))
+    (agent-auto-mode 1))
+  ;; The inbox's keys (s start session, n nothing needed) in the Linear list too.
+  (with-eval-after-load 'org-linear
+    (add-hook 'org-linear-my-issues-mode-hook #'protean-inbox-mode)))
 #+end_src
 
 ** =monet=

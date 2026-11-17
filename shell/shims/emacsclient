@@ -55,7 +55,7 @@
 #
 # Emacs does nothing else while it evaluates, and `with-timeout' cannot stop
 # Lisp that keeps computing, so no limit protects Pablo from a slow agent
-# evaluation. On 2026-11-15 an agent's `steward-model-scan' froze his Emacs
+# evaluation. On 2026-11-15 an agent's `steward-model-scan' (now `protean-model-scan') froze his Emacs
 # until he broke in with SIGUSR2. So an agent evaluation that took
 # EMACSCLIENT_EVAL_WARN seconds or more (default 3; 0 disables) prints a
 # warning to the agent saying how long Emacs was blocked and where such work

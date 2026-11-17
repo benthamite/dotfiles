@@ -90,7 +90,7 @@ Send with `wa-send --chat "EXACT NAME" | --to JID --text "..." [--file
 wa-archive's outbox, the daemon sends it as Pablo (a file goes as a document,
 or as a photo if it is an image, with the text as caption), archives it, and
 `wa-send` prints the receipt. Send only what Pablo approved: his confirmation of the
-exact text and recipients (as in a `steward-run-task` session), his explicit OK in chat, or a step of a skill he
+exact text and recipients (as in a `protean-run-task` session), his explicit OK in chat, or a step of a skill he
 invoked that names the message. Run in `~/repos/forethought` or below,
 `wa-send`, `slack.py send` and `gmail.py send|reply` add the `[agent] ` prefix
 themselves (`claude/bin/agent_prefix.py`; rule in that folder's `AGENTS.md`);
@@ -122,7 +122,7 @@ bare `[voice]`. If one shows «todavía sin transcripción», fetch it with
 `wa-fetch --id` (that also transcribes it) and wait a minute. Every attachment received since 2026-10-28 15:35 can
 be fetched; the few that arrived before cannot (the phone does not resend
 them). Never ask Pablo to forward or resend files to make them fetchable: if
-an old one is truly needed, draft a request to its sender in the project's steward task.
+an old one is truly needed, draft a request to its sender in the project's Protean task.
 
 ## Slack
 
@@ -131,7 +131,7 @@ Send with `slack.py -w WORKSPACE send --permalink URL | --channel ID
 --help`): it posts as Pablo, `--permalink` replying in that message's thread,
 and prints a receipt with the new message's permalink. Send only what Pablo
 approved: his confirmation of the exact text and recipients (as in a
-`steward-run-task` session), or his explicit OK in chat. Exit 3 means Slack gave no response, so the message may have gone out:
+`protean-run-task` session), or his explicit OK in chat. Exit 3 means Slack gave no response, so the message may have gone out:
 check `slack.py replies` or `history` before retrying, never resend blindly. A
 draft Pablo wants to edit or send himself goes in its conversation's Emacs
 composer with `copy-slack-draft`. After sending, `send` empties that composer
@@ -226,9 +226,9 @@ email (personal and Forethought), WhatsApp (every chat not on the deny-list),
 Signal, Telegram and Slack (becas-aisar, baish, forethought) into
 `~/.local/share/protean/protean.db`, routes each message into a ticket owned by
 a project, and has that project's agent assess it. Epoch Slack and Epoch mail
-are not collected. Steward (Emacs) turns each assessment into a task or a note
-under the project's heading in `~/repos/notes/steward-projects.org` (while
-`steward-protean-intake` is on; steward's manual, "Intake from Protean").
+are not collected. Protean's Emacs front end turns each assessment into a task
+or a note under the project's heading in `~/repos/notes/protean-projects.org`
+(while `protean-intake` is on; manual `~/repos/protean/emacs/README.org`).
 Protean submits nothing to a session except a closed wait's notice: there are
 no message wake-ups, no router corrections, no drafts files and no
 pre-authorized-action policies any more.
@@ -258,13 +258,13 @@ pre-authorized-action policies any more.
   person wrote, not that the matter is settled: if the message does not resolve
   it, register the wait again.
 - Draft replies, decisions and tasks only Pablo can do live in the Org task
-  steward creates for the message, under the project's heading in
-  `~/repos/notes/steward-projects.org`: its body holds the draft, the rationale
+  Protean creates for the message, under the project's heading in
+  `~/repos/notes/protean-projects.org`: its body holds the draft, the rationale
   and the references (Protean ticket and proposal, channel and conversation),
   and its `DONE_WHEN` says when it closes. Never the kill ring, and never only
   in a chat reply or a status line. An exported project (Forethought) keeps no
   message text in Org: its task holds only Protean's proposal and the
-  references. Pablo revises the draft and runs `steward-run-task`, which starts
+  references. Pablo revises the draft and runs `protean-run-task`, which starts
   a session in the project that finds the conversation from the references,
   shows him the exact text and recipients, and sends once he confirms.
 - Before a draft asks anyone for information or a document, check that it has

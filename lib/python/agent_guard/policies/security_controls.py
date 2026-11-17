@@ -2,9 +2,15 @@
 
 Denied for both runtimes, with no override an agent can type:
 
-1. AppleScript or JXA (`osascript` with -e, -l JavaScript, a script on stdin
-   or in a heredoc) addressed to System Events, System Settings or System
-   Preferences, SecurityAgent or LuLu;
+1. AppleScript or JXA (`osascript`) that operates System Events, System
+   Settings or System Preferences, or LuLu, and any addressed to
+   SecurityAgent. A script may look but not touch: AppleScript given with -e
+   or in a heredoc passes when every statement is a recognized read or plain
+   control flow (agent_guard.applescript_reads, an allowlist), `activate`
+   included. Clicking, typing, setting a property, anything unrecognized, all
+   JXA naming these targets, and a script the guard cannot see (a file, a
+   pipe, a here-string, an unexpanded variable) in a command that names one
+   stay denied;
 2. `tccutil`, whatever the subcommand;
 3. writes to a privacy database named TCC.db: `sqlite3` without a read-only
    open, an interpreter program that names it without one, redirections and
@@ -41,13 +47,13 @@ import re
 import shlex
 from collections import Counter
 
-from .. import classifiers
+from .. import applescript_reads, classifiers
 from ..codex_payload import PartialOutput, nested_exec_commands
 from ..core import CODEX, Call, Result
 from ..shell_text import mask_git_commit_messages, mask_heredoc_bodies
 from .launchagent import _plutil_targets
 
-APPLESCRIPT = "AppleScript or JXA addressed to System Events, System Settings, SecurityAgent or LuLu"
+APPLESCRIPT = "AppleScript or JXA that operates System Events, System Settings, SecurityAgent or LuLu"
 TCCUTIL = "tccutil, which resets privacy grants"
 TCC_DB = "a write to a TCC.db privacy database"
 FDESETUP = "an fdesetup (FileVault) state change"
@@ -58,9 +64,12 @@ QUARANTINE = "removing the quarantine attribute with xattr"
 UNCLASSIFIED = "nested shell code naming a security control, too deep to classify"
 
 _STILL_ALLOWED = {
-    APPLESCRIPT: "AppleScript addressed to other applications stays available, as do the helper scripts in "
-                 "~/repos/dotfiles/bin that wrap UI automation (drive-errors, lulu-directory-rules, opentopage, "
-                 "dictation-language).",
+    APPLESCRIPT: "Looking stays available: AppleScript passed with -e or in a heredoc whose every statement is a read "
+                 "or plain control flow (get, count, exists, properties of processes and their windows, tell blocks, "
+                 "set VARIABLE to, if/repeat/try, return, log, delay, activate). Clicking, typing, setting a property, "
+                 "JXA, SecurityAgent and any form the guard does not recognize are denied. AppleScript addressed to "
+                 "other applications is unaffected, as are the helper scripts in ~/repos/dotfiles/bin that wrap UI "
+                 "automation (drive-errors, lulu-directory-rules, opentopage, dictation-language).",
     TCCUTIL: "Reading privacy grants stays available: the security-audit skill's scripts/tcc-grants.py.",
     TCC_DB: "Read-only access stays available: `sqlite3 -readonly`, a `file:...?mode=ro` URI, or the security-audit "
             "skill's scripts/tcc-grants.py.",
@@ -75,16 +84,19 @@ _STILL_ALLOWED = {
 }
 
 
-def reason(label: str) -> str:
-    return (f"BLOCKED: {label}.\n\nThis class of command changes the Mac's security controls, and agents may not run "
+def reason(label: str, detail: str = "") -> str:
+    """The deny reason for LABEL; DETAIL says why an AppleScript did not pass as a read."""
+    headline = f"{label} ({detail})" if detail else label
+    return (f"BLOCKED: {headline}.\n\nThis class of command changes the Mac's security controls, and agents may not run "
             "it; there is no override. If the task truly needs it, hand Pablo the exact command, staged with "
             "~/repos/dotfiles/claude/bin/kill-ring-put, for him to run himself.\n\n" + _STILL_ALLOWED[label])
 
 
 class _Denied(Exception):
-    def __init__(self, label: str):
+    def __init__(self, label: str, detail: str = ""):
         super().__init__(label)
         self.label = label
+        self.detail = detail
 
 
 # Every name a rule can fire on; a command without one is not parsed at all.
@@ -97,6 +109,10 @@ _LULU_NAME = re.compile(r"(?<![A-Za-z0-9_-])lulu(?![A-Za-z0-9_-])|objective-see"
 _LULU_DIR = re.compile(r"Objective-See/LuLu(?![A-Za-z0-9_-])", re.I)
 _TCC = re.compile(r"(?<![A-Za-z0-9_])TCC\.db", re.I)
 _READ_ONLY_OPEN = re.compile(r"mode=ro\b|immutable=1\b|-readonly\b")
+_SECURITY_AGENT = re.compile(r"SecurityAgent", re.I)
+# Code an AppleScript loads from elsewhere: it can hold what the script itself does not show.
+_SCRIPT_LOADER = re.compile(r"\b(run|load)\s+script\b|\bdo\s+shell\s+script\b|osascript", re.I)
+_HEREDOC = re.compile(r"(?<!<)<<(?!<)-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
 _VARIABLE = re.compile(r"\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?")
 _ASSIGNMENT = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)=(.*)", re.S)
 _BOUNDARY = re.compile(r"\|\||&&|[;|&\n()`{}]|\$\(")
@@ -197,6 +213,26 @@ def _redirect_targets(text: str) -> list[str]:
     return targets
 
 
+def _osascript_heredocs(source: str) -> list[tuple[str, bool, str]]:
+    """(delimiter, quoted, body) of each heredoc on a line that runs osascript."""
+    lines = source.split("\n")
+    found, index = [], 0
+    while index < len(lines):
+        opener = _HEREDOC.search(lines[index])
+        if opener is None:
+            index += 1
+            continue
+        strip = opener.group(0).startswith("<<-")
+        end = next((later for later in range(index + 1, len(lines))
+                    if (lines[later].lstrip("\t") if strip else lines[later]) == opener.group(2)), None)
+        if end is None:
+            break
+        if "osascript" in lines[index]:
+            found.append((opener.group(2), bool(opener.group(1)), "\n".join(lines[index + 1:end])))
+        index = end + 1
+    return found
+
+
 def _skip_options(words: list, values: set[str]) -> list:
     i = 0
     while i < len(words):
@@ -293,13 +329,14 @@ class _Scan:
         if _TCC.search(programs) and not _READ_ONLY_OPEN.search(programs):
             raise _Denied(TCC_DB)
         shell = shell.replace("\\\n", "")
+        heredocs = _osascript_heredocs(source)
         for target in _redirect_targets(shell):
             self._deny_path(target)
         try:
             lifted, captures, _ = tokens._lift_substitutions(shell)
             pipelines = tokens._split_simple(list(_without_comments(tokens._tokenize(lifted))))
         except tokens.Deny:
-            self._fallback(shell, depth)
+            self._fallback(shell, depth, heredocs)
             return
         for capture in captures:
             self.classify(capture.inner, depth + 1)
@@ -341,7 +378,7 @@ class _Scan:
                     if ">" in redirect.op:
                         self._deny_path(_plain(resolved(redirect.target)))
                 here = None if simple.here_string is None else _plain(resolved(simple.here_string.text))
-                command = self._check(words, here, context, level, depth)
+                command = self._check(words, here, context, level, depth, simple.redirects, heredocs)
                 if index and command in _SHELLS:
                     # A shell reading the pipe runs what the earlier stages print.
                     for earlier in stages[:index]:
@@ -349,17 +386,22 @@ class _Scan:
                         for code in [" ".join(printed), *printed]:
                             self.classify(code, depth + 1)
 
-    def _fallback(self, shell: str, depth: int) -> None:
+    def _fallback(self, shell: str, depth: int, heredocs=()) -> None:
         """The tokenizer refuses some shapes (an unclosed quote, a quoted
-        redirect target holding a blank). Judge the command positions that a
-        split on shell operators still shows, each with the whole text as its
-        context."""
+        redirect target holding a blank, an AppleScript heredoc left in the
+        text because its command is piped on). Judge the command positions
+        that a split on shell operators still shows, each with the whole text
+        as its context. Words are split on blanks here, so an osascript's -e
+        arguments are not its script; its heredoc still is."""
         text = _plain(shell)
         for segment in _BOUNDARY.split(text):
-            words = [self.tokens.Word(token, False, False, token) for token in segment.split()
+            tokens = segment.split()
+            words = [self.tokens.Word(token, False, False, token) for token in tokens
                      if not re.match(r"\d*[<>]", token)]
+            redirects = [self.tokens.Redirect("0", "<<", match.group(1)) for match in
+                         (re.fullmatch(r"<<-?([A-Za-z_][A-Za-z0-9_]*)", token) for token in tokens) if match]
             if words:
-                self._check(words, None, text, self.full + "\n" + text, depth)
+                self._check(words, None, text, self.full + "\n" + text, depth, redirects, heredocs, whole=False)
 
     def _deny_path(self, text: str) -> None:
         label = _path_label(text)
@@ -383,7 +425,47 @@ class _Scan:
             return base, words[1:]
         return None
 
-    def _check(self, words: list, here: str | None, context: str, level: str, depth: int) -> str | None:
+    def _osascript(self, args: list, redirects, heredocs, level: str, whole: bool = True) -> None:
+        """Rule 1. The script is visible when it is given with -e or in a
+        heredoc and nothing in it is left for the shell to expand; then it
+        alone is judged. Otherwise (a file, a pipe, a here-string) the whole
+        command stands in for it, and naming a target is enough to deny."""
+        parts: list[str] | None = []
+        for index, word in enumerate(args[:-1]):
+            if word.text == "-e":
+                script = args[index + 1]
+                if not whole or (script.expands and re.search(r"[$`\x00]", script.text)):
+                    parts = None
+                    break
+                parts.append(script.text)
+        for redirect in redirects or ():
+            if parts is None or redirect.op != "<<":
+                continue
+            delimiter = redirect.target.lstrip("-").strip("'\"")
+            bodies = [(quoted, body) for name, quoted, body in heredocs if name == delimiter]
+            if len(bodies) != 1 or (not bodies[0][0] and re.search(r"[$`\\]", bodies[0][1])):
+                parts = None
+            else:
+                parts.append(bodies[0][1])
+        if not parts:
+            if _OSA_TARGET.search(level):
+                raise _Denied(APPLESCRIPT, "the guard cannot see the script; pass it with -e or in a quoted heredoc")
+            return
+        script = "\n".join(parts)
+        if not _OSA_TARGET.search(script):
+            if _SCRIPT_LOADER.search(script) and _OSA_TARGET.search(level):
+                raise _Denied(APPLESCRIPT, "the script loads code the guard cannot see")
+            return
+        if _SECURITY_AGENT.search(script):
+            raise _Denied(APPLESCRIPT, "SecurityAgent is closed, reads included")
+        if any(word.text.lower() in ("javascript", "-ljavascript") for word in args):
+            raise _Denied(APPLESCRIPT, "JXA naming these targets is denied; write the read in AppleScript")
+        problem = applescript_reads.problem(script)
+        if problem:
+            raise _Denied(APPLESCRIPT, f"not recognized as a read: {problem}")
+
+    def _check(self, words: list, here: str | None, context: str, level: str, depth: int,
+               redirects=None, heredocs=(), whole: bool = True) -> str | None:
         """Judge one simple command; return its program name. CONTEXT is its
         pipeline's text and LEVEL the text an osascript in it could be fed."""
         command = self._unwrapped(words)
@@ -399,8 +481,8 @@ class _Scan:
         if base == "find":
             for inner in _find_exec(args):
                 self._check(inner, None, context, level, depth)
-        if base == "osascript" and _OSA_TARGET.search(level):
-            raise _Denied(APPLESCRIPT)
+        if base == "osascript":
+            self._osascript(args, redirects, heredocs, level, whole)
         if base == "tccutil":
             raise _Denied(TCCUTIL)
         if base == "fdesetup":
@@ -447,7 +529,7 @@ def denial(command: str) -> str:
     try:
         _Scan(command).classify(command)
     except _Denied as denied:
-        return reason(denied.label)
+        return reason(denied.label, denied.detail)
     return ""
 
 

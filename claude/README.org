@@ -132,6 +132,10 @@ or LuLu, =tccutil=, writes to a =TCC.db= privacy database, =fdesetup=,
 =spctl= and =socketfilterfw= state changes, stopping or reconfiguring LuLu,
 and removing the quarantine attribute. The agent hands Pablo the exact command
 instead; read-only forms and helper scripts run by path stay allowed.
+Its AppleScript rule was narrowed the same day: a script may look at System
+Events, System Settings and LuLu (read-only statements on an allowlist,
+=activate= included) but not operate them, and anything the allowlist does
+not recognize, JXA and SecurityAgent included, stays denied.
 See [[file:hooks/README.org][the hook contracts]] for coverage and
 [[file:../bin/README.org][the runner contract]] for available runtimes and prerequisites.
 

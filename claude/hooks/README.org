@@ -307,9 +307,9 @@ controls. It runs in both runtimes and has no override an agent can type; the
 denial tells the agent to hand Pablo the exact command, staged with
 =claude/bin/kill-ring-put=. The classes are:
 
-- AppleScript or JXA (=osascript= with =-e=, =-l JavaScript=, a script on
-  stdin or in a heredoc, or a script file the same command writes) addressed to
-  System Events, System Settings or System Preferences, SecurityAgent or LuLu;
+- AppleScript or JXA (=osascript=) that operates System Events, System
+  Settings or System Preferences, or LuLu, and any addressed to SecurityAgent
+  (looking is allowed; see below);
 - =tccutil=, whatever the subcommand;
 - writes to a privacy database named =TCC.db=: =sqlite3= without a read-only
   open, an interpreter program naming it without one, redirections and
@@ -339,6 +339,45 @@ automation run by path as before (=bin/drive-errors=,
 guard reads the agent's command, not what a program does. For the same reason
 it does not recognize a command built inside another interpreter's program or
 kept in a script file that a later call runs.
+
+Since the same day's narrowing, an agent may look at windows but not operate
+them. An =osascript= whose script names System Events, System Settings, System
+Preferences or LuLu passes only when =agent_guard.applescript_reads= accepts
+every statement as a read or plain control flow. That module is an allowlist,
+so an unknown spelling is denied:
+
+- statements: =tell= (a block or one line), =set VARIABLE to EXPRESSION=,
+  =get=, =count=, =exists=, =return=, =log=, =delay=, =activate=, =if=,
+  =else=, =repeat=, =exit repeat=, =try=, =on error=, =end=, or a bare
+  expression;
+- expressions: strings, numbers, punctuation, variables the script assigned,
+  and a fixed vocabulary of reference forms (=every=, =first=, =whose=),
+  comparison and text operators, and the classes and properties of processes
+  and their windows (=window=, =button=, =name=, =title=, =value=,
+  =position=, =frontmost=, =UI elements= and the like).
+
+Denied, then: =click=, =keystroke=, =key code=, =perform=, =select=, =pick=,
+=make=, =delete=, =quit=, =reveal=, =set= on anything but a plain variable,
+=do shell script=, =run script=, =do JavaScript=, raw event codes, handlers,
+and every word outside the vocabulary. Three checks keep the list closed where
+AppleScript prefers a dictionary term to a variable: a variable may not be a
+single-word term of the System Events, System Settings or StandardAdditions
+dictionaries (so =set visible to false= is never a variable assignment); no
+run of adjacent words may spell one of their multi-word commands (so =log out=
+logs nothing even after =set out to ""=); and =tell application= takes only
+those targets, another application being accepted only as =tell application
+"X" to activate=. The term lists are embedded in the module, read from the
+applications' scripting definitions; regenerate them after a macOS upgrade
+that changes those dictionaries.
+
+The script must be visible: given with =-e= or in a heredoc, with nothing left
+for the shell to expand. Each =osascript= is judged on its own script, so a
+script that names none of the targets is unaffected by the rest of the
+command. Still denied whenever the command names a target: JXA (=-l
+JavaScript=), since no cheap read-only subset of JavaScript exists; a script
+in a file, a pipe or a here-string; a script holding an unexpanded variable;
+and a script that loads other code. SecurityAgent is denied outright, reads
+included. The denial names the first word or form that was not recognized.
 
 The secret guard also checks process-listing commands before its permissive
 branches. On macOS, =pgrep -fl= can expose credentials in process arguments;

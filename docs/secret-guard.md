@@ -142,16 +142,19 @@ Tally: page/screenshot 10, command output 12, file read 3, **typed literal 0**.
   no row of the table.
 - **Security controls (2026-11-17):** `policies/security_controls` denies, in
   both runtimes and with no override an agent can type, the shell commands that
-  change the Mac's own security controls: AppleScript or JXA addressed to
-  System Events, System Settings, SecurityAgent or LuLu; `tccutil`; writes to
-  a privacy database named `TCC.db`; `fdesetup`, `spctl` and `socketfilterfw`
-  state changes; stopping or reconfiguring LuLu; and removing the quarantine
-  attribute with `xattr`. The agent hands Pablo the exact command instead.
-  Read-only forms, inert mentions (an argument of a text tool, a commit
-  message, a heredoc fed to a data sink) and helper scripts run by path stay
-  allowed. It maps to no row of the table: the commands change what protects
-  the secrets, they do not print one. Classes and classifier:
-  `claude/hooks/README.org`.
+  change the Mac's own security controls: AppleScript or JXA that operates
+  System Events, System Settings or LuLu, and any addressed to SecurityAgent;
+  `tccutil`; writes to a privacy database named `TCC.db`; `fdesetup`, `spctl`
+  and `socketfilterfw` state changes; stopping or reconfiguring LuLu; and
+  removing the quarantine attribute with `xattr`. The agent hands Pablo the
+  exact command instead. Read-only forms, inert mentions (an argument of a
+  text tool, a commit message, a heredoc fed to a data sink) and helper
+  scripts run by path stay allowed. An AppleScript may look but not touch: it
+  passes when every statement is on the read-only allowlist of
+  `agent_guard/applescript_reads.py`, so clicking, typing, setting a property
+  and any unrecognized spelling are denied, as is JXA. It maps to no row of
+  the table: the commands change what protects the secrets, they do not print
+  one. Classes, allowlist and classifier: `claude/hooks/README.org`.
 
 ## Known gaps (2026-10-01)
 
@@ -168,7 +171,8 @@ Tally: page/screenshot 10, command output 12, file read 3, **typed literal 0**.
 - The security-controls policy (2026-11-17) reads shell commands only. A
   command built inside another interpreter's program
   (`python3 -c '...subprocess...'`), kept in a script file that a later call
-  runs, or reached through a computed name is not recognised.
+  runs, or reached through a computed name is not recognised. That includes a
+  shell script that a heredoc writes and the same command then runs by path.
 - TODO (2026-11-15): redactors outside this repository do not yet mask
   credential URL parameters by name as `redact-secrets.sh` does (1d5d909c3):
   agent-log's `agent-log-redact` (rendered logs and its JSONL scrubber of

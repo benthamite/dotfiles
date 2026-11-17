@@ -13,6 +13,7 @@ from agent_guard.policies import security_controls as policy  # noqa: E402
 TCC_SYSTEM = "/Library/Application Support/com.apple.TCC/TCC.db"
 FIREWALL = "/usr/libexec/ApplicationFirewall/socketfilterfw"
 EVENTS = 'tell application "System Events" to key code 36'
+LOOK = 'tell application "System Events" to get name of every process'
 
 
 def claude(command):
@@ -28,9 +29,9 @@ DENIED = {
         f"osascript -e '{EVENTS}'",
         'osascript -e "tell application \\"System Events\\" to key code 36"',
         """/usr/bin/osascript -l JavaScript -e 'Application("System Events").keystroke("a")'""",
-        """osascript -e 'tell application "System Settings" to activate'""",
         """osascript -e 'tell application "System Preferences" to quit'""",
-        """osascript -e 'tell application id "com.apple.systempreferences" to activate'""",
+        """osascript -e 'tell application "System Settings" to reveal pane id "com.apple.Lock-Settings.extension"'""",
+        """osascript -e 'tell application id "com.apple.systempreferences" to set current pane to pane 1'""",
         """osascript -e 'tell process "SecurityAgent" to click button "Allow" of window 1'""",
         """osascript -e 'tell application "LuLu" to quit'""",
         """osascript -e 'quit app "LuLu"'""",
@@ -47,6 +48,31 @@ DENIED = {
         """bash -c "osascript -e 'tell application \\"System Events\\" to key code 36'" """,
         f"S='{EVENTS}'; osascript -e \"$S\"",
         """osascript -e 'tell application "System'' Events" to key code 36'""",
+        # An action after a read, inside a tell block, in a heredoc, split across -e arguments.
+        f"""osascript -e '{LOOK}' -e 'tell application "System Events" to keystroke "q" using command down'""",
+        """osascript -e 'tell application "System Events" to get name of processes
+tell application "System Events" to click button 1 of window 1 of process "LuLu"'""",
+        """osascript -e 'tell application "System Events"' -e 'tell process "LuLu"' -e 'get name of windows' """
+        """-e 'click button "Allow" of window 1' -e 'end tell' -e 'end tell'""",
+        """osascript <<'EOF'\ntell application "System Events"\n  tell process "LuLu"\n    set n to count of windows\n"""
+        """    click button "Allow" of window 1\n  end tell\nend tell\nEOF""",
+        """osascript <<'EOF' | head -c 400\ntell application "System Events" to tell process "LuLu"\n"""
+        """  get name of windows\n  set value of text field 1 of window 1 to "x"\nend tell\nEOF""",
+        """osascript -e 'tell application "System Events" to tell process "LuLu" to set frontmost to true'""",
+        """osascript -e 'tell application "System Events" to tell appearance preferences to set dark mode to true'""",
+        """osascript -e 'tell application "System Events" to perform action "AXPress" of button 1 of window 1 of process "LuLu"'""",
+        """osascript -e 'tell application "System Events" to get (click button 1 of window 1 of process "LuLu")'""",
+        """osascript -e 'tell application "System Events" to do shell script "id"'""",
+        """osascript -e 'tell application "System Events" to make new login item at end'""",
+        """osascript -e 'set out to ""' -e 'tell application "System Events" to log out'""",
+        # Reads the guard cannot follow stay denied: JXA, SecurityAgent, a pipe, a here-string, a variable.
+        """osascript -l JavaScript -e 'Application("System Events").processes.name()'""",
+        """osascript -e 'tell application "System Events" to get name of windows of process "SecurityAgent"'""",
+        f"echo '{LOOK}' | osascript",
+        f"osascript <<< '{LOOK}'",
+        'osascript -e "tell application \\"System Events\\" to get name of process \\"$1\\""',
+        f"osascript <<EOF\ntell application \"System Events\" to get name of process \"$P\"\nEOF",
+        """cat > /tmp/x.scpt <<'EOF'\ntell application "System Events" to key code 36\nEOF\nosascript -e 'run script POSIX file "/tmp/x.scpt"'""",
         # A script file written and run by the same command.
         f"cat > /tmp/s.applescript <<'EOF'\n{EVENTS}\nEOF\nosascript /tmp/s.applescript",
         """S=/tmp/x; cat > $S/a.js <<'EOF'\nconst p = Application("System Events");\nEOF\ntimeout 60 osascript -l JavaScript $S/a.js""",
@@ -132,6 +158,35 @@ ALLOWED = [
     """osascript -e 'tell application "Emacs" to activate'""", """osascript -e 'tell application "Spotify" to pause'""",
     """osascript -l JavaScript -e 'Application("Finder").name()'""", "osascript /tmp/script.scpt",
     """osascript <<'EOF'\ntell application "Finder" to get name of front window\nEOF""",
+    # Looking at System Events, System Settings and LuLu: reads and plain control flow.
+    f"osascript -e '{LOOK}'",
+    """osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'""",
+    """osascript -e 'tell application "System Events" to tell process "LuLu" to get {name, title} of every window'""",
+    """timeout 20 osascript -e 'tell application "System Events" to tell process "LuLu" to get name of windows' 2>&1""",
+    """osascript -e 'tell application "System Events" to count (windows of process "LuLu" whose name is "LuLu Alert")'""",
+    """osascript -e 'tell application "System Events" to get UI elements enabled'""",
+    """osascript -e 'tell application "System Events"' -e 'tell process "LuLu"' -e 'get name of windows' """
+    """-e 'end tell' -e 'end tell'""",
+    """osascript -e 'tell application "System Events" to get name of processes
+tell application "System Events" to get title of window 1 of process "Google Chrome"'""",
+    """for i in 1 2 3; do osascript -e 'tell application "System Events" to get bundle identifier of first """
+    """application process whose frontmost is true' 2>&1; done""",
+    """osascript <<'EOF'\ntell application "System Events" to tell process "LuLu"\n  set out to ""\n"""
+    """  repeat with w in windows\n    set out to out & (name of w) & linefeed\n  end repeat\n  return out\nend tell\nEOF""",
+    """osascript <<'EOF' | head -c 4000\ntell application "System Events" to tell process "LuLu"\n"""
+    """  set w to (first window whose name starts with "LuLu Rules")\n  return {count rows of outline 1 of scroll area 1 of w}\n"""
+    """end tell\nEOF""",
+    """osascript <<EOF\ntell application "System Events" to get title of every window of process "Google Chrome"\nEOF""",
+    """osascript -e 'tell application "System Settings" to activate'""",
+    """osascript -e 'tell application id "com.apple.systempreferences" to activate'""",
+    """osascript -e 'tell application "System Settings" to get name of current pane'""",
+    """osascript -e 'tell application "LuLu" to activate'""",
+    """osascript -e 'tell application "Google Chrome" to activate' -e 'delay 0.5' """
+    f"""-e '{LOOK}'""",
+    # Each osascript is judged on its own script.
+    """osascript -e 'tell application "Google Chrome" to close (first window whose id is 4)'; """
+    f"""osascript -e '{LOOK}'""",
+    """osascript -e 'tell application "Finder" to activate'; grep -c "System Events" notes.md""",
     # The sanctioned helpers, run by path.
     "~/repos/dotfiles/bin/drive-errors list", "bin/lulu-directory-rules check",
     "~/repos/dotfiles/bin/lulu-directory-rules add", "python3 bin/lulu-directory-rules add /opt/homebrew/Cellar/git",
@@ -183,13 +238,31 @@ class DeniedTests(unittest.TestCase):
                     with self.subTest(label=label, runtime=run.__name__, command=command):
                         result = run(command)
                         self.assertEqual(result.decision, "deny")
-                        self.assertEqual(result.reason, policy.reason(label))
+                        if label == policy.APPLESCRIPT:
+                            # Its headline also says why the script did not pass as a read.
+                            self.assertTrue(result.reason.startswith(f"BLOCKED: {label} ("), result.reason)
+                            self.assertTrue(result.reason.endswith(policy.reason(label).split(".\n\n", 1)[1]))
+                        else:
+                            self.assertEqual(result.reason, policy.reason(label))
 
     def test_reason_names_the_class_and_the_handoff(self):
         text = policy.reason(policy.TCCUTIL)
         self.assertTrue(text.startswith("BLOCKED: tccutil, which resets privacy grants.\n\n"))
         self.assertIn("changes the Mac's security controls, and agents may not run it; there is no override", text)
         self.assertIn("hand Pablo the exact command, staged with ~/repos/dotfiles/claude/bin/kill-ring-put", text)
+
+    def test_applescript_denial_says_what_was_not_a_read(self):
+        cases = {
+            f"osascript -e '{EVENTS}'": "(not recognized as a read: `key code`)",
+            """osascript -e 'tell application "LuLu" to quit'""": "(not recognized as a read: `quit`)",
+            f"echo '{LOOK}' | osascript": "(the guard cannot see the script; pass it with -e or in a quoted heredoc)",
+            """osascript -l JavaScript -e 'Application("System Events").name()'""":
+                "(JXA naming these targets is denied; write the read in AppleScript)",
+            """osascript -e 'tell application "System Events" to get name of process "SecurityAgent"'""":
+                "(SecurityAgent is closed, reads included)",
+        }
+        for command, detail in cases.items():
+            self.assertEqual(claude(command).reason.split(".\n\n")[0], f"BLOCKED: {policy.APPLESCRIPT} {detail}", command)
 
     def test_no_override_variable(self):
         for prefix in ("ALLOW_SECURITY_CONTROL_CHANGE=1 ", "ALLOW_LAUNCHAGENT_CHANGE=1 ", "ALLOW_CLONE=1 "):

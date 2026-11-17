@@ -299,13 +299,20 @@ The security-controls guard (=agent_guard.policies.security_controls=, since
 controls, in every shell tool and in each literal nested =cmd= of a
 =functions.exec= program. It has no override an agent can type; the denial
 tells the agent to hand Pablo the exact command, staged with
-=claude/bin/kill-ring-put=. The classes are AppleScript or JXA addressed to
-System Events, System Settings or System Preferences, SecurityAgent or LuLu;
-=tccutil=; writes to a privacy database named =TCC.db=; =fdesetup=, =spctl=
-and =socketfilterfw= state changes; stopping or reconfiguring LuLu; and
-removing the quarantine attribute with =xattr=. Read-only forms, inert
-mentions and helper scripts run by path stay allowed. The classes, the
-classifier and its limits are described once, in =claude/hooks/README.org=.
+=claude/bin/kill-ring-put=. The classes are AppleScript or JXA that operates
+System Events, System Settings or System Preferences, or LuLu, and any
+addressed to SecurityAgent; =tccutil=; writes to a privacy database named
+=TCC.db=; =fdesetup=, =spctl= and =socketfilterfw= state changes; stopping or
+reconfiguring LuLu; and removing the quarantine attribute with =xattr=.
+Read-only forms, inert mentions and helper scripts run by path stay allowed.
+An AppleScript may look at those applications but not operate them: given with
+=-e= or in a heredoc, it passes when every statement is on the read-only
+allowlist of =agent_guard.applescript_reads= (=get=, =count=, =exists=,
+properties of processes and their windows, =tell= blocks, =set VARIABLE to=,
+=if=/=repeat=/=try=, =return=, =log=, =delay=, =activate=); clicking, typing,
+setting a property, JXA and any unrecognized form stay denied. The classes,
+the allowlist and their limits are described once, in
+=claude/hooks/README.org=.
 
 The secret guard also checks process-listing commands before its permissive
 branches, including every extracted literal =functions.exec= shell command.

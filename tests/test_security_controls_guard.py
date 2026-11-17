@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MARK = "changes the Mac's security controls, and agents may not run it"
 
 DENY = [
+    """osascript -e 'tell application "System Events" to tell process "LuLu" to click button "Allow" of window 1'""",
     """osascript -e 'tell application "System Events" to key code 36'""",
     "false && tccutil reset Accessibility com.example.none",
     """sqlite3 "$HOME/Library/Application Support/com.apple.TCC/TCC.db" 'delete from access'""",
@@ -27,6 +28,8 @@ DENY = [
     "xattr -rd com.apple.quarantine /Applications/Example.app",
 ]
 ALLOW = [
+    """osascript -e 'tell application "System Events" to get name of first application process whose frontmost is true'""",
+    """osascript -e 'tell application "System Events" to tell process "LuLu" to get name of windows'""",
     """osascript -e 'tell application "Finder" to get name of front window'""",
     "grep -rn tccutil docs/",
     "fdesetup status",

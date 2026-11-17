@@ -20,12 +20,33 @@ entry points before running them; related repository suites include live checks.
 
 An optional directory scopes secrets and dependency checks to that directory.
 Without one, use the current directory plus configuration locations relevant
-only to the selected domains. Machine checks concern the current Mac and, from
+only to the selected domains. Machine checks concern the current Mac (or a remote target, below) and, from
 Pablo's answers, the other always-on devices on his network; agent checks
 cover installed agents, their active account/profile configurations, and the
 current project's overrides; account checks cover the online accounts and email
 addresses resolved under [accounts](references/accounts.md). State these roots before scanning; do not silently
 expand into unrelated repositories or accounts.
+
+### Remote target
+
+To audit another Mac (a family member's, say) without installing anything on
+it, run the machine checks from here over SSH. The owner turns on Remote Login
+for their account only (Spanish: *Sesión remota*, *Sólo estos usuarios*) and
+"Allow full disk access for remote users" (*Permitir acceso completo al disco
+a los usuarios remotos*), both under System Settings > General > Sharing;
+without the second, privacy-grant reads fail. Create a dedicated ed25519 key
+and a separate `known_hosts` in the session scratchpad, and have Pablo run
+`ssh-copy-id -o IdentitiesOnly=yes` with them in Terminal.app (a `!` command
+cannot prompt for the password). Connect with `IdentitiesOnly=yes` and
+`BatchMode=yes`. The target may lack Command Line Tools, where any `python3`
+call opens an install prompt: run only stock shell commands there, and copy
+TCC databases back (0700 directory) to run `scripts/tcc-grants.py --db` here.
+The account domain still needs the owner's own sign-ins. Only the machine
+reference's sections apply; the secrets, supply-chain and agent domains apply
+only if the owner develops software or uses agents. The private report and
+TODOs name the target. When finished, delete the key line from the target's
+`authorized_keys`, trash the local key, and have the owner turn Remote Login
+and its disk access off.
 
 Read the selected domain references completely before running their checks:
 

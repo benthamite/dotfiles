@@ -103,7 +103,7 @@ class ApiError(SystemExit):
     """Slack answered ok=false for a reason other than the session credentials.
 
     `error` is Slack's error code, or "" when it was not a bare identifier.
-    Callers that keep running (inbox-monitor) use it to tell a bad request
+    Callers that keep running (Protean's collector) use it to tell a bad request
     from a credential failure, which exits as a plain SystemExit.
     """
 

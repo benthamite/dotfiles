@@ -60,7 +60,7 @@ FORETHOUGHT_STATUS=$?
 # alerts when one has not synced for two hours (claude/context/alerting.md).
 # A failed report is printed but does not change the sync's exit status.
 # Each success also touches ~/.local/state/mail-sync/ACCOUNT.last-success,
-# which inbox-monitor gates its heartbeat on: mbsync leaves .mbsyncstate
+# which Protean gates its heartbeat on: mbsync leaves .mbsyncstate
 # untouched when a sync changes nothing, so its mtime cannot show that a
 # quiet mailbox is still syncing.
 report_synced() {

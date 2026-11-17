@@ -1,0 +1,5 @@
+#!/bin/sh
+# protean: Protean's command line (~/repos/protean; its README.md), on PATH so
+# agents can run `protean read` and `protean wait` as its wake notices say.
+# Nothing it does can send a message.
+exec /Users/pablostafforini/repos/protean/bin/protean "$@"

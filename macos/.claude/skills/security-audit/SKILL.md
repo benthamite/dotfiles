@@ -29,24 +29,33 @@ expand into unrelated repositories or accounts.
 
 ### Remote target
 
-To audit another Mac (a family member's, say) without installing anything on
-it, run the machine checks from here over SSH. The owner turns on Remote Login
-for their account only (Spanish: *Sesión remota*, *Sólo estos usuarios*) and
-"Allow full disk access for remote users" (*Permitir acceso completo al disco
-a los usuarios remotos*), both under System Settings > General > Sharing;
-without the second, privacy-grant reads fail. Create a dedicated ed25519 key
-and a separate `known_hosts` in the session scratchpad, and have Pablo run
-`ssh-copy-id -o IdentitiesOnly=yes` with them in Terminal.app (a `!` command
-cannot prompt for the password). Connect with `IdentitiesOnly=yes` and
-`BatchMode=yes`. The target may lack Command Line Tools, where any `python3`
-call opens an install prompt: run only stock shell commands there, and copy
-TCC databases back (0700 directory) to run `scripts/tcc-grants.py --db` here.
-The account domain still needs the owner's own sign-ins. Only the machine
-reference's sections apply; the secrets, supply-chain and agent domains apply
-only if the owner develops software or uses agents. The private report and
-TODOs name the target. When finished, delete the key line from the target's
-`authorized_keys`, trash the local key, and have the owner turn Remote Login
-and its disk access off.
+Another Mac can be audited unattended from here over SSH, with the same
+coverage as a local run, once its owner has agreed to standing access. Which
+machine, which account and key, and how the access is restricted are
+machine-specific: they live in the private profile, never in this file.
+Remote Login needs "Allow full disk access for remote users" (Spanish:
+*Sesión remota*, *Permitir acceso completo al disco a los usuarios remotos*,
+General > Compartir) or privacy reads fail. Setup is one script Pablo runs in
+Terminal.app, typing the owner's password (a `!` command cannot prompt); it
+applies its restrictions only after a test login from here succeeds. Treat
+the access itself as an exposure in the report: whoever holds the key
+controls the target.
+
+With root, checks that need Pablo locally run directly: `sfltool dumpbtm`,
+root crontab, sudoers, `bputil -d`. Run per-user commands as the owner
+(`launchctl asuser UID sudo -u USER`). Bring tools, never take data: nothing
+that may hold a secret leaves the target. Copy a needed binary (e.g.
+`gitleaks`, for the history scan) to the account's home, run it there with
+full redaction, return counts only, and delete it. Non-secret metadata such as
+TCC databases may come back (0700 scratch) for `scripts/tcc-grants.py --db`.
+The target may lack Command Line Tools, where `python3` opens an install
+prompt; do not install them. Pass multi-line remote scripts as files
+(Write, `scp`, `sudo bash FILE`): the guard denies heredoc programs naming
+sensitive files. The secrets, supply-chain and agent domains run as inventory
+and usually conclude not applicable, with that evidence. The account domain
+needs the owner's sign-ins. Changes to the target's security settings follow
+the same rule as on this Mac: prepare them as a script Pablo launches. The
+private report and TODOs name the target.
 
 Read the selected domain references completely before running their checks:
 

@@ -1035,6 +1035,15 @@ itself, which compares the payload's
 
 Since 2026-10-27 the Stop hook =hooks/inbox-pending-stop.py= makes a session that accepts inbox-monitor wake-ups (=m m=, "toggle monitor", in ~agent-menu~) handle the messages routed to its project while it was busy, before it stops: the monitor wakes only idle sessions, and a FIAS session that worked for 90 minutes left Ro's final contract and Eitan's payment approval unseen. Since 2026-10-28 it also blocks after a hook-continued turn when newer items arrived meanwhile (a message that came in during such a continuation waited all night), still without looping. Retired on 2026-11-16 with the inbox monitor: Protean submits no messages to sessions, only closed waits' notices, so there is nothing for it to catch.
 
+Since 2026-11-17 the Stop hook =hooks/block-in-progress-with-nothing-running.py=
+refuses the opposite mistake: a turn whose last status line is =Status: in
+progress= when no background task is running and the agent set no wake-up in
+that turn. An agent that ends its turn stops, so the line is then false. The
+agent must keep working, start what it meant to rely on, or report the truth.
+After two refusals in one prompt the stop is allowed and the user is told the
+agent has stopped. It is registered in =~/.claude/settings.json= beside the
+other one.
+
 Since 2026-10-10 the Stop hook =hooks/block-done-over-running-tasks.py= refuses a
 turn whose last status line is =Status: done= while Claude Code's Stop payload
 still lists a running background shell, Monitor or background agent (teammates

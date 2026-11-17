@@ -615,6 +615,13 @@
       "note": "Both run lib/python/session_search_cleanup.py, which terminates search processes an ended session left running, never by name alone. Intended differences: Claude runs it at SessionStart and SessionEnd (mutable ~/.claude/settings.json) and matches CLAUDE_CODE_SESSION_ID, ancestry or a gone CLAUDE_PID, because a signal skips SessionEnd; Codex runs it at SessionEnd only (timeout 3, the maximum), matching CODEX_THREAD_ID, since an app-server hosts several threads and sets no owner pid."
     },
     {
+      "name": "block-in-progress-with-nothing-running.py",
+      "claude": "claude/hooks/block-in-progress-with-nothing-running.py",
+      "codex": null,
+      "status": "claude-only",
+      "note": "Claude Stop hook registered in mutable ~/.claude/settings.json: refuses Status: in progress when the Stop payload's background_tasks lists no running non-teammate task and the transcript shows no wake-up set since the user's last message. Codex parity is unassessed for the same reason as block-done-over-running-tasks.py: whether its Stop payload exposes running background work is still to be checked."
+    },
+    {
       "name": "block-done-over-running-tasks.py",
       "claude": "claude/hooks/block-done-over-running-tasks.py",
       "codex": null,

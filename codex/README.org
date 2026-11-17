@@ -859,6 +859,10 @@ not paired and names no file on the deleted side (for example
 Claude-only hook scripts deleted their manifest entries with them and needed
 no Codex change.
 
+The Claude Stop hook =block-in-progress-with-nothing-running.py= (2026-11-17)
+has no Codex counterpart either, for the same reason: whether Codex's Stop
+payload lists running background work is unassessed.
+
 The Claude Stop hook =block-done-over-running-tasks.py= (2026-10-10) has no
 Codex counterpart yet. Whether Codex background terminals outlive a turn, and
 whether its Stop payload lists them, is unassessed; the manifest records it as

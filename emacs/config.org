@@ -9908,6 +9908,8 @@ does not exist."
   ;; directory, and a task Protean made from a message is a ready brief.
   (agent-todo-directory-property "PROTEAN_DIRECTORY")
   (agent-todo-submit-property "PROTEAN_SOURCE")
+  ;; Tasks tagged :agent: start a session by themselves (Pablo, 17 Nov 2026).
+  (agent-auto-backend 'claude-code)
   (agent-account-directory-rules
    `((,(file-name-concat paths-dir-personal-repos "epoch/")
       . ((claude-code . "epoch") (codex . "epoch")))
@@ -9995,7 +9997,14 @@ does not exist."
    (list (file-name-concat paths-dir-personal-repos "forethought-notes/sprint-archive.org")))
   (protean-exported-task-tags '("pablo"))
   :config
-  (protean-mode))
+  (protean-mode)
+  ;; A task made from a message starts by itself only when its project's
+  ;; agent marked it and its sender is known.
+  (with-eval-after-load 'agent-auto
+    (add-hook 'agent-auto-eligible-functions #'protean-auto-eligible-p))
+  (with-eval-after-load 'agent
+    (require 'agent-auto)
+    (agent-auto-mode 1)))
 #+end_src
 
 ** =monet=

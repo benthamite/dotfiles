@@ -1439,6 +1439,34 @@ source to name a file decides the name recorded."
 
 (advice-add 'org-id-update-id-locations :around #'org-extras--id-update-one-name-per-file)
 
+(defun org-extras--id-update-skip-excluded (orig-fun &optional files silent)
+  "Call ORIG-FUN with FILES and SILENT, skipping excluded files in every source.
+Files matching `org-extras-id-update-excluded-patterns' are dropped from FILES,
+from `org-id-extra-files', from the agenda files and from the open Org buffers
+that `org-id-update-id-locations' also scans, and saved entries for them are
+pruned first.  Applying this to `org-id-update-id-locations' itself, rather
+than only inside `org-extras-id-update-id-locations', means a scan started by
+Org, by Org Roam or by hand skips them too.  Otherwise test fixtures collected
+into `org-id-extra-files', or a legacy Dropbox copy open in a buffer, are
+scanned next to the notes they copy and every ID they share is reported as a
+duplicate."
+  (org-extras-id--prune-locations)
+  (let ((org-id-extra-files
+         (if (symbolp org-id-extra-files)
+             org-id-extra-files
+           (cl-remove-if #'org-extras-id--update-excluded-p
+                         org-id-extra-files))))
+    (advice-add 'org-agenda-files :around #'org-extras--id-update-filter-files)
+    (advice-add 'org-buffer-list :around #'org-extras--id-update-filter-org-buffers)
+    (unwind-protect
+        (funcall orig-fun
+                 (cl-remove-if #'org-extras-id--update-excluded-p files)
+                 silent)
+      (advice-remove 'org-buffer-list #'org-extras--id-update-filter-org-buffers)
+      (advice-remove 'org-agenda-files #'org-extras--id-update-filter-files))))
+
+(advice-add 'org-id-update-id-locations :around #'org-extras--id-update-skip-excluded)
+
 (defun org-extras-id--first-name (file names)
   "Return the name NAMES first recorded for FILE's device and inode.
 Record FILE as that name when NAMES has none yet.  Return FILE unchanged
@@ -1464,24 +1492,15 @@ to display them in a dedicated buffer."
   (interactive)
   (org-extras-id--clear-duplicate-buffer)
   (org-extras-id--prune-locations)
-  (let* ((all-files (org-extras-org-files))
-         (filtered-files
-          (cl-remove-if #'org-extras-id--update-excluded-p all-files)))
+  (let ((filtered-files
+         (cl-remove-if #'org-extras-id--update-excluded-p
+                       (org-extras-org-files))))
     (org-extras-id--drop-saved-aliases filtered-files)
     (advice-add 'display-warning :after #'org-extras--id-update-warning-handler)
-    (advice-add 'org-agenda-files :around #'org-extras--id-update-filter-files)
-    (advice-add 'org-buffer-list :around #'org-extras--id-update-filter-org-buffers)
     (unwind-protect
         (condition-case err
-            (let ((org-id-extra-files
-                   (if (symbolp org-id-extra-files)
-                       org-id-extra-files
-                     (cl-remove-if #'org-extras-id--update-excluded-p
-                                   org-id-extra-files))))
-              (org-id-update-id-locations filtered-files))
+            (org-id-update-id-locations filtered-files)
           (error (message "org-extras-id-update-id-locations: %s" (error-message-string err))))
-      (advice-remove 'org-buffer-list #'org-extras--id-update-filter-org-buffers)
-      (advice-remove 'org-agenda-files #'org-extras--id-update-filter-files)
       (advice-remove 'display-warning #'org-extras--id-update-warning-handler))))
 
 (defun org-extras-id-update-id-locations-background ()

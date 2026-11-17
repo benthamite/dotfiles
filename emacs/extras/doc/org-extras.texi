@@ -1107,9 +1107,19 @@ results buffer left by an earlier scan.
 
 Internally@comma{} it temporarily advises @code{display-warning} to intercept
 ``duplicate IDs found'' messages and trigger the duplicate-ID workflow.
-It also temporarily filters @code{org-agenda-files} and @code{org-buffer-list} so
-files in excluded paths@comma{} such as git worktree checkouts@comma{} do not get
+
+The exclusions themselves live in an @code{:around} advice on
+@code{org-id-update-id-locations} (@code{org-extras--id-update-skip-excluded})@comma{} so
+they apply to every scan@comma{} including ones Org@comma{} Org Roam or a manual
+@samp{M-x org-id-update-id-locations} start without this command.  For the
+duration of the scan it prunes saved entries for excluded paths@comma{} drops
+them from the files passed in and from @code{org-id-extra-files}@comma{} and filters
+@code{org-agenda-files} and @code{org-buffer-list} so excluded files do not get
 scanned via Org's implicit agenda-file or ``open Org files'' sources.
+Without it@comma{} a direct scan read the test fixtures that @code{org-id-extra-files}
+collects from the Epoch workspace and the legacy Dropbox copy of the user
+configuration that profile builds keep open@comma{} and reported every ID they
+share with the notes they copy as a duplicate.
 
 The companion function @code{org-extras-id-update-id-locations-background}
 runs the same update with @code{debug-on-error} locally disabled.  It is for

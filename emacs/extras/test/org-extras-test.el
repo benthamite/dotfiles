@@ -1181,19 +1181,56 @@
 ;; `org-id-extra-files' reaches `org-id-update-id-locations' directly, so the
 ;; exclusions must be applied to it as well as to the files passed in.
 (ert-deftest org-extras-test-id-update-filters-extra-files ()
-  "Drop excluded paths from `org-id-extra-files' during the scan."
+  "Drop excluded paths from FILES and `org-id-extra-files' during the scan."
   (let* ((kept "/Users/x/repos/foo/projects/onboarding/onboarding.org")
          (fixture "/Users/x/repos/foo/tests/fixtures/onboarding/onboarding.org")
          (org-id-extra-files (list kept fixture))
-         (org-directory (make-temp-file "org-extras-test-" t))
+         (org-id-files nil)
+         (org-id-locations nil)
          (seen 'unset))
-    (unwind-protect
-        (cl-letf (((symbol-function 'org-id-update-id-locations)
-                   (lambda (&rest _) (setq seen org-id-extra-files))))
-          (org-extras-id-update-id-locations))
-      (delete-directory org-directory t))
-    (should (equal seen (list kept)))
+    (org-extras--id-update-skip-excluded
+     (lambda (files _silent) (setq seen (list files org-id-extra-files)))
+     (list kept fixture))
+    (should (equal seen (list (list kept) (list kept))))
     (should (equal org-id-extra-files (list kept fixture)))))
+
+(ert-deftest org-extras-test-id-update-direct-call-skips-excluded ()
+  "Report no duplicates when a scan bypasses the `org-extras' wrapper.
+A fixture copy reaches the scan through `org-id-extra-files' and a Dropbox
+copy through an open buffer, as config.org and profile builds supply them."
+  (let* ((dir (file-name-as-directory
+               (file-truename (make-temp-file "org-extras-direct-" t))))
+         (note (expand-file-name "notes/onboarding.org" dir))
+         (fixture (expand-file-name "tests/fixtures/onboarding.org" dir))
+         (dropbox (expand-file-name
+                   "Library/CloudStorage/Dropbox/onboarding.org" dir))
+         (content "* One\n:PROPERTIES:\n:ID: direct-call-one\n:END:\n")
+         (org-agenda-files nil)
+         (org-id-extra-files (list note fixture))
+         (org-id-track-globally t)
+         (org-id-locations-file (expand-file-name "id-locations.el" dir))
+         (org-id-files nil)
+         (org-id-locations nil)
+         (org-id--locations-checksum nil)
+         (duplicates nil)
+         buffer)
+    (unwind-protect
+        (progn
+          (dolist (file (list note fixture dropbox))
+            (make-directory (file-name-directory file) t)
+            (with-temp-file file (insert content)))
+          (setq buffer (find-file-noselect dropbox))
+          (with-current-buffer buffer (org-mode))
+          (cl-letf (((symbol-function 'message)
+                     (lambda (format-string &rest args)
+                       (when (string-prefix-p "Duplicate ID" format-string)
+                         (push (apply #'format format-string args) duplicates))))
+                    ((symbol-function 'warn) #'ignore))
+            (org-id-update-id-locations))
+          (should-not duplicates)
+          (should (equal (mapcar #'expand-file-name org-id-files) (list note))))
+      (when (buffer-live-p buffer) (kill-buffer buffer))
+      (delete-directory dir t))))
 
 (ert-deftest org-extras-test-id-update-excludes-sync-conflict-copies ()
   "Skip sync-conflict copies, which duplicate every ID of the original."

@@ -14,10 +14,11 @@ from __future__ import annotations
 
 import os
 import re
+import shlex
 
 from ..codex_payload import command_substitution, jq_alternative, jq_raw, jq_text
 from ..core import CLAUDE, CODEX, Call, HookFailure, Result
-from ..ere import ere, grep, sed
+from ..ere import ere, grep, grep_only, sed
 from ..shell_text import mask_git_commit_messages, mask_heredoc_bodies
 
 
@@ -214,6 +215,88 @@ def is_safe_op_run_loader(command: str) -> bool:
             and not any(grep(p, stripped) for p in (_OP_ASSIGNMENT, _OP_RUN_SHELL, _SUBSTITUTION)))
 
 
+# gitleaks 8.30: `dir` (aliases `file`, `directory`) takes the paths to scan; the older
+# `detect --no-git --source PATH` still works. --redact with no value, or 100, replaces
+# every finding's secret on screen and in the json, csv, junit and sarif reports
+# (checked on synthetic files); a lower value, --verbose without it, a template report
+# or a debug log level can show one.
+_GITLEAKS = ("gitleaks", "/opt/homebrew/bin/gitleaks")
+_GITLEAKS_SWITCHES = frozenset(("--redact", "--redact=100", "--no-banner", "--no-color", "--follow-symlinks",
+                                "--ignore-gitleaks-allow", "--no-git"))
+_GITLEAKS_VALUES = {
+    "--exit-code": r"[0-9]+", "--timeout": r"[0-9]+", "--max-target-megabytes": r"[0-9]+",
+    "--log-level": "info|warn|error|fatal", "-l": "info|warn|error|fatal",
+    "--report-format": "json|csv|junit|sarif", "-f": "json|csv|junit|sarif",
+}
+_GITLEAKS_PATHS = frozenset(("--report-path", "-r", "--source", "-s"))
+_UNQUOTED_SHELL = re.compile(r"[\n`$\\;|<>(){}*?\[\]!#]")
+
+
+def is_safe_history_scan(runtime: str, command: str, home_dir: str) -> bool:
+    """The security-audit skill's history check, and nothing wider: the
+    Homebrew `gitleaks`, optionally after one `cd DIR &&`, scanning only
+    shell or REPL history files with full redaction, any report going to a
+    regular file, and no composition beyond file redirects. A flag outside
+    the short list above, an environment prefix, a glob, an expansion other
+    than $HOME, or another path makes it an ordinary read of the history."""
+    if grep(_TERMINAL_REDIRECT, command):
+        return False
+    if any(label_for_text(runtime, redirect) for redirect in grep_only(_FILE_REDIRECT[0], command)):
+        return False
+    text = command_substitution(sed(command, _FILE_REDIRECT))
+    text = re.sub(r"\$\{HOME\}|\$HOME(?![A-Za-z0-9_])", lambda _: home_dir, text)
+    if _UNQUOTED_SHELL.search(text):
+        return False
+    try:
+        words = shlex.split(text)
+    except ValueError:
+        return False
+    if words[:1] == ["cd"]:
+        if len(words) < 4 or words[1].startswith("-") or "&" in words[1] or words[2] != "&&":
+            return False
+        words = words[3:]
+    if len(words) < 3 or words[0] not in _GITLEAKS or any("&" in word for word in words):
+        return False
+    subcommand, arguments = words[1], words[2:]
+    if subcommand not in ("dir", "file", "directory", "detect"):
+        return False
+    scanned: list[str] = []
+    index = 0
+    while index < len(arguments):
+        word = arguments[index]
+        name, joined, value = word.partition("=")
+        if word in _GITLEAKS_SWITCHES:
+            index += 1
+            continue
+        if name in _GITLEAKS_VALUES or name in _GITLEAKS_PATHS:
+            if not joined:
+                index += 1
+                if index >= len(arguments):
+                    return False
+                value = arguments[index]
+            if name in _GITLEAKS_VALUES:
+                if not re.fullmatch(_GITLEAKS_VALUES[name], value):
+                    return False
+            elif name in ("--source", "-s"):
+                if subcommand != "detect":
+                    return False
+                scanned.append(value)
+            elif (not value or value == "-" or value.startswith("/dev/") or label_for_text(runtime, value)
+                  or _store_label(expand_tilde(value, home_dir))):
+                return False  # the report must be a regular file that is no credential store
+        elif word.startswith("-") or subcommand == "detect":
+            return False
+        else:
+            scanned.append(word)
+        index += 1
+    if not any(word in ("--redact", "--redact=100") for word in arguments):
+        return False
+    if subcommand == "detect" and ("--no-git" not in arguments or len(scanned) != 1):
+        return False
+    return bool(scanned) and all(".." not in path and _store_label(expand_tilde(path, home_dir)) == "shell history"
+                                 for path in scanned)
+
+
 _COMPOSITION = ere(r"[;&|<>`]|[$][(]")
 
 
@@ -250,6 +333,9 @@ def _check_command(runtime: str, command: str, home_dir: str) -> tuple[str, str,
         return "", "", ""
     if label == "environment secrets file" and (is_safe_env_loader(command) or is_safe_op_run_loader(command)):
         return "", "", ENV_LOADER_CONTEXT[runtime]
+    # "shell history" is the last label tried, so the command names no other sensitive file.
+    if label == "shell history" and is_safe_history_scan(runtime, command, home_dir):
+        return "", "", ""
     if has_shell_composition(command):
         return label, f"{_COMPOUND[runtime]} cannot use a metadata-command allowance safely", ""
     if any(grep(p, command, echo=True) for p in _METADATA_COMMANDS):

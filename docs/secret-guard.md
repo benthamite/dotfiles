@@ -139,7 +139,13 @@ Tally: page/screenshot 10, command output 12, file read 3, **typed literal 0**.
   alone (`ls`, `stat`, `wc`, `grep -c`) stay allowed, and programs that open a
   store themselves (`slack.py`, `bin/secret-index`, `gh auth status`) are
   unaffected, since the guard reads the agent's command. Preventive: it closes
-  no row of the table.
+  no row of the table. One command may scan history files, the security
+  audit's: the Homebrew `gitleaks dir` over history files only, with
+  `--redact` bare or `=100`, any report written to a regular file, and no
+  `--verbose`, pipe, substitution or other path (`is_safe_history_scan`).
+  gitleaks 8.30 then shows no secret on screen or in its json, csv, junit and
+  sarif reports, checked on synthetic files; recheck that after a major
+  gitleaks upgrade.
 - **Security controls (2026-11-17):** `policies/security_controls` denies, in
   both runtimes and with no override an agent can type, the shell commands that
   change the Mac's own security controls: AppleScript or JXA that operates

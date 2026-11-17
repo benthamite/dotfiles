@@ -145,7 +145,12 @@ themselves: =auth.json= in every Codex home, the Slack browser-session cache
 databases, and shell and REPL history files. The metadata forms above still
 apply, and programs that open a store themselves (=claude/bin/slack.py=,
 =bin/secret-index=, =gh auth status=, Codex itself) are unaffected; the list
-and the Claude =Read= and =Grep= rules are in =claude/hooks/README.org=.
+and the Claude =Read= and =Grep= rules are in =claude/hooks/README.org=. One
+command may scan history files, the security-audit skill's redacting run:
+=gitleaks dir HISTORY-FILE... --redact=, optionally after one =cd DIR &&=,
+with a report written to a regular file and no =--verbose=, pipe,
+substitution, partial redaction or other path. Its exact flag list is in
+=claude/hooks/README.org= too.
 
 The secret-leak guard applies the same command policy to every literal nested
 =cmd= inside a =functions.exec= program, including nested shell-tool calls; a

@@ -1210,7 +1210,9 @@ reach this decision through the same =agent_guard.policies.sensitive_read= polic
 the credential stores that programs open by themselves the same way: =auth.json= in a Codex home, the Slack
 session cache (=~/.cache/slack-chrome=), =~/.config/gh/hosts.yml=, Chrome's cookie databases, and shell and
 REPL history files. =slack.py=, =bin/secret-index= and =gh auth status= are unaffected, because the guard
-reads the agent's command, not what a program opens. Quoted argument globs, including =rg=
+reads the agent's command, not what a program opens. The one command that may name history files is the
+security-audit skill's scan, =gitleaks dir HISTORY-FILE... --redact= with any report written to a file
+(exact shape in =hooks/README.org=). Quoted argument globs, including =rg=
 exclusion patterns beginning with =!=, remain inert data rather than executable
 command words. A shell =case= default pattern is likewise grammar, not an
 executable glob. So is the =*= in a standalone assignment ended by a

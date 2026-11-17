@@ -150,7 +150,7 @@ STORE_READS = {
     "shell history": [
         "cat ~/.zsh_history", "tail -50 ~/.zsh_history", "grep -n curl ~/.bash_history", "cat ~/.python_history",
         "less ~/.psql_history", "cat ~/.node_repl_history", "cat ~/.zsh_sessions/ABC.history",
-        'rg -n token "$HOME/.zsh_history"', "gitleaks detect --no-git --redact --source ~/.zsh_history",
+        'rg -n token "$HOME/.zsh_history"', "gitleaks detect --no-git --source ~/.zsh_history",
         "cd ~ && head .zsh_history", "sort < ~/.zsh_history | uniq -c",
     ],
 }
@@ -251,6 +251,75 @@ class CredentialStoreTests(unittest.TestCase):
             with self.subTest(path=path, glob=glob):
                 self.assertEqual(decide("claude", "Grep", {"path": path, "output_mode": "content", "glob": glob}).decision,
                                  "allow")
+
+
+HISTORY_SCANS = [
+    "gitleaks dir ~/.zsh_history --redact",
+    "/opt/homebrew/bin/gitleaks dir ~/.zsh_history ~/.bash_history ~/.python_history --redact --no-banner",
+    'gitleaks dir "$HOME/.zsh_history" --redact=100 --report-path /tmp/history-scan.json --report-format json',
+    "gitleaks file ~/.zsh_sessions --redact -r /tmp/sessions.json --exit-code 0",
+    "gitleaks directory ~/.psql_history ~/.node_repl_history --redact --no-color --log-level warn",
+    "cd /tmp/audit && gitleaks dir ~/.zsh_history --redact --no-banner -r history.json > scan.log 2> scan.err",
+    "cd ~ && gitleaks dir .zsh_history .bash_history --redact",
+    "gitleaks detect --no-git --source ~/.zsh_history --redact --no-banner",
+    f"gitleaks dir {HOME}/.zsh_history --redact --report-format=sarif --report-path=/tmp/h.sarif",
+]
+HISTORY_SCAN_NEAR_MISSES = [
+    # no redaction, partial redaction, or output that can show a finding
+    "gitleaks dir ~/.zsh_history", "gitleaks dir ~/.zsh_history --no-banner -r /tmp/h.json",
+    "gitleaks dir ~/.zsh_history --redact=20", "gitleaks dir ~/.zsh_history --redact=0",
+    "gitleaks dir ~/.zsh_history --redact 50", "gitleaks dir ~/.zsh_history --redact --verbose",
+    "gitleaks dir ~/.zsh_history --redact -v", "gitleaks dir ~/.zsh_history --redact --log-level debug",
+    "gitleaks dir ~/.zsh_history --redact --report-format template --report-template t.tmpl",
+    "gitleaks dir ~/.zsh_history --redact -r -", "gitleaks dir ~/.zsh_history --redact --report-path /dev/stdout",
+    "gitleaks dir ~/.zsh_history --redact --report-path ~/.bash_history",
+    "gitleaks dir ~/.zsh_history --redact > /dev/stdout", "gitleaks dir ~/.zsh_history --redact 2>&1",
+    # a second path, sensitive or not
+    "gitleaks dir ~/.zsh_history ~/.ssh/id_ed25519 --redact", "gitleaks dir ~/.zsh_history .env --redact",
+    "gitleaks dir ~/.zsh_history ~/notes.txt --redact", "gitleaks dir ~/.codex/auth.json --redact",
+    "gitleaks dir ~/.zsh_history --redact -r ~/.config/gh/hosts.yml",
+    "gitleaks dir ~ --redact --report-path ~/.zsh_history", "gitleaks dir ~/.zsh_sessions/../notes --redact",
+    # composition
+    "gitleaks dir ~/.zsh_history --redact | cat", "gitleaks dir ~/.zsh_history --redact; cat ~/.zsh_history",
+    "gitleaks dir ~/.zsh_history --redact && tail ~/.zsh_history", "cat ~/.zsh_history | gitleaks stdin --redact",
+    "gitleaks stdin --redact < ~/.zsh_history", "gitleaks dir $(echo ~/.zsh_history) --redact",
+    'gitleaks dir ~/.zsh_history --redact -r "$(mktemp)"', 'gitleaks dir "$H/.zsh_history" --redact',
+    "false && gitleaks dir ~/.zsh_history --redact", "cd ~ && cd / && gitleaks dir ~/.zsh_history --redact",
+    "cd /tmp&env && gitleaks dir ~/.zsh_history --redact", "cd -P && gitleaks dir ~/.zsh_history --redact",
+    "gitleaks dir ~/.zsh_history --redact &", "gitleaks dir ~/.zsh_history --redact\ncat ~/.zsh_history",
+    # another program, configuration or subcommand
+    "./gitleaks dir ~/.zsh_history --redact", "/tmp/gitleaks dir ~/.zsh_history --redact",
+    "sudo gitleaks dir ~/.zsh_history --redact", "GITLEAKS_CONFIG=x gitleaks dir ~/.zsh_history --redact",
+    "gitleaks dir ~/.zsh_history --redact --config /tmp/rules.toml", "gitleaks git ~/.zsh_history --redact",
+    "gitleaks detect --source ~/.zsh_history --redact", "gitleaks detect --no-git --redact ~/.zsh_history",
+    "trufflehog filesystem ~/.zsh_history",
+]
+
+
+class HistoryScanTests(unittest.TestCase):
+    """The one way to scan history: the security-audit skill's redacting gitleaks run."""
+
+    def test_redacting_scan_allowed_in_both_runtimes(self):
+        for command in HISTORY_SCANS:
+            for runtime, tool in (("claude", "Bash"), ("codex", "exec_command")):
+                with self.subTest(runtime=runtime, command=command):
+                    self.assertEqual(bash(runtime, command, tool).decision, "allow")
+                    c = call(runtime, tool, {"command": command})
+                    if runtime == "claude":
+                        self.assertEqual(sensitive_read.dispatcher_check(c), ([], ""))
+
+    def test_near_misses_stay_denied_in_both_runtimes(self):
+        for command in HISTORY_SCAN_NEAR_MISSES:
+            for runtime, tool in (("claude", "Bash"), ("codex", "exec_command")):
+                with self.subTest(runtime=runtime, command=command):
+                    result = bash(runtime, command, tool)
+                    self.assertEqual(result.decision, "deny")
+                    self.assertTrue(result.reason.startswith("BLOCKED: sensitive read: "), result.reason)
+
+    def test_other_reads_of_history_are_unchanged(self):
+        for command in ("cat ~/.zsh_history", "grep -n gitleaks ~/.zsh_history", "tail -5 ~/.bash_history"):
+            self.assertEqual(bash("claude", command).decision, "deny", command)
+        self.assertEqual(decide("claude", "Read", {"file_path": "~/.zsh_history"}).decision, "deny")
 
 
 class FailureTests(unittest.TestCase):

@@ -156,6 +156,22 @@ agent's command and not what a program opens: =claude/bin/slack.py=,
 =claude/bin/slack_chrome.py=, =bin/secret-index= and =gh auth status= run as
 before. =Glob= returns only file names and is not checked.
 
+One command may scan history files: the security-audit skill's redacting
+=gitleaks= run (=is_safe_history_scan=). It is the Homebrew =gitleaks= in
+command position, optionally after one =cd DIR &&=, with the subcommand =dir=
+(or its aliases =file= and =directory=, or =detect --no-git --source=), only
+history files as paths, =--redact= bare or =--redact=100=, any
+=--report-path= naming a regular file that is no credential store, and
+otherwise only =--report-format= (=json=, =csv=, =junit=, =sarif=),
+=--no-banner=, =--no-color=, =--exit-code=, =--timeout=,
+=--max-target-megabytes=, =--follow-symlinks=, =--ignore-gitleaks-allow= and
+=--log-level= (not =debug= or =trace=). Output redirects to files are the only
+composition. With full redaction gitleaks 8.30 replaces each finding's secret
+on screen and in those four report formats (checked on synthetic files);
+=--verbose=, a partial =--redact=, a template report, a custom configuration,
+an environment prefix, a glob, a pipe, a substitution, another path or another
+scanner leave the command an ordinary read of the history, which stays denied.
+
 The secret-leak guard (=agent_guard.policies.secret_leak=) blocks secret-shaped literals and secret-printing
 commands. Raw =op=, =security=, and =pbpaste= are denied even when
 wrapped, piped, filtered, redirected, dynamically resolved, or called through

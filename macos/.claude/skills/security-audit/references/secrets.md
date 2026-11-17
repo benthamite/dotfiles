@@ -37,8 +37,23 @@ still matter.
 - Inspect `.envrc` as executable configuration within the read policy; do not
   activate it. Fetching from a store still exports secrets to commands in that
   directory. Establish recipients and inheritance, not just storage format.
-- Check shell-history exposure only through a safe redacting scanner. Include
-  command arguments and credential-bearing URLs; never print raw history.
+- Check shell-history exposure only through the one scan the sensitive-read
+  guard allows, the Homebrew `gitleaks` with full redaction over history files
+  only:
+
+      gitleaks dir ~/.zsh_history ~/.bash_history --redact --no-banner --report-path REPORT.json
+
+  List the history files that exist (`.zsh_history`, `.zsh_sessions`,
+  `.bash_history`, `.python_history`, `.psql_history`, `.node_repl_history`;
+  test each with `ls` alone) and nothing else. `--redact` must be bare or
+  `=100`, and the report must go to a regular file, in the scratch directory.
+  A leading `cd DIR &&` and output redirects to files are the only additions
+  the guard accepts: `--verbose`, a pipe, a substitution, a partial
+  redaction, another path or another scanner make the command an ordinary
+  read of the history, which is denied. Exit status 1 means findings. The
+  report holds rule names, files and line numbers with every secret replaced
+  by `REDACTED`; read it for counts and rule names. Include command arguments
+  and credential-bearing URLs in the assessment; never print raw history.
 - Check file ownership, access modes, accidental sync/publication paths, and
   secret references. Avoid dumping process environments or full process args.
   Do not recommend globally exported credentials as an MCP/config remedy.

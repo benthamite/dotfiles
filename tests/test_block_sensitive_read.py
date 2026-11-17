@@ -44,6 +44,9 @@ ALLOW = [
     "gh auth status",
     "ls -la ~/.codex/auth.json",
     "wc -l ~/.zsh_history",
+    # the security audit's history scan: gitleaks with full redaction, over history files only
+    "gitleaks dir ~/.zsh_history ~/.bash_history --redact --no-banner",
+    "cd /tmp/audit && gitleaks dir ~/.zsh_history --redact --report-path history.json > scan.log",
 ]
 
 # Since 2026-09-18 `.env.op` itself is not a secrets file (it holds op://
@@ -75,6 +78,12 @@ DENY = [
     "tail -20 ~/.bash_history",
     "grep -n token ~/.python_history ~/.psql_history ~/.node_repl_history",
     "cat ~/.zsh_sessions/A.history",
+    # near-misses of the history scan
+    "gitleaks dir ~/.zsh_history",
+    "gitleaks dir ~/.zsh_history --redact=20",
+    "gitleaks dir ~/.zsh_history ~/.ssh/id_ed25519 --redact",
+    "gitleaks dir ~/.zsh_history --redact | cat",
+    "gitleaks dir ~/.zsh_history --redact --verbose",
 ]
 
 

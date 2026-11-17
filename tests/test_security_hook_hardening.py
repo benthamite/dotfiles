@@ -20,11 +20,11 @@ SENSITIVE_READ_GUARDS = (
 )
 SENSITIVE_READ_HELPERS = {
     DOTFILES / "claude/hooks/block-sensitive-read.sh": DOTFILES
-    / ".claude/skills/security-audit/scripts/classify-shell-exports.py",
+    / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
     DOTFILES / "codex/hooks/block-sensitive-read.sh": DOTFILES
-    / ".codex/skills/security-audit/scripts/classify-shell-exports.py",
+    / "macos/.codex/skills/security-audit/scripts/classify-shell-exports.py",
     DOTFILES / "claude/hooks/pretooluse-bash.sh": DOTFILES
-    / ".claude/skills/security-audit/scripts/classify-shell-exports.py",
+    / "macos/.claude/skills/security-audit/scripts/classify-shell-exports.py",
 }
 
 

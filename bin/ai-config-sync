@@ -48,7 +48,6 @@ DOTFILES_PROJECT_LOCAL_SKILLS = {
     "optimize-agent-instructions",
     "publish-dotfiles",
     "release-dotfiles",
-    "security-audit",
     "skill-audit",
     "skill-resolver",
 }

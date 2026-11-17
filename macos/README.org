@@ -71,8 +71,8 @@ python3 -m unittest tests.test_personal_updates -v
 * Project-local skills
 
 Paired macOS-only skills live under =macos/.claude/skills/= and
-=macos/.codex/skills/=. They cover contact reconciliation, application inspection
-and LuLu alert review, but they are not global skills:
+=macos/.codex/skills/=. They cover contact reconciliation, application inspection,
+LuLu alert review and machine security audits, but they are not global skills:
 agent discovery loads them only while working in this project scope. Their current names,
 descriptions, and paths are generated in the
 [[file:../agents/skill-inventory.org][tracked agent skill inventory]].

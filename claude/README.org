@@ -130,8 +130,10 @@ can type, the Bash commands that change the Mac's own security controls:
 AppleScript or JXA addressed to System Events, System Settings, SecurityAgent
 or LuLu, =tccutil=, writes to a =TCC.db= privacy database, =fdesetup=,
 =spctl= and =socketfilterfw= state changes, stopping or reconfiguring LuLu,
-and removing the quarantine attribute. The agent hands Pablo the exact command
-instead; read-only forms and helper scripts run by path stay allowed.
+and removing the quarantine attribute; since the same evening also changes to
+the anger lock's state under =~/.local/state/anger-lock=. The agent hands
+Pablo the exact command instead (except for the anger lock, which only its
+hook may clear); read-only forms and helper scripts run by path stay allowed.
 Its AppleScript rule was narrowed the same day: a script may look at System
 Events, System Settings and LuLu (read-only statements on an allowlist,
 =activate= included) but not operate them, and anything the allowlist does
@@ -1034,6 +1036,19 @@ itself, which compares the payload's
 =session_id= with the id it records for the session.
 
 Since 2026-10-27 the Stop hook =hooks/inbox-pending-stop.py= makes a session that accepts inbox-monitor wake-ups (=m m=, "toggle monitor", in ~agent-menu~) handle the messages routed to its project while it was busy, before it stops: the monitor wakes only idle sessions, and a FIAS session that worked for 90 minutes left Ro's final contract and Eitan's payment approval unseen. Since 2026-10-28 it also blocks after a hook-continued turn when newer items arrived meanwhile (a message that came in during such a continuation waited all night), still without looping. Retired on 2026-11-16 with the inbox monitor: Protean submits no messages to sessions, only closed waits' notices, so there is nothing for it to catch.
+
+Since 2026-11-17 the =UserPromptSubmit= hook =hooks/anger-lock.sh= stops
+prompts Pablo writes in anger, at his request, for his own well-being and out
+of concern for the model's possible welfare. It is deterministic so that no
+agent decides whether he is angry or can be argued out of the lock: a Haiku
+call (=lib/python/anger_lock.py=) judges the prompt, an angry one never
+reaches the agent, and every Claude and Codex session is locked for
+=LOCK_SECONDS= (5 s while Pablo tests for misfires; he sets the real value
+later). The block message carries a short suggestion for letting the anger go,
+written in the same call and varied against the last ones in the log. The
+guard (=security_controls= rule 9) denies agents any change to the lock file.
+Each check adds about 2 s to a prompt. It is registered in
+=~/.claude/settings.json=.
 
 Since 2026-11-17 the Stop hook =hooks/block-in-progress-with-nothing-running.py=
 refuses the opposite mistake: a turn whose last status line is =Status: in

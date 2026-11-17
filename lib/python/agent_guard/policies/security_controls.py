@@ -22,7 +22,13 @@ Denied for both runtimes, with no override an agent can type:
    systemextensionsctl targets naming it, `defaults write/delete` on its
    domain, and writes under /Library/Objective-See/LuLu;
 8. removing the quarantine attribute: `xattr -d com.apple.quarantine` and
-   `xattr -c`, in any flag order.
+   `xattr -c`, in any flag order;
+9. writing, moving or deleting the anger lock's state (any path under
+   `.local/state/anger-lock`), by shell command or by the Edit/Write tools
+   (2026-11-17). The lock is Pablo's own commitment device
+   (lib/python/anger_lock.py): only its hook may set or clear it, so no agent
+   can be talked into lifting it. Unlike the other rules, the denial does not
+   offer a command for Pablo to run.
 
 A command is judged by what it runs, not by what it mentions. The shell text
 is tokenized with the op-policy classifier's tokenizer, as the function-body
@@ -48,6 +54,7 @@ import shlex
 from collections import Counter
 
 from .. import applescript_reads, classifiers
+from ..codex_paths import codex_changed_paths
 from ..codex_payload import PartialOutput, nested_exec_commands
 from ..core import CODEX, Call, Result
 from ..shell_text import mask_git_commit_messages, mask_heredoc_bodies
@@ -61,6 +68,7 @@ SPCTL = "an spctl (Gatekeeper) state change"
 FIREWALL = "an application-firewall state change through socketfilterfw"
 LULU = "stopping or reconfiguring LuLu"
 QUARANTINE = "removing the quarantine attribute with xattr"
+ANGER_LOCK = "changing the anger lock's state under ~/.local/state/anger-lock"
 UNCLASSIFIED = "nested shell code naming a security control, too deep to classify"
 
 _STILL_ALLOWED = {
@@ -80,6 +88,7 @@ _STILL_ALLOWED = {
     LULU: "Reading LuLu's state stays available (pgrep, `defaults read`, the security-audit skill's "
           "scripts/lulu-rules.py), as do `open -a LuLu` and bin/lulu-directory-rules.",
     QUARANTINE: "`xattr -l` and `xattr -p` stay available.",
+    ANGER_LOCK: "Reading it stays available (`cat ~/.local/state/anger-lock/locked-until`, the log).",
     UNCLASSIFIED: "Run the inner command directly so the guard can classify it.",
 }
 
@@ -87,6 +96,11 @@ _STILL_ALLOWED = {
 def reason(label: str, detail: str = "") -> str:
     """The deny reason for LABEL; DETAIL says why an AppleScript did not pass as a read."""
     headline = f"{label} ({detail})" if detail else label
+    if label == ANGER_LOCK:
+        return (f"BLOCKED: {headline}.\n\nThe anger lock is Pablo's commitment device: only its hook sets or clears "
+                "it, and no agent may lift, shorten or work around it, nor hand Pablo a command to do so. If the lock "
+                "seems to misfire, tell Pablo; the duration and classifier live in lib/python/anger_lock.py.\n\n"
+                + _STILL_ALLOWED[label])
     return (f"BLOCKED: {headline}.\n\nThis class of command changes the Mac's security controls, and agents may not run "
             "it; there is no override. If the task truly needs it, hand Pablo the exact command, staged with "
             "~/repos/dotfiles/claude/bin/kill-ring-put, for him to run himself.\n\n" + _STILL_ALLOWED[label])
@@ -100,13 +114,15 @@ class _Denied(Exception):
 
 
 # Every name a rule can fire on; a command without one is not parsed at all.
-_RELEVANT = re.compile(r"osascript|tccutil|TCC\.db|fdesetup|spctl|socketfilterfw|lulu|objective-see|xattr", re.I)
+_RELEVANT = re.compile(r"osascript|tccutil|TCC\.db|fdesetup|spctl|socketfilterfw|lulu|objective-see|xattr|anger-lock",
+                       re.I)
 _OSA_TARGET = re.compile(r"System\s*Events|System\s*Settings|System\s*Preferences|SecurityAgent"
                          r"|com\.apple\.systemevents|com\.apple\.systempreferences"
                          r"|(?<![A-Za-z0-9_-])lulu(?![A-Za-z0-9_-])|objective-see", re.I)
 # `lulu-directory-rules` and `lulu-rules.py` are helpers, not the firewall.
 _LULU_NAME = re.compile(r"(?<![A-Za-z0-9_-])lulu(?![A-Za-z0-9_-])|objective-see", re.I)
 _LULU_DIR = re.compile(r"Objective-See/LuLu(?![A-Za-z0-9_-])", re.I)
+_ANGER_LOCK_DIR = re.compile(r"\.local/state/anger-lock(?![A-Za-z0-9_.-])", re.I)
 _TCC = re.compile(r"(?<![A-Za-z0-9_])TCC\.db", re.I)
 _READ_ONLY_OPEN = re.compile(r"mode=ro\b|immutable=1\b|-readonly\b")
 _SECURITY_AGENT = re.compile(r"SecurityAgent", re.I)
@@ -154,6 +170,8 @@ def _plain(text: str) -> str:
 def _path_label(text: str) -> str:
     if _TCC.search(text):
         return TCC_DB
+    if _ANGER_LOCK_DIR.search(text):
+        return ANGER_LOCK
     return LULU if _LULU_DIR.search(text) else ""
 
 
@@ -555,8 +573,20 @@ def _sources(call: Call, command: str) -> list[str]:
     return sources
 
 
+def _edited_paths(call: Call) -> list[str]:
+    if call.runtime == CODEX:
+        return list(codex_changed_paths(call.raw))
+    path = call.tool_input.get("file_path") or call.tool_input.get("notebook_path")
+    return [path] if isinstance(path, str) else []
+
+
 def decide(call: Call) -> Result:
-    command = call.shell_command() if call.is_shell else ""
+    if not call.is_shell:
+        for path in _edited_paths(call):
+            if _ANGER_LOCK_DIR.search(path):
+                return Result.deny(reason(ANGER_LOCK))
+        return Result.allow()
+    command = call.shell_command()
     if not command:
         return Result.allow()
     for source in _sources(call, command):

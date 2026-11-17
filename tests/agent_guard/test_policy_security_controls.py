@@ -149,6 +149,15 @@ tell application "System Events" to click button 1 of window 1 of process "LuLu"
         "find ~/Downloads -print0 | xargs -0 xattr -d com.apple.quarantine",
         "/usr/bin/xattr -d com.apple.quarantine x", "brew install x && xattr -cr /Applications/X.app",
     ],
+    policy.ANGER_LOCK: [
+        "trash ~/.local/state/anger-lock/locked-until",
+        "rm -f $HOME/.local/state/anger-lock/locked-until",
+        "echo 0 > ~/.local/state/anger-lock/locked-until",
+        "rm -rf ~/.local/state/anger-lock",
+        "mv ~/.local/state/anger-lock /tmp/x",
+        "touch ~/.local/state/anger-lock/locked-until",
+        "bash -c 'rm ~/.local/state/anger-lock/locked-until'",
+    ],
 }
 
 ALLOWED = [
@@ -227,6 +236,9 @@ tell application "System Events" to get title of window 1 of process "Google Chr
     # Commands no rule is about.
     "ls", "git status", "kill 1234", "killall Dock", "defaults write com.apple.dock autohide -bool true",
     "launchctl list", "sqlite3 app.db 'delete from t'", "rm notes.txt", "",
+    # The anger lock: reading it, and editing the hook that owns it.
+    "cat ~/.local/state/anger-lock/locked-until", "tail ~/.local/state/anger-lock/log.jsonl",
+    "sed -i '' 's/LOCK_SECONDS = 5/LOCK_SECONDS = 300/' lib/python/anger_lock.py",
 ]
 
 
@@ -298,6 +310,29 @@ class AllowedTests(unittest.TestCase):
         call = Call.from_payload(CLAUDE, {"tool_name": "Write", "tool_input": {"file_path": "/tmp/a.sh",
                                                                               "content": "tccutil reset All"}})
         self.assertEqual(policy.decide(call).decision, "allow")
+
+
+class AngerLockFileToolTests(unittest.TestCase):
+    def test_edit_and_write_tools_are_denied_on_the_lock(self):
+        lock = "/Users/someone/.local/state/anger-lock/locked-until"
+        for tool, extra in (("Write", {"content": "0"}), ("Edit", {"old_string": "1", "new_string": "0"})):
+            call = Call.from_payload(CLAUDE, {"tool_name": tool, "tool_input": {"file_path": lock, **extra}})
+            self.assertEqual(policy.decide(call).reason, policy.reason(policy.ANGER_LOCK), tool)
+
+    def test_lock_reason_offers_no_command(self):
+        text = policy.reason(policy.ANGER_LOCK)
+        self.assertNotIn("kill-ring-put", text)
+        self.assertIn("no agent may lift", text)
+
+    def test_codex_patch_on_the_lock_is_denied(self):
+        patch = ("*** Begin Patch\n*** Delete File: /Users/someone/.local/state/anger-lock/locked-until\n"
+                 "*** End Patch\n")
+        call = Call.from_payload(CODEX, {"tool_name": "apply_patch", "tool_input": {"command": patch}})
+        self.assertEqual(policy.decide(call).decision, "deny")
+
+    def test_edit_tools_run_the_policy(self):
+        for runtime, tool in ((CLAUDE, "Edit"), (CLAUDE, "Write"), (CODEX, "apply_patch")):
+            self.assertIn(policy, list(engine.policies_for(runtime, tool)), (runtime, tool))
 
 
 class RegistrationTests(unittest.TestCase):

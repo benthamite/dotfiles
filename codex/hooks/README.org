@@ -308,7 +308,9 @@ tells the agent to hand Pablo the exact command, staged with
 System Events, System Settings or System Preferences, or LuLu, and any
 addressed to SecurityAgent; =tccutil=; writes to a privacy database named
 =TCC.db=; =fdesetup=, =spctl= and =socketfilterfw= state changes; stopping or
-reconfiguring LuLu; and removing the quarantine attribute with =xattr=.
+reconfiguring LuLu; removing the quarantine attribute with =xattr=; and
+changing the anger lock's state under =~/.local/state/anger-lock= (also
+through =apply_patch=).
 Read-only forms, inert mentions and helper scripts run by path stay allowed.
 An AppleScript may look at those applications but not operate them: given with
 =-e= or in a heredoc, it passes when every statement is on the read-only
@@ -383,6 +385,7 @@ tokens, =ya29.= access tokens) in the input guards and the redactor.
 | =remind-ai-config-sync.sh= | Delegates paired Claude/Codex update reminders to =bin/ai-config-sync=. |
 | =remind-claude-readme-update.sh= | Reminds work outside dotfiles when a symlinked edit changed the Claude configuration. |
 | =require-codex-readme-update.sh= | Requires the Codex README with staged Codex integration or sync changes; dependency lockfiles do not count. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
+| =anger-lock.sh= | At =UserPromptSubmit= (needs trusting in =/hooks=), runs =lib/python/anger_lock.py=: a Haiku call judges whether Pablo's own words show swearing, anger or abuse; if so the prompt is blocked with a break message and a fresh suggestion, and every Claude and Codex session is locked for =LOCK_SECONDS= (shared lock file =~/.local/state/anger-lock/locked-until=, which the guard's =security_controls= rule 9 keeps agents from changing). A classifier failure lets the prompt through with a visible warning. Tests: =tests/test_anger_lock.py=. |
 | =session-search-cleanup.sh= | At =SessionEnd=, terminates the search processes the ended thread left running, matched by =CODEX_THREAD_ID= in their environment, never by name alone (=lib/python/session_search_cleanup.py=). |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 

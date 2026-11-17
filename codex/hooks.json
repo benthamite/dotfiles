@@ -22,6 +22,16 @@
             "timeout": 30
           }
         ]
+      },
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "~/repos/dotfiles/codex/hooks/anger-lock.sh",
+            "timeout": 30
+          }
+        ]
       }
     ],
     "PreToolUse": [

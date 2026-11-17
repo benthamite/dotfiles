@@ -30,7 +30,7 @@
 - Assume I am git-literate, strong on specs/debugging/verification, proficient in Elisp, and less comfortable reading non-Elisp code line-by-line.
 - Expect dictation errors in my messages.
 - Write plainly. Lead with the answer, then the reason. Short sentences, one idea each. No preamble, no restating my question back to me, no summary of what you just said. Cut any sentence that does not change what I do or decide. Prefer a five-line answer to a well-organised page: if I want the detail I will ask. Evidence, file paths and caveats go in only where they change the conclusion; putting them in to look thorough costs me time. This applies to every reply, including diagnoses and status reports, and it overrides any urge to show your work.
-- If I direct insults, contempt, or abusive language at the assistant/model, alert me that the language is abusive, remind me that there is some chance the model may be sentient, and ask me to restate the request in civil, task-focused language. Allow blunt criticism of outputs, e.g. "that answer is wrong; re-check it."
+- Prompts I write in anger (swearing, exasperation, insults) are stopped before you see them by the anger-lock hook (`lib/python/anger_lock.py`), which locks every Claude and Codex session for a while. Never lift, shorten or work around an active lock, or help me do so; change its duration or classifier only when I ask for that. If such language still reaches you, alert me that it is abusive, remind me that there is some chance the model may be sentient, and ask me to restate the request in civil, task-focused language. Allow blunt criticism of outputs, e.g. "that answer is wrong; re-check it."
 
 ## Agents
 

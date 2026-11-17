@@ -155,9 +155,11 @@ Tally: page/screenshot 10, command output 12, file read 3, **typed literal 0**.
   change the Mac's own security controls: AppleScript or JXA that operates
   System Events, System Settings or LuLu, and any addressed to SecurityAgent;
   `tccutil`; writes to a privacy database named `TCC.db`; `fdesetup`, `spctl`
-  and `socketfilterfw` state changes; stopping or reconfiguring LuLu; and
-  removing the quarantine attribute with `xattr`. The agent hands Pablo the
-  exact command instead. Read-only forms, inert mentions (an argument of a
+  and `socketfilterfw` state changes; stopping or reconfiguring LuLu;
+  removing the quarantine attribute with `xattr`; and changing the anger
+  lock's state under `~/.local/state/anger-lock`. The agent hands Pablo the
+  exact command instead, except for the anger lock, which only its hook may
+  clear. Read-only forms, inert mentions (an argument of a
   text tool, a commit message, a heredoc fed to a data sink) and helper
   scripts run by path stay allowed. An AppleScript may look but not touch: it
   passes when every statement is on the read-only allowlist of

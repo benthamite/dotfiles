@@ -608,6 +608,13 @@
       "note": "The only PreToolUse guard registration in both runtimes: runs lib/python/agent_guard (one policy module per former guard hook, chains in engine.py) and maps any status other than 0 to exit 2, so a missing interpreter, import error or crash denies. Intended differences from the shell guards: docs/plans/2026-10-01-guard-engine.md. Tests: bin/test-guards. Policy search_root (Claude Bash, Grep and Glob; Codex shell tools) denies searches rooted at a huge tree (HUGE_ROOTS in lib/python/agent_guard/policies/search_root.py). Claude stale_team (SendMessage) blocks agents on a stale team."
     },
     {
+      "name": "anger-lock.sh",
+      "claude": "claude/hooks/anger-lock.sh",
+      "codex": "codex/hooks/anger-lock.sh",
+      "status": "paired",
+      "note": "Both run lib/python/anger_lock.py at UserPromptSubmit and share one lock file (~/.local/state/anger-lock/locked-until), so a lock set in either tool blocks both. Intended difference: Codex also gets the block text as systemMessage, since its docs do not say that the block reason is shown to the user. Claude registration is in mutable ~/.claude/settings.json; Codex's in codex/hooks.json, which Codex runs only after the hook is trusted in /hooks."
+    },
+    {
       "name": "session-search-cleanup.sh",
       "claude": "claude/hooks/session-search-cleanup.sh",
       "codex": "codex/hooks/session-search-cleanup.sh",
@@ -700,7 +707,7 @@
       "path": "codex/hooks.json",
       "tracked": true,
       "live_path": "~/.codex/hooks.json",
-      "note": "Global registrations live through ~/.codex/hooks.json, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper; only PermissionRequest waits on Emacs. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains in lib/python/agent_guard/engine.py); trust renewed per home via app-server API (2026-11-06). New definitions need native trust. Output redactor 2026-09-30."
+      "note": "Registrations live at the live_path, outside repo-root .codex to avoid double loading. Lifecycle hooks use codex-hook-wrapper; only PermissionRequest waits on Emacs. Shell matchers cover Bash, exec_command and functions.exec(_command); edit matchers are collapsed for trust review. Guards allow or deny, never ask. Since 2026-10-01 the shell and apply_patch|Edit|Write PreToolUse groups each run only agent-guard.sh (chains: agent_guard/engine.py); trust renewed per home via app-server API (2026-11-06). New definitions need native trust. Output redactor 2026-09-30. Also anger-lock.sh (own entry)."
     },
     {
       "tool": "Claude Code and Codex",

@@ -339,7 +339,11 @@ denial tells the agent to hand Pablo the exact command, staged with
   =launchctl= and =systemextensionsctl= targets naming it, =defaults
   write/delete= on its domain, and writes under =/Library/Objective-See/LuLu=;
 - removing the quarantine attribute: =xattr -d com.apple.quarantine= and
-  =xattr -c=, in any flag order.
+  =xattr -c=, in any flag order;
+- writing, moving or deleting the anger lock's state under
+  =~/.local/state/anger-lock= (shell commands and, unlike the other rules,
+  the Edit/Write tools and Codex patches too). Its denial offers Pablo no
+  command: only the hook sets or clears the lock.
 
 A command is judged by what it runs, not by what it mentions. The text is
 tokenized with the tokenizer of =lib-op-policy.py=; each simple command is
@@ -472,6 +476,7 @@ Claude's wrapping of introspection output through =redact-secrets.sh=.
 | =require-doc-update.sh= | Requires a selected manual for production Elisp (a support file outside any package tree with its own =doc/= may instead select the =README.org= of its directory or a parent), or each global/project-local skill helper's own selected Markdown documentation; a change made only of a version header, a =lexical-binding= cookie, a bare =(defvar SYMBOL)= or blank lines needs none, nor does one that only replaces string-literal contents no manual quotes (=lib-elisp-string-change.py=); checks declared Texinfo and Info outputs without evaluating Org. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
 | =require-fresh-texinfo.py= | Blocks a commit whose staged =.texi= differs from a fresh export, through =regenerate-manual-after-edit.sh=, of its staged Org manual (checked for every staged Org manual and every staged =.texi=); manuals the hook will not export automatically are skipped. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=. |
 | =require-readme-update.sh= | Requires Claude configuration documentation with staged Claude configuration changes; dependency lockfiles do not count. Run for both agents from the global Git =pre-commit= hook by =claude/bin/agent-commit-gates=, which reads the staged files from the index. |
+| =anger-lock.sh= | At =UserPromptSubmit=, runs =lib/python/anger_lock.py=: a Haiku call judges whether Pablo's own words show swearing, anger or abuse; if so the prompt is blocked with a break message and a fresh suggestion, and every Claude and Codex session is locked for =LOCK_SECONDS= (shared lock file =~/.local/state/anger-lock/locked-until=, which the guard's =security_controls= rule 9 keeps agents from changing). A classifier failure lets the prompt through with a visible warning. Tests: =tests/test_anger_lock.py=. |
 | =session-search-cleanup.sh= | At =SessionStart= and =SessionEnd=, terminates the search processes an ended session left running, matched by =CLAUDE_CODE_SESSION_ID=, process ancestry or a gone =CLAUDE_PID= owner, never by name alone (=lib/python/session_search_cleanup.py=); the =SessionStart= run catches sessions a signal ended, which skip =SessionEnd=. |
 | =session-learning-capture.sh= | Retained unregistered helper; validates Stop input and canonical cwd, emits escaped untrusted metadata, and reports malformed input without requesting capture. It writes no lesson records. |
 | =sync-reasoning-tasks-worktree.sh= | Repairs and updates an eligible reasoning-task worktree at SessionStart without pushing it. |

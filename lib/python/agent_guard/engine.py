@@ -27,7 +27,7 @@ CHAINS = {
                   elisp_cookie)),
         ("Read", (sensitive_read, walk_list)),
         ("Edit|Write|NotebookEdit", (secret_leak, retired_secrets, elpaca_dotfiles_edit, elisp_skill, texi_edit, walk_list,
-                                     launchagent, elisp_cookie)),
+                                     launchagent, elisp_cookie, security_controls)),
         ("Grep", (sensitive_read, walk_list, search_root)),
         ("Glob", (walk_list, search_root)),
         ("SendMessage", (stale_team,)),
@@ -39,7 +39,7 @@ CHAINS = {
           launchagent, security_controls, untrusted_execution, hookspath, retired_secrets, search_root, elisp_cookie,
           codex_wrap)),
         ("apply_patch|Edit|Write", (secret_leak, elpaca_dotfiles_edit, texi_edit, walk_list, launchagent, retired_secrets,
-                                    elisp_cookie)),
+                                    elisp_cookie, security_controls)),
     ],
 }
 

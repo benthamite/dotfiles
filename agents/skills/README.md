@@ -128,7 +128,7 @@ publication process reviews the outgoing history and tree before a push.
 | `audit-mac-app` | Inspect a macOS application before running it or granting permissions. | [Source](../../macos/.claude/skills/audit-mac-app/SKILL.md) | [Source](../../macos/.codex/skills/audit-mac-app/SKILL.md) |
 | `reconcile-contacts` | Compare contact populations and prepare merge candidates. | [Source](../../macos/.claude/skills/reconcile-contacts/SKILL.md) | [Source](../../macos/.codex/skills/reconcile-contacts/SKILL.md) |
 | `review-lulu-alert` | Investigate a firewall alert and recommend a scoped response. | [Source](../../macos/.claude/skills/review-lulu-alert/SKILL.md) | [Source](../../macos/.codex/skills/review-lulu-alert/SKILL.md) |
-| `security-audit` | Review secrets handling, supply chains, macOS controls and agent permissions. | [Source](../../macos/.claude/skills/security-audit/SKILL.md) | [Source](../../macos/.codex/skills/security-audit/SKILL.md) |
+| `security-audit` | Review secrets handling, supply chains, macOS controls and agent permissions. | [Source](../../.claude/skills/security-audit/SKILL.md) | [Source](../../.codex/skills/security-audit/SKILL.md) |
 
 ## Disabled
 

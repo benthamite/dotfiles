@@ -11,7 +11,7 @@ from pathlib import Path
 
 DOTFILES = Path(__file__).resolve().parents[1]
 CLASSIFIERS = {
-    tool: DOTFILES / f"macos/.{tool}/skills/security-audit/scripts/classify-shell-exports.py"
+    tool: DOTFILES / f".{tool}/skills/security-audit/scripts/classify-shell-exports.py"
     for tool in ("claude", "codex")
 }
 SYNTHETIC_ENV = {"PATH": "/usr/bin:/bin", "LC_ALL": "C", "PYTHONDONTWRITEBYTECODE": "1"}

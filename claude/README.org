@@ -425,6 +425,11 @@ their original scope. Its filesystem inventory is distinct from the runtime's
 enabled skill catalog; account and installed plugin-version evidence determine
 which sources it searches.
 
+The project-local =security-audit= lives in the root =.claude/skills/= rather than under
+=macos/=, so it loads in any session started in this repository. It audits
+development-environment secrets, supply chains, macOS controls, agent
+permissions and online-account takeover exposure.
+
 The project-local =skill-audit= remains explicit-invocation-only. Its historical
 collector distinguishes failed reads from successful output envelopes, preserves
 personal/plugin identities and exact name boundaries, and handles task-start

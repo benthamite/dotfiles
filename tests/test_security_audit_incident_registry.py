@@ -17,13 +17,13 @@ from pathlib import Path
 DOTFILES = Path(__file__).resolve().parents[1]
 HELPERS = {
     "claude": DOTFILES
-    / "macos/.claude/skills/security-audit/scripts/credential-incident-registry.py",
+    / ".claude/skills/security-audit/scripts/credential-incident-registry.py",
     "codex": DOTFILES
-    / "macos/.codex/skills/security-audit/scripts/credential-incident-registry.py",
+    / ".codex/skills/security-audit/scripts/credential-incident-registry.py",
 }
 SKILLS = {
-    "claude": DOTFILES / "macos/.claude/skills/security-audit/SKILL.md",
-    "codex": DOTFILES / "macos/.codex/skills/security-audit/SKILL.md",
+    "claude": DOTFILES / ".claude/skills/security-audit/SKILL.md",
+    "codex": DOTFILES / ".codex/skills/security-audit/SKILL.md",
 }
 
 
@@ -364,7 +364,7 @@ class CredentialIncidentRegistryTests(unittest.TestCase):
             {"kind": "provider-ticket", "id": "abcdef0123456789" * 2},
         ]
         self.record["locations"] += [
-            {"path": "macos/.codex/skills/security-audit/scripts/credential-incident-registry.py"},
+            {"path": ".codex/skills/security-audit/scripts/credential-incident-registry.py"},
             {"path": "archive/" + "a" * 40 + "/config/service.json"},
         ]
         self.write_input()

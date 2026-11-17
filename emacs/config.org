@@ -6032,6 +6032,8 @@ the triggered flag while rescheduling so the callback cannot reenter itself.
 
 /[[https://github.com/emacs-mirror/emacs/blob/master/lisp/simple.el][simple]] registers additional variables for persistence across sessions via savehist./
 
+The kill ring is left out on purpose: =save-interprogram-paste-before-kill= copies the system clipboard into it, so saving it would keep copied passwords on disk and in backups.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature simple
   :defer t
@@ -6039,7 +6041,6 @@ the triggered flag while rescheduling so the callback cannot reenter itself.
   (with-eval-after-load 'savehist
     (dolist (var '(command-history
                    extended-command-history
-                   kill-ring
                    mark-ring
                    shell-command-history
                    read-expression-history))
@@ -6074,10 +6075,15 @@ Using my fork, whose branch writes a =lexical-binding= cookie in the session fil
                  :repo "benthamite/session"
                  :branch "fix/lexical-binding-cookie") ; permanent fork: emacsattic/session is archived
   :custom
-  (session-globals-include '((kill-ring 100)
-                             (session-file-alist 100 t)
+  (session-globals-include '((session-file-alist 100 t)
                              (file-name-history 100)
                              search-ring regexp-search-ring))
+
+  :config
+  ;; Do not save the kill ring (see the savehist variables under `simple').
+  ;; Leaving it out of the list above is not enough: `session-globals-regexp'
+  ;; saves every variable whose name ends in `-ring'.
+  (add-to-list 'session-globals-exclude 'kill-ring)
 
   :hook
   (elpaca-after-init-hook . session-initialize))

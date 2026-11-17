@@ -9972,6 +9972,11 @@ does not exist."
   ;; Read the engine's assessments: every project's messages become Org tasks
   ;; (since 16 Nov 2026, protean/docs/plan-2026-11-16-project-context.md).
   (protean-intake t)
+  ;; Forethought's projects are the Linear-project headings of sprint.org, and
+  ;; every task made there is Pablo's alone (Pablo, 17 Nov 2026).
+  (protean-linear-mirror-files
+   (list (file-name-concat paths-dir-personal-repos "forethought-notes/sprint.org")))
+  (protean-exported-task-tags '("pablo"))
   :config
   (protean-mode))
 #+end_src

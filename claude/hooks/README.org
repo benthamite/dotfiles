@@ -26,7 +26,7 @@ per-tool chains in the order the old registrations ran: =Bash= runs
 =dispatcher= (secret leak, untrusted execution, sensitive read, destructive,
 Ahrefs, walk-list, =core.hooksPath=, GitHub write, Elpaca rebuild and
 long-pipeline checks, then output wrapping), =dirty_tree=, =launchagent=,
-=retired_secrets=, =search_root= and =elisp_cookie=; =Read= runs =sensitive_read= and
+=security_controls=, =retired_secrets=, =search_root= and =elisp_cookie=; =Read= runs =sensitive_read= and
 =walk_list=, and =Grep= adds =search_root=; =Edit=, =Write= and =NotebookEdit=
 run =secret_leak=, =retired_secrets=, =elpaca_dotfiles_edit=, =elisp_skill=,
 =texi_edit=, =walk_list=, =launchagent= and =elisp_cookie=; =Glob= runs =walk_list= and
@@ -282,6 +282,45 @@ plists and removes its registry entry in one step; a job removed by hand stays
 in the registry and the next audit reports it missing. A reload of a registered
 job goes through =bin/launchd-reload.py=, which records the load time the audit
 judges the job's schedule from.
+
+The security-controls guard (=agent_guard.policies.security_controls=, since
+2026-11-17) denies the shell commands that change the Mac's own security
+controls. It runs in both runtimes and has no override an agent can type; the
+denial tells the agent to hand Pablo the exact command, staged with
+=claude/bin/kill-ring-put=. The classes are:
+
+- AppleScript or JXA (=osascript= with =-e=, =-l JavaScript=, a script on
+  stdin or in a heredoc, or a script file the same command writes) addressed to
+  System Events, System Settings or System Preferences, SecurityAgent or LuLu;
+- =tccutil=, whatever the subcommand;
+- writes to a privacy database named =TCC.db=: =sqlite3= without a read-only
+  open, an interpreter program naming it without one, redirections and
+  file-changing commands;
+- =fdesetup= verbs other than its read-only ones (=status=, =list=,
+  =isactive=, =haspersonalrecoverykey=, =hasinstitutionalrecoverykey=,
+  =supportsauthrestart=);
+- =spctl= other than =--status= and =--assess=;
+- =socketfilterfw= other than its =--get*= and =--listapps= reads;
+- stopping or reconfiguring LuLu: =kill=, =pkill= or =killall= naming it,
+  =launchctl= and =systemextensionsctl= targets naming it, =defaults
+  write/delete= on its domain, and writes under =/Library/Objective-See/LuLu=;
+- removing the quarantine attribute: =xattr -d com.apple.quarantine= and
+  =xattr -c=, in any flag order.
+
+A command is judged by what it runs, not by what it mentions. The text is
+tokenized with the tokenizer of =lib-op-policy.py=; each simple command is
+unwrapped (=sudo=, =env=, =xargs=, =find -exec=), and code handed to a shell
+(=sh -c=, =eval=, a here-string, a pipe, a heredoc, a substitution) is
+classified in turn. A protected name that is only an argument of another
+program (=grep -rn tccutil docs/=), part of a commit message, or in a heredoc
+fed to a data sink is therefore allowed, and so are read-only forms
+(=sqlite3 -readonly=, =defaults read=, =pgrep=, =xattr -l=) and
+AppleScript addressed to other applications. Helper scripts that wrap UI
+automation run by path as before (=bin/drive-errors=,
+=bin/lulu-directory-rules=, =bin/opentopage=, =bin/dictation-language=): the
+guard reads the agent's command, not what a program does. For the same reason
+it does not recognize a command built inside another interpreter's program or
+kept in a script file that a later call runs.
 
 The secret guard also checks process-listing commands before its permissive
 branches. On macOS, =pgrep -fl= can expose credentials in process arguments;

@@ -26,7 +26,7 @@ policies registered for the tool. Each former guard hook is a module in
 the order the old registrations ran. The shell tools (=Bash=, =exec_command=,
 =functions.exec=, =functions.exec_command=) run =sensitive_read=, =secret_leak=,
 =ahrefs=, =github_write=, =destructive=, =walk_list=, =elpaca_rebuild=,
-=dirty_tree=, =launchagent=, =untrusted_execution=, =hookspath=,
+=dirty_tree=, =launchagent=, =security_controls=, =untrusted_execution=, =hookspath=,
 =retired_secrets=, =search_root=, =elisp_cookie= and finally =codex_wrap=; =apply_patch=, =Edit= and =Write=
 run =secret_leak=, =elpaca_dotfiles_edit=, =texi_edit=, =walk_list=,
 =launchagent=, =retired_secrets= and =elisp_cookie= (new =.el= files need a
@@ -286,6 +286,19 @@ plists and removes its registry entry in one step; a job removed by hand stays
 in the registry and the next audit reports it missing. A reload of a registered
 job goes through =bin/launchd-reload.py=, which records the load time the audit
 judges the job's schedule from.
+
+The security-controls guard (=agent_guard.policies.security_controls=, since
+2026-11-17) denies the shell commands that change the Mac's own security
+controls, in every shell tool and in each literal nested =cmd= of a
+=functions.exec= program. It has no override an agent can type; the denial
+tells the agent to hand Pablo the exact command, staged with
+=claude/bin/kill-ring-put=. The classes are AppleScript or JXA addressed to
+System Events, System Settings or System Preferences, SecurityAgent or LuLu;
+=tccutil=; writes to a privacy database named =TCC.db=; =fdesetup=, =spctl=
+and =socketfilterfw= state changes; stopping or reconfiguring LuLu; and
+removing the quarantine attribute with =xattr=. Read-only forms, inert
+mentions and helper scripts run by path stay allowed. The classes, the
+classifier and its limits are described once, in =claude/hooks/README.org=.
 
 The secret guard also checks process-listing commands before its permissive
 branches, including every extracted literal =functions.exec= shell command.

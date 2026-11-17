@@ -64,6 +64,13 @@ The LaunchAgent registry guard also denies removing a live plist by hand, even
 with its override; =~/repos/launchd/bin/launchd-retire.py= retires a job and its
 registry entry together, and =launchd-reload.py= reloads one and records its
 load time.
+Since 2026-11-17 the security-controls guard denies, with no override an agent
+can type, the shell commands that change the Mac's own security controls:
+AppleScript or JXA addressed to System Events, System Settings, SecurityAgent
+or LuLu, =tccutil=, writes to a =TCC.db= privacy database, =fdesetup=,
+=spctl= and =socketfilterfw= state changes, stopping or reconfiguring LuLu,
+and removing the quarantine attribute. The agent hands Pablo the exact command
+instead; read-only forms and helper scripts run by path stay allowed.
 See [[file:hooks/README.org][the hook contracts]] for coverage and [[file:../bin/README.org][the runner contract]] for prerequisites.
 
 The native =agents.max_concurrent_threads_per_session= setting allows 32

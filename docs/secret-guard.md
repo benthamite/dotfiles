@@ -119,6 +119,18 @@ Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
 - **Output, Codex:** shell and MCP results are masked via `decision: block`.
 - **Screenshots:** dropped on pages in `agents/credential-pages.txt`, or when
   the page cannot be determined.
+- **Security controls (2026-11-17):** `policies/security_controls` denies, in
+  both runtimes and with no override an agent can type, the shell commands that
+  change the Mac's own security controls: AppleScript or JXA addressed to
+  System Events, System Settings, SecurityAgent or LuLu; `tccutil`; writes to
+  a privacy database named `TCC.db`; `fdesetup`, `spctl` and `socketfilterfw`
+  state changes; stopping or reconfiguring LuLu; and removing the quarantine
+  attribute with `xattr`. The agent hands Pablo the exact command instead.
+  Read-only forms, inert mentions (an argument of a text tool, a commit
+  message, a heredoc fed to a data sink) and helper scripts run by path stay
+  allowed. It maps to no row of the table: the commands change what protects
+  the secrets, they do not print one. Classes and classifier:
+  `claude/hooks/README.org`.
 
 ## Known gaps (2026-10-01)
 
@@ -132,6 +144,10 @@ Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
   stored somewhere the index does not read (the Keychain, browser storage)
   are recognised only by shape.
 - A secret glued to the end of a word (`abcSECRET`) is not found.
+- The security-controls policy (2026-11-17) reads shell commands only. A
+  command built inside another interpreter's program
+  (`python3 -c '...subprocess...'`), kept in a script file that a later call
+  runs, or reached through a computed name is not recognised.
 - TODO (2026-11-15): redactors outside this repository do not yet mask
   credential URL parameters by name as `redact-secrets.sh` does (1d5d909c3):
   agent-log's `agent-log-redact` (rendered logs and its JSONL scrubber of

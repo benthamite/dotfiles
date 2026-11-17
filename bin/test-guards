@@ -49,6 +49,7 @@ FULL=(
   tests/test_secret_guard_parity.py
   tests/test_secret_guard_scope.py
   tests/test_secret_index.py
+  tests/test_security_controls_guard.py
   tests/test_security_hook_hardening.py
   tests/test_session_search_cleanup.py
   tests/test_terminal_document_activation.py

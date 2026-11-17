@@ -62,29 +62,6 @@ the selected backend with =--no-push --commit HEAD=. Use it after a push has
 already happened and you want an agent to inspect GitHub Actions failures, fix
 the root cause, and continue the authorized CI closeout loop.
 
-* Inbox monitor drafts
-:PROPERTIES:
-:CUSTOM_ID: h:inbox-monitor-drafts
-:END:
-
-#+findex: agent-extras-inbox-drafts-file
-Loading =agent-extras= sets ~agent-review-file-function~ to
-~agent-extras-inbox-drafts-file~, so =m f= (open review file) in the Monitor
-section of ~agent-menu~ opens the inbox monitor's drafts file for the
-current session: the file where draft replies to the messages routed to that
-session's project wait for review, with the context needed to decide each one.
-The function asks the monitor's =inbox-drafts path --cwd DIR= which project
-holds the session's directory, and returns nil (so =m f= reports that the
-session has no review file) when the command is missing or no monitored
-project holds the directory. After commenting on the drafts, =m p= (process
-review file) asks the session to carry out the comments.
-
-#+vindex: agent-extras-review-files-directory
-#+findex: agent-extras-review-file-setup
-Any file visited under ~agent-extras-review-files-directory~ (the drafts
-directory) turns on ~redline-mode~, so the CriticMarkup comments on each draft
-can be read and written in place, however the file was opened.
-
 * Orchestration run view
 :PROPERTIES:
 :CUSTOM_ID: h:orchestration-run-view

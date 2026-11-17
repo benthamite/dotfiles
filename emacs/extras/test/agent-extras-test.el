@@ -190,44 +190,5 @@
                            :command)
                 (cdr binding)))))
 
-(ert-deftest agent-extras-test-inbox-drafts-file-asks-the-monitor ()
-  "Return the path `inbox-drafts path' prints for the session's directory."
-  (let* ((dir (make-temp-file "agent-extras-session" t))
-         (script (make-temp-file "inbox-drafts"))
-         (session (generate-new-buffer " *session*")))
-    (unwind-protect
-        (progn
-          (with-temp-file script
-            (insert "#!/bin/sh\n[ \"$1\" = path ] && [ \"$3\" = \"" dir "/\" ] "
-                    "&& echo /tmp/drafts/x.md\n"))
-          (set-file-modes script #o755)
-          (with-current-buffer session (setq default-directory (file-name-as-directory dir)))
-          (cl-letf (((symbol-function 'executable-find) (lambda (_) script)))
-            (should (equal (agent-extras-inbox-drafts-file session) "/tmp/drafts/x.md")))
-          (cl-letf (((symbol-function 'executable-find) (lambda (_) nil)))
-            (should-not (agent-extras-inbox-drafts-file session))))
-      (kill-buffer session)
-      (delete-file script)
-      (delete-directory dir))))
-
-(ert-deftest agent-extras-test-review-file-turns-on-redline ()
-  "Visiting a file under the review directory turns on `redline-mode'."
-  (let* ((dir (file-name-as-directory (make-temp-file "agent-review" t)))
-         (agent-extras-review-files-directory dir)
-         (file (expand-file-name "fias.md" dir))
-         (outside (make-temp-file "agent-other" nil ".md"))
-         called)
-    (unwind-protect
-        (cl-letf (((symbol-function 'redline-mode) (lambda (&rest _) (push buffer-file-name called))))
-          (with-temp-buffer
-            (setq buffer-file-name file)
-            (agent-extras-review-file-setup))
-          (with-temp-buffer
-            (setq buffer-file-name outside)
-            (agent-extras-review-file-setup))
-          (should (equal called (list file))))
-      (delete-file outside)
-      (delete-directory dir t))))
-
 (provide 'agent-extras-test)
 ;;; agent-extras-test.el ends here

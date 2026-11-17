@@ -31,7 +31,6 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Overview::
 * Project audit::
 * Post-push CI::
-* Inbox monitor drafts::
 * Orchestration run view::
 * Indices::
 
@@ -94,27 +93,6 @@ The command @code{agent-extras-post-push-ci} runs the @samp{post-push-ci} skill 
 the selected backend with @samp{--no-push --commit HEAD}. Use it after a push has
 already happened and you want an agent to inspect GitHub Actions failures@comma{} fix
 the root cause@comma{} and continue the authorized CI closeout loop.
-
-@node Inbox monitor drafts
-@chapter Inbox monitor drafts
-
-@findex agent-extras-inbox-drafts-file
-Loading @samp{agent-extras} sets @code{agent-review-file-function} to
-@code{agent-extras-inbox-drafts-file}@comma{} so @samp{m f} (open review file) in the Monitor
-section of @code{agent-menu} opens the inbox monitor's drafts file for the
-current session: the file where draft replies to the messages routed to that
-session's project wait for review@comma{} with the context needed to decide each one.
-The function asks the monitor's @samp{inbox-drafts path --cwd DIR} which project
-holds the session's directory@comma{} and returns nil (so @samp{m f} reports that the
-session has no review file) when the command is missing or no monitored
-project holds the directory. After commenting on the drafts@comma{} @samp{m p} (process
-review file) asks the session to carry out the comments.
-
-@vindex agent-extras-review-files-directory
-@findex agent-extras-review-file-setup
-Any file visited under @code{agent-extras-review-files-directory} (the drafts
-directory) turns on @code{redline-mode}@comma{} so the CriticMarkup comments on each draft
-can be read and written in place@comma{} however the file was opened.
 
 @node Orchestration run view
 @chapter Orchestration run view

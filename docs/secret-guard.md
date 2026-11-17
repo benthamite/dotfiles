@@ -69,6 +69,10 @@ Compiled 2026-09-30 from dotfiles history, hook READMEs and session logs
 output, (b) file read, (c) agent typed the literal, (d) browser page or
 screenshot.
 
+This table records how each leak happened, to guide guard design. Whether a
+leaked secret has since been replaced is tracked in Pablo's private ledger
+(rule in `claude/context/secrets.md`), not here.
+
 | Date | Secret kind | Path | How |
 |---|---|---|---|
 | 05-16 | Asana tokens (Codex config) | b | a search printed the Codex config file |

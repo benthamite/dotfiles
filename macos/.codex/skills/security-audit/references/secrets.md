@@ -141,6 +141,16 @@ store. Per-process injection does not isolate the consumer from its own secrets.
 
 ## Credential incident memory
 
+Start with Pablo's ledger of leaked credentials,
+`~/repos/notes/leaked-credentials.org` (rule in
+`~/repos/dotfiles/claude/context/secrets.md`). Its open (`TODO`) entries are
+known live exposures: list them in the report, by credential name only, before
+looking for new ones. When a finding concerns a credential already in the
+ledger, report against that entry instead of opening a new one. Audit mode
+does not close entries; authorized remediation closes them with the date and
+the evidence. The registry below is separate: it holds fingerprint-level state
+for findings in dotfiles' public history.
+
 Before investigating a detected credential, resolve the bundled
 `scripts/credential-incident-registry.py` and directory target to absolute paths.
 Invoke the helper's executable entry point directly; it uses isolated system

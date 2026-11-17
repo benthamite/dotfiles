@@ -14123,7 +14123,7 @@ Then change the value of =telega-server-libs-prefix= from =/opt/homebrew= to =/u
 
 /[[https://github.com/benthamite/sgn][sgn]] is an Emacs interface for Signal./
 
-sgn is started at the end of startup so that Signal messages keep reaching its database, which =sgn-read= and the inbox monitor read; otherwise nothing arrives until sgn is opened by hand (it stayed off from 13 Oct to 2 Nov 2026).
+sgn is started at the end of startup so that Signal messages keep reaching its database, which =sgn-read= and Protean read; otherwise nothing arrives until sgn is opened by hand (it stayed off from 13 Oct to 2 Nov 2026).
 
 It starts last on ~elpaca-after-init-hook~ (depth 90), and a failure to start is logged rather than signaled. Starting fails when 1Password is slow to answer at startup: reading ~sgn-account~ as sgn loads then signals an error or leaves it nil. An error there would skip every function that runs after it on the hook.
 

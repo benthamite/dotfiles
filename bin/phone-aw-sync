@@ -65,9 +65,22 @@ if [ -z "$(find "$source_dir" -name "*.db" 2>/dev/null | head -1)" ]; then
   fail "$source_dir holds no datastore (*.db): in ActivityWatch, check Sync is on and its folder is ActivityWatchSync"
 fi
 
+# A run only counts as success if ActivityWatch is still writing its
+# datastore: from 14 to 16 Nov 2026 this script copied an unchanged file and
+# reported healthy for two days after the app stopped writing. The app writes
+# every 15 minutes while it has events; a phone left idle overnight writes
+# nothing, so the limit (12 h) sits above a night's sleep. Withholding the
+# heartbeat (rather than also alerting) lets the monitor's stale alert report
+# it once, 3 h later. The copy still runs, so nothing written is held back.
+fresh=yes
+if [ -z "$(find "$source_dir" -name "*.db" -mmin -720 2>/dev/null | head -1)" ]; then
+  fresh=no
+  log "datastore unchanged for over 12 h: ActivityWatch has stopped writing; heartbeat withheld"
+fi
+
 if ! ssh $ssh_opts "$mac" true 2>/dev/null; then
   log "Mac unreachable; skipped (the next run copies what was missed)"
-  report heartbeat
+  [ "$fresh" = yes ] && report heartbeat
   exit 0
 fi
 
@@ -76,4 +89,5 @@ rsync -a --partial -e "ssh $ssh_opts" "$source_dir/" "$mac:$dest" ||
 
 log "copied to the Mac"
 touch "$state_dir/success"
-report heartbeat
+[ "$fresh" = yes ] && report heartbeat
+exit 0

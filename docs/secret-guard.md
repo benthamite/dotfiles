@@ -54,6 +54,13 @@ redesign behind it is
    Python; `plutil` is unsuitable because it also accepts old-style and XML
    property lists. A policy's `HookFailure`, an unparsable or non-JSON payload,
    a nested-only or non-string tool name, or a failing parser still deny.
+   A hook that times out or cannot be started never reaches the wrapper, so
+   the Claude registration in `~/.claude/settings.json` sets
+   `"onFailure": "block"` (2026-11-17; Claude Code 2.1.295 or later): Claude
+   Code then blocks the call, read-only tools included. Checked on 2.1.326
+   with a throwaway hook that sleeps past its timeout: Bash and Read were
+   blocked with the setting and ran without it. What Codex does when a hook
+   times out is not documented and has not been checked.
 
 ## Incident inventory (agent exposures)
 
@@ -105,8 +112,9 @@ screenshot.
 | 11-03 | Airtable PAT (regenerated before use) | d | screenshot of the token-created dialog |
 | 11-13 | GitHub CLI OAuth token (base64 in a git auth header) | a | a script's `git clone` timed out and Python's `TimeoutExpired` traceback printed the argv holding the header; the script now passes it through `GIT_CONFIG_*` env vars; rotated 11-13 (grant revoked, new login) |
 | 11-15 | Slack websocket reconnect parameter (`frt`) of an Emacs Slack connection (its `token` parameter was masked) | a | an `emacsclient` read of `process-list` names in Pablo's Emacs, during an org-linear diagnosis, printed the websocket URL; the output hook masked `token=` (by its `xoxc-` shape) but not `frt=`. Closed by masking credential-bearing URL parameters by name in `redact-secrets.sh`, both runtimes, 1d5d909c3 |
+| 09-26 | Brave Search API key | a | a process listing printed the arguments of the Emacs `brave-search` MCP server, which held the key; found on 2026-11-17 by checking a sample of old transcripts against the secret index |
 
-Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
+Tally: page/screenshot 10, command output 12, file read 3, **typed literal 0**.
 
 ## Protection in place (2026-10-01)
 

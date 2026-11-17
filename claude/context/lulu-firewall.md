@@ -17,3 +17,9 @@ Pablo's Mac runs LuLu (Objective-See), an outbound firewall. Homebrew binaries a
 **Remaining gap.** A package upgraded only as another package's dependency, or upgraded by hand with `brew upgrade`, is not held. If its alerts appear, answer one with Allow, then run `lulu-directory-rules add`.
 
 **Rule review.** LuLu's Rules window shows only a program's name and signer, not its path, so rules for different binaries with the same name cannot be told apart there. Read `rules.plist` instead (`security-audit`'s `scripts/lulu-rules.py`).
+
+**App not running.** LuLu has two parts: the system extension, which filters, and the app `/Applications/LuLu.app`, the only place alerts appear.
+- Check: `ps -x -o comm= | grep -x /Applications/LuLu.app/Contents/MacOS/LuLu`. The extension's process, under `/Library/SystemExtensions`, does not count.
+- Start: `open -g -a LuLu`, which does not take focus.
+- Monitoring: the launchd audit reports the app when it is not running (`required_apps`; `~/repos/launchd/README.md`, "Required apps").
+- History and evidence: the private note `~/repos/notes/mac-hardening/lulu-app-not-running.md`.

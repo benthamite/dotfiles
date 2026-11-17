@@ -117,14 +117,26 @@ _LABEL_TESTS = {
     "1Password read cache": ere(r"op-automations/cache\b"),
     "OAuth client secret": ere(r"""(^|[[:space:]])?/?[^[:space:]]*\.config/[^/[:space:]]+/(secret\.json|client_secret[^"[:space:]]*\.json)\b"""),
     "credential JSON": ere(r"(^|[[:space:]/])(credentials\.json|service-account[^/[:space:]]*\.json|tokens\.json)\b"),
+    # Credential stores that programs open by themselves (2026-11-17): an
+    # agent has no reason to read, search or name them in a command.
+    "Codex credentials": ere(r"\.codex(-[A-Za-z0-9_.-]+)?/auth\.json\b"),
+    "Slack session cache": ere(r"\.cache/slack-chrome([^A-Za-z0-9_.-]|$)"),
+    "GitHub CLI credentials": ere(r"(^|[^A-Za-z0-9_-])gh/hosts\.yml\b"),
+    # The second branch is a cookie file named after a `cd` into the profile.
+    "Chrome cookie database": ere(r"""Google/Chrome/[^/]+/(Network/)?Cookies(-journal)?([^A-Za-z0-9_.-]|$)"""
+                                  r"""|Google/Chrome.*[[:space:]"'=]Cookies(-journal)?([^A-Za-z0-9_.-]|$)"""),
+    "shell history": ere(r"""(^|[[:space:]/"'=<>(:])\.(zsh_history|zsh_sessions|bash_history|python_history"""
+                         r"""|psql_history|node_repl_history)\b"""),
 }
+_STORE_LABELS = ("Codex credentials", "Slack session cache", "GitHub CLI credentials", "Chrome cookie database",
+                 "shell history")
 _LABEL_ORDER = {
     CLAUDE: ("shell secrets file", "MCP credential config", "environment secrets file", "SSH private key",
              "GPG keyring", "OAuth tokens", "Gmail MCP credentials", "1Password read cache", "OAuth client secret",
-             "credential JSON"),
+             "credential JSON", *_STORE_LABELS),
     CODEX: ("MCP credential config", "shell secrets file", "SSH private key", "GPG keyring", "OAuth tokens",
               "Gmail MCP credentials", "1Password read cache", "OAuth client secret", "credential JSON",
-              "environment secrets file"),
+              "environment secrets file", *_STORE_LABELS),
 }
 
 
@@ -247,6 +259,43 @@ def _check_command(runtime: str, command: str, home_dir: str) -> tuple[str, str,
 
 # --- Claude Read and Grep -------------------------------------------------------------
 
+_HISTORY_NAMES = (".zsh_history", ".bash_history", ".python_history", ".psql_history", ".node_repl_history")
+# The stores of _STORE_LABELS as whole file paths, in any directory.
+_STORE_FILES = tuple((label, re.compile("(.*/)?" + pattern, re.S)) for label, pattern in (
+    ("Codex credentials", r"\.codex(-[^/]+)?/auth\.json"),
+    ("Slack session cache", r"\.cache/slack-chrome(/.*)?"),
+    ("GitHub CLI credentials", r"\.config/gh/hosts\.yml"),
+    ("Chrome cookie database", r"Google/Chrome/[^/]+/(Network/)?Cookies(-journal)?"),
+    ("shell history", "(" + "|".join(map(re.escape, _HISTORY_NAMES)) + r"|\.zsh_sessions(/.*)?)"),
+))
+# Directories, relative to the home directory, whose content search would read one of those files.
+_STORE_SCOPES = tuple((label, re.compile(pattern)) for label, pattern in (
+    ("Codex credentials", r"/\.codex(-[^/]+)?"),
+    ("Slack session cache", r"/\.cache"),
+    ("GitHub CLI credentials", r"/\.config/gh"),
+    ("Chrome cookie database", r"/Library/Application Support/Google/Chrome(/[^/]+(/Network)?)?"),
+))
+# Grep globs that pick a store out of a wider directory: (glob part, path part).
+_STORE_GLOBS = (("auth.json", ".codex"), ("hosts.yml", ".config"), ("Cookies", "/Library"))
+
+
+def _store_label(path: str) -> str:
+    """The label of the credential store PATH names, or ""."""
+    path = path.rstrip("/") or path
+    return next((label for label, pattern in _STORE_FILES if pattern.fullmatch(path)), "")
+
+
+def _store_scope_label(path: str, home_dir: str) -> str:
+    """The label of the credential store a content search of directory PATH would read, or ""."""
+    path = path.rstrip("/") or path
+    for prefix in (home_dir, "/Users/pablostafforini"):
+        if path.startswith(prefix + "/"):
+            for label, pattern in _STORE_SCOPES:
+                if pattern.fullmatch(path[len(prefix):]):
+                    return label
+    return ""
+
+
 def _claude_read_label(path: str, home_dir: str) -> str:
     """Labels for an expanded Read path, in the hook's `case` order."""
     if _case(path, _glob("*", "/.mcp.json"), _glob("*", "/mcp.json")):
@@ -275,7 +324,7 @@ def _claude_read_label(path: str, home_dir: str) -> str:
         if _case(path, _glob(prefix + "/.config/", "*", "/secret.json"),
                  _glob(prefix + "/.config/", "*", "/client_secret", "*", ".json")):
             return "OAuth client secret"
-    return ""
+    return _store_label(path)
 
 
 def _scope_label(path: str, home_dir: str) -> str:
@@ -291,6 +340,9 @@ def _scope_label(path: str, home_dir: str) -> str:
     for prefix in (home_dir, "/Users/pablostafforini"):
         if path == f"{prefix}/.zsh_history" or under(f"{prefix}/.zsh_sessions"):
             return "shell history"
+    store = _store_label(path) or _store_scope_label(path, home_dir)
+    if store:
+        return store
     if under(f"{home_dir}/.gmail-mcp-epoch/credentials", "/Users/pablostafforini/.gmail-mcp-epoch/credentials"):
         return "Gmail MCP credentials"
     if _case(path, _glob("*", "/op-automations/cache"), _glob("*", "/op-automations/cache/", "*"),
@@ -317,7 +369,7 @@ def _scope_label(path: str, home_dir: str) -> str:
 
 _SENSITIVE_GLOB_PARTS = (".env", ".envrc", ".mcp.json", "mcp.json", ".zshenv-secrets", ".zsh_history",
                          ".zsh_sessions", ".gnupg", "id_", "credentials.json", "service-account", "tokens.json",
-                         "secret.json", "client_secret")
+                         "secret.json", "client_secret", "slack-chrome", *_HISTORY_NAMES[1:])
 
 
 def _bash_pwd(call: Call) -> str:
@@ -344,7 +396,8 @@ def _claude_grep(call: Call, home_dir: str) -> Result:
     label = _scope_label(expand_tilde(grep_path, home_dir), home_dir)
     if label:
         return _deny(CLAUDE, label, f"Grep content output could return matching lines from {grep_path}")
-    if any(part in pattern_glob for part in _SENSITIVE_GLOB_PARTS):
+    if any(part in pattern_glob for part in _SENSITIVE_GLOB_PARTS) or any(
+            part in pattern_glob and scope in expand_tilde(grep_path, home_dir) for part, scope in _STORE_GLOBS):
         return _deny(CLAUDE, "sensitive file glob",
                      f"Grep content output with glob {pattern_glob} could return secret values")
     return Result.allow()

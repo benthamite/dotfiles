@@ -1202,7 +1202,11 @@ with or without it; any other =@…= word is denied. The broker's own
 shapes (without =--out-file=); =cache forget= prints nothing and is allowed.
 The sensitive-read guards deny reading, grepping or naming the cache directory
 (=…/op-automations/cache=) in a command, since it holds plaintext values. Bash, =Read= and =Grep=
-reach this decision through the same =agent_guard.policies.sensitive_read= policy. Quoted argument globs, including =rg=
+reach this decision through the same =agent_guard.policies.sensitive_read= policy. Since 2026-11-17 it treats
+the credential stores that programs open by themselves the same way: =auth.json= in a Codex home, the Slack
+session cache (=~/.cache/slack-chrome=), =~/.config/gh/hosts.yml=, Chrome's cookie databases, and shell and
+REPL history files. =slack.py=, =bin/secret-index= and =gh auth status= are unaffected, because the guard
+reads the agent's command, not what a program opens. Quoted argument globs, including =rg=
 exclusion patterns beginning with =!=, remain inert data rather than executable
 command words. A shell =case= default pattern is likewise grammar, not an
 executable glob. So is the =*= in a standalone assignment ended by a

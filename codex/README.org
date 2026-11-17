@@ -1088,7 +1088,12 @@ unclassifiable and denied. The =op-automations= account selector (=@epoch=,
 behaves the same with or without it; any other =@…= word is denied. The
 broker's own =cache read= verb takes =read='s non-printing shapes (without
 =--out-file=) and =cache forget= is allowed; the sensitive-read guard denies
-naming the plaintext cache directory (=…/op-automations/cache=). Quoted
+naming the plaintext cache directory (=…/op-automations/cache=). Since
+2026-11-17 it treats the credential stores that programs open by themselves
+the same way: =auth.json= in a Codex home, the Slack session cache
+(=~/.cache/slack-chrome=), =~/.config/gh/hosts.yml=, Chrome's cookie
+databases, and shell and REPL history files; programs that open them
+(=slack.py=, =bin/secret-index=, =gh auth status=) are unaffected. Quoted
 argument globs, including =rg= exclusion patterns beginning with =!=, remain
 inert data rather than executable command words. A shell =case= default pattern
 is likewise grammar, not an executable glob. So is the =*= in a standalone assignment ended by a

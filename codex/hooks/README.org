@@ -138,7 +138,14 @@ secret-leak guard still denies their secret-printing shapes. It also permits
 =.env= or =.envrc= to be sourced solely as subprocess environment, and
 =op-automations run --env-file .env.op -- <program>= with leading =VAR=value=
 assignments and file redirects, while still denying commands that print,
-parse, or dump that environment.
+parse, or dump that environment. Since 2026-11-17 it also denies shell
+commands that read, search or name the credential stores that programs open by
+themselves: =auth.json= in every Codex home, the Slack browser-session cache
+(=~/.cache/slack-chrome=), =~/.config/gh/hosts.yml=, Chrome's cookie
+databases, and shell and REPL history files. The metadata forms above still
+apply, and programs that open a store themselves (=claude/bin/slack.py=,
+=bin/secret-index=, =gh auth status=, Codex itself) are unaffected; the list
+and the Claude =Read= and =Grep= rules are in =claude/hooks/README.org=.
 
 The secret-leak guard applies the same command policy to every literal nested
 =cmd= inside a =functions.exec= program, including nested shell-tool calls; a

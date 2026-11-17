@@ -123,6 +123,136 @@ class ReadAndGrepTests(unittest.TestCase):
         self.assertEqual(decide("codex", "Bash", "cat .env").decision, "deny")
 
 
+CHROME = "Library/Application Support/Google/Chrome"
+STORE_READS = {
+    "Codex credentials": [
+        "cat ~/.codex/auth.json", "cat ~/.codex-epoch/auth.json", f"jq . {HOME}/.codex/auth.json",
+        'head -c 100 "$HOME/.codex-personal/auth.json"', "rg token ~/.codex/auth.json",
+        f"""python3 -c "print(open('{HOME}/.codex/auth.json').read())" """, "false && cat ~/.codex/auth.json",
+        "cp ~/.codex/auth.json /tmp/a.json",
+    ],
+    "Slack session cache": [
+        "cat ~/.cache/slack-chrome/epoch.slack.com.json", "jq -r .token ~/.cache/slack-chrome/x.json",
+        "grep -r xoxc ~/.cache/slack-chrome", "ls ~/.cache/slack-chrome | xargs cat",
+        f"python3 -m json.tool {HOME}/.cache/slack-chrome/x.json",
+    ],
+    "GitHub CLI credentials": [
+        "cat ~/.config/gh/hosts.yml", "grep oauth_token ~/.config/gh/hosts.yml", "cd ~/.config && cat gh/hosts.yml",
+        'yq . "$HOME/.config/gh/hosts.yml"', "sed -n 1,5p ~/.config/gh/hosts.yml",
+    ],
+    "Chrome cookie database": [
+        f'sqlite3 "$HOME/{CHROME}/Default/Cookies" "select * from cookies"',
+        "sqlite3 ~/Library/Application\\ Support/Google/Chrome/Profile\\ 2/Network/Cookies .dump",
+        f'cp "$HOME/{CHROME}/Default/Network/Cookies" /tmp/c.db', f'strings "{HOME}/{CHROME}/Default/Cookies-journal"',
+        f'cd "$HOME/{CHROME}/Default" && sqlite3 Cookies .dump',
+        f'sqlite3 "file:{HOME}/{CHROME}/Profile 3/Network/Cookies?mode=ro" "select name from cookies"',
+    ],
+    "shell history": [
+        "cat ~/.zsh_history", "tail -50 ~/.zsh_history", "grep -n curl ~/.bash_history", "cat ~/.python_history",
+        "less ~/.psql_history", "cat ~/.node_repl_history", "cat ~/.zsh_sessions/ABC.history",
+        'rg -n token "$HOME/.zsh_history"', "gitleaks detect --no-git --redact --source ~/.zsh_history",
+        "cd ~ && head .zsh_history", "sort < ~/.zsh_history | uniq -c",
+    ],
+}
+STORE_ALLOWED = [
+    # Metadata commands, alone, as for every other sensitive file.
+    "ls -la ~/.codex/auth.json", "stat ~/.zsh_history", "wc -l ~/.zsh_history", "grep -c curl ~/.zsh_history",
+    "test -f ~/.config/gh/hosts.yml", "ls ~/.cache/slack-chrome", f'ls -l "$HOME/{CHROME}/Default/Cookies"',
+    # Programs that open a store themselves: the guard reads the command, not what the program opens.
+    "python3 claude/bin/slack.py -w epoch channels | head -3",
+    "python3 ~/repos/dotfiles/claude/bin/slack_chrome.py epoch.slack.com", "bin/secret-index refresh",
+    "~/repos/dotfiles/bin/secret-index status", "gh auth status", "gh auth status --hostname github.com",
+    "gh api user --jq .login", "codex login status",
+    """python3 -c 'import slack_chrome; slack_chrome.refresh("epoch.slack.com")'""",
+    # Neighbours of the stores, and inert mentions.
+    "cat ~/.codex/config.toml", "ls ~/.codex-epoch/sessions", "cat ~/.config/gh/config.yml", "cat project/auth.json",
+    "cat hosts.yml", "grep -rn slack_chrome claude/bin", f'ls "$HOME/{CHROME}/Default/Extensions"',
+    "cat docs/zsh_history.md", "cat ~/.zshrc", "git commit -m 'guard .zsh_history and ~/.codex/auth.json' -- x.py",
+    "cat <<'EOF' > notes.md\n~/.codex/auth.json and ~/.zsh_history are denied\nEOF",
+]
+
+
+class CredentialStoreTests(unittest.TestCase):
+    def test_shell_reads_denied_in_both_runtimes(self):
+        for label, commands in STORE_READS.items():
+            for command in commands:
+                for runtime, tool in (("claude", "Bash"), ("codex", "exec_command")):
+                    with self.subTest(label=label, runtime=runtime, command=command):
+                        result = bash(runtime, command, tool)
+                        self.assertEqual(result.decision, "deny")
+                        self.assertTrue(result.reason.startswith(f"BLOCKED: sensitive read: {label} — "), result.reason)
+
+    def test_metadata_helpers_and_neighbours_allowed_in_both_runtimes(self):
+        for command in STORE_ALLOWED:
+            for runtime, tool in (("claude", "Bash"), ("codex", "exec_command")):
+                with self.subTest(runtime=runtime, command=command):
+                    self.assertEqual(bash(runtime, command, tool).decision, "allow")
+
+    def test_dispatcher_copy_agrees(self):
+        for command in ("cat ~/.zsh_history", "cat ~/.codex/auth.json", "ls ~/.cache/slack-chrome", "gh auth status"):
+            c = call("claude", "Bash", {"command": command})
+            hook = sensitive_read.decide(c)
+            self.assertEqual(sensitive_read.dispatcher_check(c), ([hook.reason] if hook.reason else [], hook.context))
+
+    def test_read_tool(self):
+        denied = {
+            "Codex credentials": ("~/.codex/auth.json", f"{HOME}/.codex-epoch/auth.json"),
+            "Slack session cache": (f"{HOME}/.cache/slack-chrome/epoch.slack.com.json",),
+            "GitHub CLI credentials": (f"{HOME}/.config/gh/hosts.yml",),
+            "Chrome cookie database": (f"{HOME}/{CHROME}/Default/Cookies", f"{HOME}/{CHROME}/Profile 2/Network/Cookies",
+                                       f"{HOME}/{CHROME}/Default/Network/Cookies-journal"),
+            "shell history": ("~/.zsh_history", f"{HOME}/.bash_history", f"{HOME}/.python_history",
+                              f"{HOME}/.psql_history", f"{HOME}/.node_repl_history", f"{HOME}/.zsh_sessions/A.history"),
+        }
+        for label, paths in denied.items():
+            for path in paths:
+                with self.subTest(path=path):
+                    self.assertEqual(decide("claude", "Read", {"file_path": path}).reason.split(".\n\n")[0],
+                                     f"BLOCKED: sensitive read: {label} — {path}")
+                    self.assertTrue(decide("codex", "Read", {"path": path}).reason.startswith(
+                        f"BLOCKED: sensitive read: {label} — "), path)
+        for path in (f"{HOME}/.codex/config.toml", f"{HOME}/.config/gh/config.yml", "/r/project/auth.json",
+                     f"{HOME}/{CHROME}/Default/Preferences", "/r/docs/zsh_history.md", f"{HOME}/.zshrc",
+                     f"{HOME}/.cache/slack-chrome-notes.md", "/r/dotfiles/claude/bin/slack_chrome.py"):
+            with self.subTest(path=path):
+                self.assertEqual(decide("claude", "Read", {"file_path": path}).decision, "allow")
+                self.assertEqual(decide("codex", "Read", {"path": path}).decision, "allow")
+
+    def test_grep_tool_scopes(self):
+        denied = {
+            "~/.codex": "Codex credentials", "~/.codex-epoch": "Codex credentials",
+            f"{HOME}/.codex/auth.json": "Codex credentials", "~/.cache/slack-chrome": "Slack session cache",
+            "~/.cache": "Slack session cache", "~/.config/gh": "GitHub CLI credentials",
+            f"{HOME}/.config/gh/hosts.yml": "GitHub CLI credentials",
+            f"{HOME}/{CHROME}": "Chrome cookie database", f"{HOME}/{CHROME}/Default": "Chrome cookie database",
+            f"{HOME}/{CHROME}/Default/Network/": "Chrome cookie database", "~/.bash_history": "shell history",
+            "~/.zsh_history": "shell history", f"{HOME}/.node_repl_history": "shell history",
+        }
+        for path, label in denied.items():
+            with self.subTest(path=path):
+                result = decide("claude", "Grep", {"path": path, "output_mode": "content"})
+                self.assertIn(f"{label} — Grep content output could return matching lines from {path}", result.reason)
+                # Name-only and count modes return no file contents.
+                self.assertEqual(decide("claude", "Grep", {"path": path}).decision, "allow")
+                self.assertEqual(decide("claude", "Grep", {"path": path, "output_mode": "count"}).decision, "allow")
+        for path in ("~/.codex/sessions", "~/.config", f"{HOME}/{CHROME}/Default/Extensions", "/r/dotfiles/macos/.codex",
+                     "/r/project/.cache", "~/repos/dotfiles/claude/bin"):
+            with self.subTest(path=path):
+                self.assertEqual(decide("claude", "Grep", {"path": path, "output_mode": "content"}).decision, "allow")
+
+    def test_grep_tool_globs(self):
+        for path, glob in (("/r", "**/.bash_history"), ("/r", ".python_history"), ("~/.codex/sessions/..", "auth.json"),
+                           ("~/.config", "**/hosts.yml"), ("~/Library/Application Support", "**/Cookies"),
+                           ("/r", "slack-chrome/*.json")):
+            with self.subTest(path=path, glob=glob):
+                result = decide("claude", "Grep", {"path": path, "output_mode": "content", "glob": glob})
+                self.assertIn(f"sensitive file glob — Grep content output with glob {glob} could", result.reason)
+        for path, glob in (("/r/project", "auth.json"), ("/r/ansible", "hosts.yml"), ("/r/web", "**/useCookies.ts")):
+            with self.subTest(path=path, glob=glob):
+                self.assertEqual(decide("claude", "Grep", {"path": path, "output_mode": "content", "glob": glob}).decision,
+                                 "allow")
+
+
 class FailureTests(unittest.TestCase):
     """A helper failure propagates and the engine denies, as the hook's EXIT
     trap did (or, where the shell swallowed the failure and allowed, stricter)."""

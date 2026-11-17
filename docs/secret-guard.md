@@ -119,6 +119,19 @@ Tally: page/screenshot 10, command output 11, file read 3, **typed literal 0**.
 - **Output, Codex:** shell and MCP results are masked via `decision: block`.
 - **Screenshots:** dropped on pages in `agents/credential-pages.txt`, or when
   the page cannot be determined.
+- **Credential stores (2026-11-17):** `policies/sensitive_read` treats the
+  stores that programs open by themselves like the 1Password read cache and
+  `.zshenv-secrets`: `auth.json` in every Codex home, the Slack
+  browser-session cache (`~/.cache/slack-chrome`), `~/.config/gh/hosts.yml`,
+  Chrome's cookie databases with their `-journal` files, and shell and REPL
+  history files (`.zsh_history`, `.zsh_sessions`, `.bash_history`,
+  `.python_history`, `.psql_history`, `.node_repl_history`). Reading one,
+  searching its contents or naming it in a shell command is denied in both
+  runtimes, for Claude's `Read` and `Grep` as well; metadata commands used
+  alone (`ls`, `stat`, `wc`, `grep -c`) stay allowed, and programs that open a
+  store themselves (`slack.py`, `bin/secret-index`, `gh auth status`) are
+  unaffected, since the guard reads the agent's command. Preventive: it closes
+  no row of the table.
 - **Security controls (2026-11-17):** `policies/security_controls` denies, in
   both runtimes and with no override an agent can type, the shell commands that
   change the Mac's own security controls: AppleScript or JXA addressed to

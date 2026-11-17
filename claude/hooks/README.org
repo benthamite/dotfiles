@@ -138,6 +138,24 @@ content searches remain available for
 ordinary repository scopes and filename/count-only searches; sensitive paths,
 globs, and broad home-directory content searches are denied.
 
+Since 2026-11-17 the same policy covers the credential stores that programs
+open by themselves, which an agent has no reason to read, search or name in a
+command: =auth.json= in every Codex home (=~/.codex=, =~/.codex-*=), the Slack
+browser-session cache (=~/.cache/slack-chrome=), the GitHub CLI hosts file
+(=~/.config/gh/hosts.yml=), Chrome's cookie databases (=Cookies= and
+=Network/Cookies= in each profile, with their =-journal= files), and shell and
+REPL history files (=.zsh_history=, =.zsh_sessions=, =.bash_history=,
+=.python_history=, =.psql_history=, =.node_repl_history=). =Read= of one is
+denied; a =Grep= content search is denied on the store, on the directory that
+holds it (a Codex home, =~/.config/gh=, =~/.cache=, a Chrome profile) and
+through a glob that picks it out; a shell command naming one is denied unless
+it is one of the metadata forms above, used alone. History files were already
+closed to =Grep= content searches; =Read= and shell commands are new. Programs
+that open a store themselves are unaffected, because the guard reads the
+agent's command and not what a program opens: =claude/bin/slack.py=,
+=claude/bin/slack_chrome.py=, =bin/secret-index= and =gh auth status= run as
+before. =Glob= returns only file names and is not checked.
+
 The secret-leak guard (=agent_guard.policies.secret_leak=) blocks secret-shaped literals and secret-printing
 commands. Raw =op=, =security=, and =pbpaste= are denied even when
 wrapped, piped, filtered, redirected, dynamically resolved, or called through

@@ -37,6 +37,13 @@ ALLOW = [
     "op-automations run --env-file .env.local -- python3 script.py --check",
     "cd ~/repos/x && op-automations run --env-file .env.local -- make test",
     "git -C /Users/x/repo ls-files .env.local",
+    # programs that open a credential store themselves name none in the command
+    "python3 claude/bin/slack.py -w epoch channels",
+    "python3 claude/bin/slack_chrome.py epoch.slack.com",
+    "bin/secret-index status",
+    "gh auth status",
+    "ls -la ~/.codex/auth.json",
+    "wc -l ~/.zsh_history",
 ]
 
 # Since 2026-09-18 `.env.op` itself is not a secrets file (it holds op://
@@ -58,6 +65,16 @@ DENY = [
     # op-automations cached reads are plaintext 1Password values
     "cat ~/.local/state/op-automations/cache/0123abcd",
     'head -c 40 "$XDG_STATE_HOME/op-automations/cache/"*',
+    # credential stores that programs open by themselves (2026-11-17)
+    "cat ~/.codex/auth.json",
+    "false && cat ~/.codex-epoch/auth.json",
+    "jq -r .token ~/.cache/slack-chrome/epoch.slack.com.json",
+    "cat ~/.config/gh/hosts.yml",
+    'sqlite3 "$HOME/Library/Application Support/Google/Chrome/Default/Network/Cookies" .dump',
+    "cat ~/.zsh_history",
+    "tail -20 ~/.bash_history",
+    "grep -n token ~/.python_history ~/.psql_history ~/.node_repl_history",
+    "cat ~/.zsh_sessions/A.history",
 ]
 
 

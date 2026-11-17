@@ -1,0 +1,78 @@
+#!/bin/sh
+# Make jinx use the GLib bundled in Emacs.app instead of Homebrew's.
+#
+# jinx-mod.dylib links Homebrew's enchant, which links Homebrew's GLib, while
+# the emacs-plus-app cask bundles its own GLib in Emacs.app/Contents/Frameworks.
+# Loading both puts two copies of GLib in Emacs, and the Objective-C runtime
+# warns at every start: "Class GNotificationCenterDelegate is implemented in
+# both ... This may cause spurious casting failures and mysterious crashes."
+# Homebrew's GLib cannot be removed (about 60 formulae need it).
+#
+# So this script copies enchant (library and provider plugins, in enchant's
+# own lib/ layout, since enchant finds plugins relative to its prefix) into
+# DEST, points their GLib and libintl references at
+# @executable_path/../Frameworks (the copies Emacs.app already has loaded),
+# points the plugins at the copied libenchant, re-signs them ad hoc, and
+# relinks jinx-mod.dylib to the copy. Emacs.app's GLib is newer than
+# Homebrew's enchant was built against, which dyld accepts.
+#
+# Run it again after `brew upgrade enchant`, after jinx rebuilds its module,
+# or after an emacs-plus-app update.
+#
+# Usage: jinx-enchant-relink [JINX_MOD_DYLIB] [DEST]
+set -eu
+
+JINX=${1:-$HOME/.config/emacs-profiles/active/elpaca/builds/jinx/jinx-mod.dylib}
+DEST=${2:-$HOME/.local/lib/jinx-enchant}
+SRC=$(cd "$(brew --prefix enchant)" && pwd -P)
+FW=@executable_path/../Frameworks
+
+[ -f "$JINX" ] || { echo "jinx-enchant-relink: no module at $JINX" >&2; exit 1; }
+
+tmp=$(mktemp -d "${TMPDIR:-/tmp}/jinx-enchant.XXXXXX")
+mkdir -p "$tmp/lib/enchant-2"
+cp "$SRC/lib/libenchant-2.2.dylib" "$tmp/lib/"
+cp "$SRC"/lib/enchant-2/*.so "$tmp/lib/enchant-2/"
+[ -d "$SRC/share/enchant" ] && mkdir -p "$tmp/share" && cp -R "$SRC/share/enchant" "$tmp/share/"
+
+lib="$DEST/lib/libenchant-2.2.dylib"
+
+# Rewrite every Homebrew GLib/libintl reference to Emacs.app's copy, and every
+# libenchant reference to the copied library.
+relink() {
+	f=$1
+	otool -L "$f" | tail -n +2 | awk '{print $1}' | while read -r dep; do
+		case "$dep" in
+			*/libglib-2.0.0.dylib | */libgio-2.0.0.dylib | \
+				*/libgobject-2.0.0.dylib | */libgmodule-2.0.0.dylib | \
+				*/libintl.8.dylib)
+				case "$dep" in "$FW"/*) continue ;; esac
+				install_name_tool -change "$dep" "$FW/$(basename "$dep")" "$f" ;;
+			*/libenchant-2.2.dylib)
+				[ "$dep" = "$lib" ] || install_name_tool -change "$dep" "$lib" "$f" ;;
+		esac
+	done
+}
+
+install_name_tool -id "$lib" "$tmp/lib/libenchant-2.2.dylib"
+for f in "$tmp/lib/libenchant-2.2.dylib" "$tmp"/lib/enchant-2/*.so; do
+	chmod u+w "$f"
+	relink "$f"
+	codesign --force --sign - "$f" 2>/dev/null
+done
+
+rm -rf "$DEST.new"
+mv "$tmp" "$DEST.new"
+[ -d "$DEST" ] && mv "$DEST" "$DEST.old.$$"
+mv "$DEST.new" "$DEST"
+rm -rf "$DEST.old.$$"
+
+# Relink jinx through a copy and an atomic rename, so an Emacs that has the
+# module loaded keeps its mapped file intact.
+jtmp="$JINX.relink.$$"
+cp "$JINX" "$jtmp"
+relink "$jtmp"
+codesign --force --sign - "$jtmp" 2>/dev/null
+mv -f "$jtmp" "$JINX"
+
+echo "jinx-enchant-relink: $JINX now uses $lib with Emacs.app's GLib"

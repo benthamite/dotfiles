@@ -43,6 +43,7 @@ Commands
 Enhanced functionality
 
 * Abbreviation learning::
+* One GLib in Emacs.app: One GLib in Emacsapp. 
 
 Indices
 
@@ -99,6 +100,7 @@ in the source.
 
 @menu
 * Abbreviation learning::
+* One GLib in Emacs.app: One GLib in Emacsapp. 
 @end menu
 
 @node Abbreviation learning
@@ -119,6 +121,31 @@ displayed in the echo area for each new abbreviation.
 
 Over time this builds a personalized typo-correction dictionary that
 speeds up writing without any manual configuration.
+
+@node One GLib in Emacsapp
+@section One GLib in Emacs.app
+
+@vindex jinx-extras-relink-program
+Jinx's module links Homebrew's enchant@comma{} which links Homebrew's GLib.
+The @samp{emacs-plus-app} build of Emacs bundles its own GLib in
+@samp{Emacs.app/Contents/Frameworks}@comma{} so loading the module puts a second
+GLib into Emacs@comma{} and Emacs prints at every start: ``Class
+GNotificationCenterDelegate is implemented in both @dots{} This may cause
+spurious casting failures and mysterious crashes.''
+
+Before Jinx loads its module@comma{} @samp{jinx-extras.el} checks with @samp{otool}
+whether the module links Homebrew's enchant.  If it does@comma{} it runs
+@code{jinx-extras-relink-program} (@samp{bin/jinx-enchant-relink} in the
+dotfiles)@comma{} which copies enchant and its provider plugins to
+@samp{~/.local/lib/jinx-enchant/}@comma{} points their GLib references at the
+copies Emacs.app already has loaded@comma{} and relinks the module to that
+copy.  When Jinx has just compiled a new module@comma{} the relink runs right
+after loading it@comma{} so the fix takes effect at the next start.  Set the
+option to nil to turn this off.
+
+Run the program by hand after @samp{brew upgrade enchant} or an
+@samp{emacs-plus-app} update@comma{} since an existing relinked module does not
+trigger it again.
 
 @node Indices
 @chapter Indices

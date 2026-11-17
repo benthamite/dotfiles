@@ -78,6 +78,33 @@ displayed in the echo area for each new abbreviation.
 Over time this builds a personalized typo-correction dictionary that
 speeds up writing without any manual configuration.
 
+** One GLib in Emacs.app
+:PROPERTIES:
+:CUSTOM_ID: h:one-glib
+:END:
+
+#+vindex: jinx-extras-relink-program
+Jinx's module links Homebrew's enchant, which links Homebrew's GLib.
+The =emacs-plus-app= build of Emacs bundles its own GLib in
+=Emacs.app/Contents/Frameworks=, so loading the module puts a second
+GLib into Emacs, and Emacs prints at every start: "Class
+GNotificationCenterDelegate is implemented in both ... This may cause
+spurious casting failures and mysterious crashes."
+
+Before Jinx loads its module, =jinx-extras.el= checks with =otool=
+whether the module links Homebrew's enchant.  If it does, it runs
+~jinx-extras-relink-program~ (=bin/jinx-enchant-relink= in the
+dotfiles), which copies enchant and its provider plugins to
+=~/.local/lib/jinx-enchant/=, points their GLib references at the
+copies Emacs.app already has loaded, and relinks the module to that
+copy.  When Jinx has just compiled a new module, the relink runs right
+after loading it, so the fix takes effect at the next start.  Set the
+option to nil to turn this off.
+
+Run the program by hand after =brew upgrade enchant= or an
+=emacs-plus-app= update, since an existing relinked module does not
+trigger it again.
+
 * Indices
 :PROPERTIES:
 :CUSTOM_ID: h:indices

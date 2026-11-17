@@ -72,5 +72,48 @@
       (should (equal abbrev "b"))
       (delete-overlay ov))))
 
+;;;; One GLib in Emacs.app
+
+(ert-deftest jinx-extras-test-relink-existing-module-before-load ()
+  "An existing module linking Homebrew's enchant is relinked before loading."
+  (skip-unless (require 'jinx-extras nil t))
+  (let (calls)
+    (cl-letf (((symbol-function 'jinx-extras--module-file) (lambda () "/m.dylib"))
+              ((symbol-function 'jinx-extras--links-homebrew-enchant-p) (lambda (_) t))
+              ((symbol-function 'jinx-extras--relink) (lambda (m) (push (list 'relink m) calls))))
+      (jinx-extras--use-emacs-glib (lambda () (push 'load calls))))
+    (should (equal (reverse calls) '((relink "/m.dylib") load)))))
+
+(ert-deftest jinx-extras-test-relinked-module-left-alone ()
+  "A module already linked to the copy is loaded without relinking."
+  (skip-unless (require 'jinx-extras nil t))
+  (let (calls)
+    (cl-letf (((symbol-function 'jinx-extras--module-file) (lambda () "/m.dylib"))
+              ((symbol-function 'jinx-extras--links-homebrew-enchant-p) (lambda (_) nil))
+              ((symbol-function 'jinx-extras--relink) (lambda (m) (push (list 'relink m) calls))))
+      (jinx-extras--use-emacs-glib (lambda () (push 'load calls))))
+    (should (equal calls '(load)))))
+
+(ert-deftest jinx-extras-test-relink-freshly-compiled-module-after-load ()
+  "A module that ORIG compiles is relinked after it is loaded."
+  (skip-unless (require 'jinx-extras nil t))
+  (let (calls built)
+    (cl-letf (((symbol-function 'jinx-extras--module-file) (lambda () built))
+              ((symbol-function 'jinx-extras--relink) (lambda (m) (push (list 'relink m) calls))))
+      (jinx-extras--use-emacs-glib (lambda () (setq built "/new.dylib") (push 'load calls))))
+    (should (equal (reverse calls) '(load (relink "/new.dylib"))))))
+
+(ert-deftest jinx-extras-test-homebrew-enchant-detected ()
+  "Detection reads the module's library list from otool."
+  (skip-unless (and (require 'jinx-extras nil t) (eq system-type 'darwin)))
+  (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/otool"))
+            ((symbol-function 'shell-command-to-string)
+             (lambda (_) "m.dylib:\n\t/opt/homebrew/opt/enchant/lib/libenchant-2.2.dylib (x)\n")))
+    (should (jinx-extras--links-homebrew-enchant-p "/m.dylib")))
+  (cl-letf (((symbol-function 'executable-find) (lambda (_) "/usr/bin/otool"))
+            ((symbol-function 'shell-command-to-string)
+             (lambda (_) "m.dylib:\n\t/Users/x/.local/lib/jinx-enchant/lib/libenchant-2.2.dylib (x)\n")))
+    (should-not (jinx-extras--links-homebrew-enchant-p "/m.dylib"))))
+
 (provide 'jinx-extras-test)
 ;;; jinx-extras-test.el ends here

@@ -9839,6 +9839,16 @@ does not exist."
   ;; Bookmark the running profile's package checkouts, where packages such
   ;; as agent.el are edited, so the phone can start a session there.
   (agent-remote-folder-bookmarks (list elpaca-sources-directory))
+  ;; Only the devices listed in ~/.config/agent-remote/allowed-networks (one
+  ;; CIDR per line; kept out of this public repository) may reach the control
+  ;; page, which has no login of its own.  The package default admits every
+  ;; device on the tailnet, so a missing file admits only this machine.
+  (agent-remote-allowed-networks
+   (let ((file (expand-file-name "~/.config/agent-remote/allowed-networks")))
+     (if (file-readable-p file)
+         (split-string (with-temp-buffer (insert-file-contents file) (buffer-string))
+                       "\n" t "[ \t]+")
+       '("127.0.0.1/32"))))
   ;; exit-skill-audit audits exit-time skills monthly and writes `held' when its
   ;; proposals await Pablo (claude/context/skill-audits.md).  Its directories
   ;; are the union of its targets' (exit-skill-audit/targets/*/target.json).

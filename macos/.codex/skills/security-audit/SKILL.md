@@ -155,14 +155,16 @@ and verify the reported behavior before claiming it resolved.
 A finding that lives only in a report or session log gets lost: the 2026-10-17
 accounts run left three open items in its log and nowhere else. Before ending
 a run, give every finding and deferred remediation step not resolved and
-verified in the session a `** TODO` heading in Pablo's TODO inbox,
-`~/repos/android/inbox-desktop.org`, which syncs to his Linear. Order them by
+verified in the session a `** TODO` heading under `* PROJECT dotfiles` in
+`~/repos/notes/protean-projects.org`, which syncs to his Linear under that
+project. Never put them in an inbox file (`~/repos/android/inbox-*.org`):
+inboxes are for unsorted captures, not project tasks. Order them by
 severity and, within accounts, by the account tiers in the accounts reference.
 The heading names the account or control and the action; evidence stays in
 the private report. Then compare the report's findings with the TODOs one by
 one, and in the report name any finding left without a TODO on purpose, with
 the reason.
 
-Two repeating TODOs in the same file carry the schedule: a quarterly accounts
+Two repeating TODOs under the same project heading carry the schedule: a quarterly accounts
 check and a yearly comprehensive audit. When a run covers one of them, mark it
 done so it repeats.

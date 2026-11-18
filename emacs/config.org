@@ -9790,7 +9790,6 @@ BACKEND is `claude' or `codex'.  Each entry becomes (NAME :home HOME), with
   :config
   (require 'agent-claude)
   (require 'agent-codex)
-  (require 'agent-chief)
   (agent-claude-mode 1)
   (agent-codex-mode 1)
   (agent-tab-bar-mode 1)
@@ -9890,7 +9889,6 @@ does not exist."
      ("\\`mu4e:/forethought/" . "forethought")
      ("\\`linear:forethought\\'" . "forethought")))
   (agent-project-registry-root (file-name-concat paths-dir-epoch-workspace "projects/"))
-  (agent-chief-directory paths-dir-epoch)
   (agent-claude-org-todo-in-progress-keyword "DOING")
   ;; Scripts resolve the same accounts through bin/agent-account-home.
   (agent-claude-accounts (pablo/agent-accounts 'claude))

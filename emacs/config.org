@@ -10022,8 +10022,9 @@ does not exist."
   (with-eval-after-load 'org-linear
     (add-hook 'org-linear-my-issues-mode-hook #'protean-inbox-mode))
   ;; agent.el's own keys for a list of tasks (s starts a session on the task
-  ;; or goes back to it, S links a running session to it), in the lists that
-  ;; have the inbox's keys.  Sessions are agent.el's, so the keys are too.
+  ;; or goes back to it, S links a running session to it, D hands the task
+  ;; to an unattended session), in the lists that have the inbox's keys.
+  ;; Sessions are agent.el's, so the keys are too.
   (add-hook 'protean-inbox-mode-hook
             (lambda () (agent-task-keys-mode (if protean-inbox-mode 1 -1)))))
 #+end_src

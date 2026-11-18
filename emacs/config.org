@@ -9911,6 +9911,10 @@ does not exist."
   ;; Sessions started from a task, by hand or because it is tagged :agent:,
   ;; run on Claude without asking (Pablo, 17 Nov 2026).
   (agent-todo-backend 'claude-code)
+  ;; A session closed while it waits on someone registers the wait with
+  ;; Protean, whose answer ends the task's waiting (Pablo, 18 Nov 2026).  On
+  ;; one line: agent.el adds it to a prompt a terminal must take whole.
+  (agent-auto-wait-instructions "If you are waiting on a person, register the wait with Protean before you write the receipt, with the command: protean wait add --project P --note \"WHAT YOU ARE WAITING FOR\" --who \"THEIR NAME\" --channel whatsapp|email|slack|signal --sender STABLE_ID --on resume  P is this project as `protean read --project' takes it: its directory, its title or its directory's name.  STABLE_ID is the id their messages come from on that channel: a WhatsApp JID (from `wa-read resolve'), an email address, or a Slack user ID (from `slack.py users-search').  Say in the note what you are waiting for in your own words, without quoting a message.  If you registered this wait earlier in the session, do not register it again: use the number it printed then (`protean wait list --project P' shows the open ones).  The command prints `wait #ID registered', ID being a number, sometimes followed by a remark in parentheses.  Write `protean:ID' with that number, such as `protean:42', in the `wait' field of the receipt.")
   (agent-account-directory-rules
    `((,(file-name-concat paths-dir-personal-repos "epoch/")
       . ((claude-code . "epoch") (codex . "epoch")))
@@ -10007,13 +10011,20 @@ does not exist."
   ;; A task made from a message starts by itself only when its project's
   ;; agent marked it and its sender is known.
   (with-eval-after-load 'agent-auto
-    (add-hook 'agent-auto-eligible-functions #'protean-auto-eligible-p))
+    (add-hook 'agent-auto-eligible-functions #'protean-auto-eligible-p)
+    ;; A task a closing session left waiting comes back when Protean says
+    ;; its wait is over.
+    (add-hook 'agent-auto-wait-over-functions #'protean-wait-over-p))
   (with-eval-after-load 'agent
     (require 'agent-auto)
     (agent-auto-mode 1))
   ;; The inbox's keys (s start session, n nothing needed) in the Linear list too.
   (with-eval-after-load 'org-linear
-    (add-hook 'org-linear-my-issues-mode-hook #'protean-inbox-mode)))
+    (add-hook 'org-linear-my-issues-mode-hook #'protean-inbox-mode))
+  ;; agent.el's own keys for a list of tasks (S links a running session to
+  ;; the task), in the lists that have the inbox's keys.
+  (add-hook 'protean-inbox-mode-hook
+            (lambda () (agent-task-keys-mode (if protean-inbox-mode 1 -1)))))
 #+end_src
 
 ** =monet=

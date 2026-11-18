@@ -10018,11 +10018,12 @@ does not exist."
   (with-eval-after-load 'agent
     (require 'agent-auto)
     (agent-auto-mode 1))
-  ;; The inbox's keys (s start session, n nothing needed) in the Linear list too.
+  ;; The inbox's keys (o conversation, n nothing needed) in the Linear list too.
   (with-eval-after-load 'org-linear
     (add-hook 'org-linear-my-issues-mode-hook #'protean-inbox-mode))
-  ;; agent.el's own keys for a list of tasks (S links a running session to
-  ;; the task), in the lists that have the inbox's keys.
+  ;; agent.el's own keys for a list of tasks (s starts a session on the task
+  ;; or goes back to it, S links a running session to it), in the lists that
+  ;; have the inbox's keys.  Sessions are agent.el's, so the keys are too.
   (add-hook 'protean-inbox-mode-hook
             (lambda () (agent-task-keys-mode (if protean-inbox-mode 1 -1)))))
 #+end_src

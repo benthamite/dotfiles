@@ -226,7 +226,9 @@ the owning account's secrets context without listing account or vault topology.
 The =reorder-supplies= skill (2026-11-08, encrypted like =order-salads=)
 keeps a registry of Pablo's recurring consumables, with shop, exact listing and
 last quantities. It takes each reorder to the final payment step and hands
-that step to Pablo. It updates the registry after every order.
+that step to Pablo. It updates the registry after every order. Since
+2026-11-18 the registry also lists oats and low-sodium canned lentils, which
+double as the emergency pantry.
 
 The =order-salads= skill polls the supplier's WhatsApp chat about every 5
 minutes while waiting for a ticket, not every minute, and keeps polling with no

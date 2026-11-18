@@ -9997,6 +9997,11 @@ does not exist."
   (protean-archives
    (list (file-name-concat paths-dir-personal-repos "forethought-notes/sprint-archive.org")))
   (protean-exported-task-tags '("pablo"))
+  ;; When Protean archives a mail it has dealt with, do what my own refile
+  ;; does besides moving it: fix the Gmail labels and keep the read status.
+  (protean-archive-before-refile-functions
+   (list (lambda (msg) (mu4e-extras-gmail-fix-flags 'refile msg))
+         #'mu4e-extras--preserve-read-status))
   :config
   (protean-mode)
   ;; A task made from a message starts by itself only when its project's

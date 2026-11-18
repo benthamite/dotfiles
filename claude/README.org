@@ -684,7 +684,7 @@ logged-in sites, each agent's browser control, closing every tab an agent
 opens (since 2026-10-19, after a download run left tabs in Pablo's windows) and switching back any site setting it changed before closing its tab (since 2026-11-12, after an agent left Idea Swipe in its read-only "View as Will" mode), checking which account a "Continue with Google"-style sign-in uses before creating anything under it (since 2026-11-13, after the personal Linear workspace was created under the wrong Google account), never stealing focus (the agent's own
 tab or tab group comes only from the browser tool's own calls, work only in
 those tabs, no other new windows, including visible windows opened by
-Playwright or similar scripts, no activating windows, =chrome-profile-open=
+Playwright or similar scripts and provider sign-in buttons that open a popup (since 2026-11-18, after Pangram's "Continue with Google" opened an account-chooser window), no activating windows, =chrome-profile-open=
 only for manual launching), and one retry policy that separates connection failures (governed
 by =chrome-bridge-recover.py= for Claude) from page/REPL stalls. It takes
 precedence over the vendor Chrome skills where they differ.

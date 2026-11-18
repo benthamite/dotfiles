@@ -78,6 +78,14 @@ to the front.
   that tab, naming it and its Chrome profile window.
 - Do not click links or buttons that open a new tab or window (Chrome
   activates them). Read the link's `href` and navigate your own tab to it.
+- That includes sign-in buttons for another account provider ("Continue
+  with Google", "Sign in with Apple", SSO): many sites open the provider's
+  account chooser in a popup window. Before clicking one, check it with
+  `find` or `read_page`. If it is a link, navigate your tab to its `href`. If
+  it is a script button, don't click it: leave your tab on the site's sign-in
+  page and ask Pablo to sign in there, naming the tab and its Chrome profile
+  window. Origin: on 18 Nov 2026 an agent clicked Pangram's "Continue with
+  Google" and a Google account-chooser window opened over Pablo's work.
 - Never raise, activate or reorder Chrome windows: no AppleScript or
   `osascript`, System Events, `open -a`, or `chrome-profile-open`.
 - Never fall back to screenshots of the desktop or coordinate clicking outside

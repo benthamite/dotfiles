@@ -949,7 +949,9 @@ dispatching to the paired scripts documented in [[file:hooks/README.org][the hoo
 Since 2026-10-01 every PreToolUse guard runs in one Python process: =hooks.json=
 registers only =hooks/agent-guard.sh= for the shell tools and for
 =apply_patch|Edit|Write=. It runs the engine in =lib/python/agent_guard= and
-turns any failure into a denial. Claude's exception for a crash on its read-only
+turns any failure into a denial. Like the Claude script it starts Python with
+=-P=, so a file in the working directory named like a standard-library module
+cannot be imported in its place and crash the engine (2026-11-18). Claude's exception for a crash on its read-only
 tools does not apply: Codex has no =Read=, =Grep= or =Glob= tool, so its
 =agent-guard.sh= keeps =READ_ONLY_TOOLS= empty; it shares the Claude script's
 strict =JSON.parse= reading of the top-level =tool_name=, which never runs

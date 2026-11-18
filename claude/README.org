@@ -1085,6 +1085,10 @@ engine in =lib/python/agent_guard= and turns any failure into a denial,
 except that a crash on =Read=, =Grep= or =Glob= allows the call unguarded with
 a warning to the user and the agent, so a broken guard can still be read and
 diagnosed (2026-10-05, after crashes on 2026-10-01/02 denied every tool).
+The script starts Python with =-P=, which keeps the working directory off
+=sys.path=: with =-c= it is otherwise first, so a file there named like a
+standard-library module was imported in its place and crashed the engine
+(2026-11-18, a project's =select.py=; =tests/test_agent_guard_launcher_cwd.py=).
 The engine handles the crashes it catches; =agent-guard.sh= handles the rest
 (no interpreter, an import error, a signal), reading the top-level
 =tool_name= with =JSON.parse= under =osascript -l JavaScript=, not the

@@ -9,6 +9,9 @@
 #
 # -S skips site-packages: the engine is stdlib-only, and an editable install's
 # .pth finder there costs ~140 ms per start. -E ignores PYTHON* variables.
+# -P keeps the working directory off sys.path: with -c it is otherwise first,
+# so a file there named like a stdlib module (a select.py, say) is imported
+# in its place, the engine crashes, and every tool is denied (2026-11-18).
 # Bytecode is cached outside Drive (no __pycache__ under the sync root),
 # which saves ~30 ms of source compilation per call.
 #
@@ -26,7 +29,7 @@
 READ_ONLY_TOOLS='Read|Grep|Glob'
 PY="$HOME/.pyenv/versions/3.11.9/bin/python3"
 payload=$(cat)
-printf '%s' "$payload" | "$PY" -S -E -X pycache_prefix="$HOME/.cache/agent-guard/pycache" \
+printf '%s' "$payload" | "$PY" -S -E -P -X pycache_prefix="$HOME/.cache/agent-guard/pycache" \
   -c 'import sys; sys.path.insert(0, sys.argv[1]); from agent_guard.engine import main; sys.exit(main(sys.argv[2]))' \
   "$HOME/repos/dotfiles/lib/python" claude
 status=$?

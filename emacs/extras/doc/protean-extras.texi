@@ -37,7 +37,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 @node Overview
 @chapter Overview
 
-Protean's inbox shows@comma{} beside the line at point@comma{} the task above and the message it is about below (Protean's manual@comma{} ``The preview''). Protean names no client: it asks the functions of @code{protean-message-open-functions} to open the message. @samp{protean-extras.el} provides one such function per channel I read in Emacs@comma{} each of which prepares its client's buffer at the message and hands it to Protean without displaying anything itself:
+Protean's inbox shows@comma{} beside the line at point@comma{} the task above and the message it is about below (Protean's manual@comma{} ``The preview''). Protean names no client: it asks the functions of @code{protean-message-open-functions} to open the message. @samp{protean-extras.el} provides one such function per channel I read in Emacs@comma{} each of which prepares its client's buffer at the message and hands it to Protean without displaying anything itself. With the buffer each gives where the message is in it@comma{} so that the preview marks it: the Slack message's @samp{ts}@comma{} the Signal message's @samp{sgn-message-rowid}@comma{} telega's button of the message. An email is its buffer alone and needs no mark.
 
 @multitable {aaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
 @headitem Channel

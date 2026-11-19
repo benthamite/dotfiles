@@ -17,7 +17,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 :CUSTOM_ID: h:overview
 :END:
 
-Protean's inbox shows, beside the line at point, the task above and the message it is about below (Protean's manual, "The preview"). Protean names no client: it asks the functions of ~protean-message-open-functions~ to open the message. =protean-extras.el= provides one such function per channel I read in Emacs, each of which prepares its client's buffer at the message and hands it to Protean without displaying anything itself:
+Protean's inbox shows, beside the line at point, the task above and the message it is about below (Protean's manual, "The preview"). Protean names no client: it asks the functions of ~protean-message-open-functions~ to open the message. =protean-extras.el= provides one such function per channel I read in Emacs, each of which prepares its client's buffer at the message and hands it to Protean without displaying anything itself. With the buffer each gives where the message is in it, so that the preview marks it: the Slack message's =ts=, the Signal message's =sgn-message-rowid=, telega's button of the message. An email is its buffer alone and needs no mark.
 
 | Channel  | Function                         | Client                                   |
 |----------+----------------------------------+------------------------------------------|

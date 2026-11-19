@@ -24,10 +24,15 @@ put its own definitions back."
                     (if (memq feature ,features) feature (apply ,original feature rest)))))
          ,@body))))
 
+(defvar protean-extras-test--bounds nil
+  "The BOUNDS the last opener called in a test gave DONE.")
+
 (defun protean-extras-test--opened (opener message)
-  "Call OPENER on MESSAGE; return (TAKEN BUFFER REASON) as it answered."
+  "Call OPENER on MESSAGE; return (TAKEN BUFFER REASON) as it answered.
+The BOUNDS it gave, if any, are in `protean-extras-test--bounds'."
   (let* ((answer nil)
-         (taken (funcall opener message (lambda (buffer &optional reason)
+         (taken (funcall opener message (lambda (buffer &optional reason bounds)
+                                          (setq protean-extras-test--bounds bounds)
                                           (setq answer (list buffer reason))))))
     (cons taken answer)))
 
@@ -104,7 +109,15 @@ the message is there."
           (should taken)
           (should (bufferp buffer))
           (should (equal (car opened) '(channel "100.1")))
-          (should (equal went "100.1")))
+          (should (equal went "100.1"))
+          ;; The message is the stretch whose `ts' is its timestamp.
+          (require 'protean-preview)
+          (with-temp-buffer
+            (insert (propertize "other\n" 'ts "99.9")
+                    (propertize "the message\n" 'ts (copy-sequence "100.1"))
+                    (propertize "later\n" 'ts "200.2"))
+            (goto-char (point-min))
+            (should (equal (funcall protean-extras-test--bounds) '(7 . 19)))))
         (protean-extras-test--opened
          #'protean-extras-open-slack
          '(:channel "slack" :account "forethought" :ref "C1/200.2" :thread "100.1"))

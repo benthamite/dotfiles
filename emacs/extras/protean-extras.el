@@ -52,6 +52,7 @@
 (declare-function telega-chat-get "telega-chat")
 (declare-function telega-chatbuf--get-create "telega-chat")
 (declare-function telega-chatbuf--goto-msg "telega-chat")
+(declare-function protean-message-property-bounds "protean-preview")
 (defvar slack-teams-by-token)
 (defvar mu4e--view-message)
 
@@ -130,7 +131,10 @@ be connected.  A reply in a thread opens the thread."
            (room (or (slack-room-find (car parts) team)
                      (error "Slack has no room %s" (car parts))))
            (thread (plist-get message :thread))
-           (found (lambda () (slack-buffer-goto ts) (funcall done (current-buffer))))
+           (found (lambda ()
+                    (slack-buffer-goto ts)
+                    (funcall done (current-buffer) nil
+                             (lambda () (protean-message-property-bounds 'ts ts)))))
            (failed (lambda (&rest _) (funcall done nil "Slack could not load the message"))))
       (unless (slack-team-connectedp team)
         (error "Slack's team %s is not connected" name))
@@ -156,7 +160,12 @@ For `protean-message-open-functions'."
     (pcase-let ((`(,chat ,sender ,timestamp)
                  (or (sgn-parse-message-id (or (plist-get message :ref) ""))
                      (error "Not a Signal message: %s" (plist-get message :ref)))))
-      (funcall done (sgn-message-buffer chat sender timestamp)))
+      (let* ((buffer (sgn-message-buffer chat sender timestamp))
+             (rowid (with-current-buffer buffer
+                      (get-text-property (point) 'sgn-message-rowid))))
+        (funcall done buffer nil
+                 (and rowid (lambda ()
+                              (protean-message-property-bounds 'sgn-message-rowid rowid))))))
     t))
 
 ;;;; Telegram
@@ -174,8 +183,16 @@ For `protean-message-open-functions'.  Telegram must be running."
                            (error "Telegram has no chat %s" chat-id)))
                  (buffer (telega-chatbuf--get-create chat :no-history)))
       (with-current-buffer buffer
-        (telega-chatbuf--goto-msg message-id nil (lambda () (funcall done buffer)))))
+        (telega-chatbuf--goto-msg message-id nil
+                                  (lambda ()
+                                    (funcall done buffer nil
+                                             #'protean-extras--telegram-bounds)))))
     t))
+
+(defun protean-extras--telegram-bounds ()
+  "Return where telega's message at point is, as (BEG . END), or nil."
+  (when-let* ((button (button-at (point))))
+    (cons (button-start button) (button-end button))))
 
 (provide 'protean-extras)
 ;;; protean-extras.el ends here

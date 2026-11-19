@@ -5,8 +5,10 @@ import json
 import os
 import plistlib
 import re
+import io
 import subprocess
 import sys
+import tarfile
 import tempfile
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -39,6 +41,17 @@ INSTALLED_VERSION_SOURCES = {
     "macfuse": Path("/Library/Filesystems/macfuse.fs"),
     "mullvad-vpn": Path("/Applications/Mullvad VPN.app"),
 }
+# wa-archive's WhatsApp library has no releases, only commits on main, and
+# WhatsApp rejects clients that fall too far behind. Its lane records each new
+# commit, waits like the Homebrew lane, and rebuilds the daemon with it.
+WHATSMEOW = "go.mau.fi/whatsmeow"
+DEFAULT_WA_ARCHIVE = Path.home() / "repos/wa-archive"
+DEFAULT_WHATSMEOW_STATE_FILE = DEFAULT_STATE_FILE.with_name("whatsmeow.json")
+# The lane commits and deploys only from this branch, never from work in progress.
+WA_ARCHIVE_BRANCH = "master"
+WHATSMEOW_WAIVE_COMMAND = "personal-updates whatsmeow --waive-age"
+GO_TIMEOUT_SECONDS = 900
+INSTALL_TIMEOUT_SECONDS = 1200
 
 
 def now_utc():
@@ -482,6 +495,337 @@ def lulu_alert_text(packages):
             "Their upgrades are held back until you run: lulu-directory-rules add")
 
 
+class WhatsmeowStepError(RuntimeError):
+    """A failed command of the whatsmeow lane, carrying the command's own output."""
+
+
+def go_environment(**overrides):
+    # Never switch to a Go toolchain the Homebrew lane has not aged: with
+    # GOTOOLCHAIN=local, a module needing a newer Go fails instead of downloading one.
+    return {"GOTOOLCHAIN": "local", **overrides}
+
+
+def run_step(step, command, cwd, *, timeout=GO_TIMEOUT_SECONDS, env_overrides=None):
+    """Run COMMAND in CWD and return its stdout bytes; raise WhatsmeowStepError on failure."""
+    try:
+        result = subprocess.run(command, cwd=cwd, input=b"", capture_output=True, timeout=timeout,
+                                env={**os.environ, **(env_overrides or {})})
+    except subprocess.TimeoutExpired:
+        raise WhatsmeowStepError(f"{step} timed out after {timeout} s") from None
+    if result.returncode:
+        output = (result.stderr + result.stdout).decode(errors="replace").strip()
+        raise WhatsmeowStepError(f"{step} failed (exit {result.returncode}): {output[-1500:]}")
+    return result.stdout
+
+
+def decode_json_stream(text):
+    """Parse the concatenated JSON objects that `go list -json' prints."""
+    decoder, items, index = json.JSONDecoder(), [], 0
+    text = text.strip()
+    while index < len(text):
+        item, index = decoder.raw_decode(text, index)
+        items.append(item)
+        while index < len(text) and text[index].isspace():
+            index += 1
+    return items
+
+
+def go_module_info(queries):
+    """`go list -m -json' for QUERIES (MODULE@VERSION), in a throwaway module outside Drive."""
+    with tempfile.TemporaryDirectory(prefix="personal-updates-go-", dir="/private/tmp") as directory:
+        env = go_environment(GOFLAGS="-mod=mod")
+        run_step("go mod init", ["go", "mod", "init", "personal-updates-probe"], directory, env_overrides=env)
+        output = run_step("go list", ["go", "list", "-m", "-e", "-json", *queries], directory, env_overrides=env)
+    infos = decode_json_stream(output.decode())
+    if len(infos) != len(queries):
+        raise RuntimeError(f"go list returned {len(infos)} results for {len(queries)} queries")
+    return infos
+
+
+def parse_go_time(value):
+    return datetime.fromisoformat(value.replace("Z", "+00:00"))
+
+
+def module_time(info):
+    """Publication time of a `go list -m -json' result, or None when unknown."""
+    if info.get("Error") or not info.get("Time"):
+        return None
+    return parse_go_time(info["Time"])
+
+
+def required_module_time(info):
+    published = module_time(info)
+    if published is None:
+        reason = (info.get("Error") or {}).get("Err", "no publication time")
+        raise RuntimeError(f"go list {info.get('Path')}@{info.get('Version')}: {reason}")
+    return published
+
+
+def read_go_mod(directory):
+    output = run_step("go mod edit -json", ["go", "mod", "edit", "-json"], directory,
+                      env_overrides=go_environment())
+    return json.loads(output)
+
+
+def required_version(go_mod, path):
+    for item in go_mod.get("Require") or []:
+        if item["Path"] == path:
+            return item["Version"]
+    raise RuntimeError(f"go.mod does not require {path}")
+
+
+def go_sum_entries(text):
+    """go.sum's (module, version) entries; a `/go.mod' suffix marks a go.mod-only hash."""
+    return {tuple(line.split()[:2]) for line in text.splitlines() if len(line.split()) == 3}
+
+
+def changed_module_versions(before_mod, after_mod, before_sum, after_sum):
+    """MODULE@VERSION pairs an update adds to go.mod's requirements or to go.sum.
+
+    A version whose code enters go.sum when only its go.mod was there before
+    counts as changed: its code is new to the build."""
+    def required(go_mod):
+        return {(item["Path"], item["Version"]) for item in go_mod.get("Require") or []}
+    added = (required(after_mod) - required(before_mod)) | (go_sum_entries(after_sum) - go_sum_entries(before_sum))
+    return sorted({(path, version.removesuffix("/go.mod")) for path, version in added})
+
+
+def toolchain_changes(before_mod, after_mod, goos, goarch):
+    """(label, query) pairs for changed go and toolchain lines, aged by Go's toolchain module."""
+    changes = []
+    if after_mod.get("Go") and after_mod.get("Go") != before_mod.get("Go"):
+        changes.append((f"go line {after_mod['Go']}",
+                        f"golang.org/toolchain@v0.0.1-go{after_mod['Go']}.{goos}-{goarch}"))
+    before_toolchain = (before_mod.get("Toolchain") or {}).get("Name")
+    after_toolchain = (after_mod.get("Toolchain") or {}).get("Name")
+    if after_toolchain and after_toolchain != before_toolchain:
+        changes.append((f"toolchain line {after_toolchain}",
+                        f"golang.org/toolchain@v0.0.1-{after_toolchain}.{goos}-{goarch}"))
+    return changes
+
+
+def age_blockers(changes, infos, cutoff):
+    """Labels of CHANGES whose publication time is unknown or after CUTOFF."""
+    blockers = []
+    for (label, _query), info in zip(changes, infos):
+        published = module_time(info)
+        if published is None:
+            reason = (info.get("Error") or {}).get("Err", "no publication time")
+            blockers.append(f"{label} (unchecked: {reason})")
+        elif published > cutoff:
+            blockers.append(f"{label} (published {published.isoformat()})")
+    return blockers
+
+
+def merge_whatsmeow_candidates(candidates, head, current_time, now):
+    """Keep recorded commits newer than go.mod's and add HEAD, keeping its first sighting."""
+    merged = {version: entry for version, entry in candidates.items()
+              if datetime.fromisoformat(entry["commit_time"]) > current_time}
+    head_time = required_module_time(head)
+    if head_time > current_time and head["Version"] not in merged:
+        merged[head["Version"]] = {"commit_time": head_time.isoformat(), "first_seen": now.isoformat()}
+    return merged
+
+
+def select_whatsmeow_candidate(candidates, current_time, min_age_days, now):
+    """The newest recorded commit newer than go.mod's whose commit and first sighting have aged.
+
+    Taking the newest aged commit, not the newest commit, keeps a busy
+    upstream from restarting the wait forever."""
+    cutoff = now - timedelta(days=min_age_days)
+    aged = []
+    for version, entry in candidates.items():
+        committed = datetime.fromisoformat(entry["commit_time"])
+        if committed > current_time and max(committed, datetime.fromisoformat(entry["first_seen"])) <= cutoff:
+            aged.append((committed, version))
+    return max(aged)[1] if aged else None
+
+
+def wa_archive_blockers(repo):
+    """Reasons the wa-archive checkout cannot take an unattended update (read-only checks)."""
+    branch = subprocess.run(["git", "symbolic-ref", "--quiet", "--short", "HEAD"], cwd=repo,
+                            capture_output=True, text=True)
+    status = subprocess.run(["git", "status", "--porcelain"], cwd=repo, capture_output=True, text=True)
+    if status.returncode:
+        raise RuntimeError(f"git status in {repo} failed: {status.stderr.strip()}")
+    blockers = []
+    if branch.stdout.strip() != WA_ARCHIVE_BRANCH:
+        blockers.append(f"{repo} is on {branch.stdout.strip() or 'a detached HEAD'}, not {WA_ARCHIVE_BRANCH}")
+    if status.stdout.strip():
+        blockers.append(f"{repo} has uncommitted changes, which install.sh would deploy")
+    return blockers
+
+
+def check_commit_signing(repo):
+    """Fail before deploying if the update could not be committed for lack of a signing key."""
+    signing = subprocess.run(["git", "config", "--bool", "commit.gpgsign"], cwd=repo,
+                             capture_output=True, text=True).stdout.strip() == "true"
+    if signing:
+        # Writes only an unreferenced commit object; nothing points to it.
+        run_step("commit signing check", ["git", "commit-tree", "-S", "HEAD^{tree}", "-p", "HEAD",
+                                          "-m", "personal-updates signing check"], repo)
+
+
+def resolve_whatsmeow_update(repo, version):
+    """Run `go get' and `go mod tidy' for VERSION on a temporary copy of wa-archive's HEAD."""
+    with tempfile.TemporaryDirectory(prefix="personal-updates-wa-archive-", dir="/private/tmp") as directory:
+        archive = run_step("git archive", ["git", "archive", "--format=tar", "HEAD"], repo)
+        with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+            tar.extractall(directory, filter="data")
+        copy = Path(directory)
+        before_mod = read_go_mod(directory)
+        before_sum = (copy / "go.sum").read_text() if (copy / "go.sum").exists() else ""
+        env = go_environment(GOFLAGS="-mod=mod")
+        run_step("go get", ["go", "get", f"{WHATSMEOW}@{version}"], directory, env_overrides=env)
+        run_step("go mod tidy", ["go", "mod", "tidy"], directory, env_overrides=env)
+        goos, goarch = run_step("go env", ["go", "env", "GOOS", "GOARCH"], directory,
+                                env_overrides=env).decode().split()
+        return {"before_mod": before_mod, "after_mod": read_go_mod(directory),
+                "before_sum": before_sum, "after_sum": (copy / "go.sum").read_text(),
+                "go_mod": (copy / "go.mod").read_bytes(), "go_sum": (copy / "go.sum").read_bytes(),
+                "goos": goos, "goarch": goarch}
+
+
+def update_changes(resolution, waive_age):
+    """(label, query) for every module version and Go line the update changes.
+
+    With WAIVE_AGE, whatsmeow itself is exempt; everything it pulls in is not."""
+    changes = [(f"{path}@{version}", f"{path}@{version}")
+               for path, version in changed_module_versions(resolution["before_mod"], resolution["after_mod"],
+                                                            resolution["before_sum"], resolution["after_sum"])
+               if not (waive_age and path == WHATSMEOW)]
+    return changes + toolchain_changes(resolution["before_mod"], resolution["after_mod"],
+                                       resolution["goos"], resolution["goarch"])
+
+
+def apply_whatsmeow_update(repo, version, resolution):
+    """Test, deploy and commit the resolved go.mod and go.sum; restore both unless committed."""
+    paths = {name: Path(repo) / name for name in ("go.mod", "go.sum")}
+    originals = {name: path.read_bytes() for name, path in paths.items()}
+    committed = False
+    try:
+        paths["go.mod"].write_bytes(resolution["go_mod"])
+        paths["go.sum"].write_bytes(resolution["go_sum"])
+        run_step("go test ./...", ["go", "test", "./..."], repo, env_overrides=go_environment())
+        # install.sh restores the previous binary itself when the new one does not connect.
+        run_step("install.sh", ["./install.sh"], repo, timeout=INSTALL_TIMEOUT_SECONDS,
+                 env_overrides=go_environment())
+        run_step("git commit", ["git", "commit", "--quiet", "-m", f"Update whatsmeow to {version}",
+                                "--", "go.mod", "go.sum"], repo)
+        committed = True
+    finally:
+        if not committed:
+            try:
+                for name, data in originals.items():
+                    paths[name].write_bytes(data)
+            except OSError as error:
+                raise RuntimeError(f"restoring go.mod and go.sum failed ({error}); "
+                                   f"run git checkout -- go.mod go.sum in {repo}") from error
+
+
+def whatsmeow_lane(args, *, waive_age=False, now=None):
+    """Bring wa-archive's whatsmeow up to the newest eligible commit; return a report.
+
+    Failures are recorded in the report, not raised, so the Homebrew lanes
+    still run; the caller alerts on them."""
+    now = now or now_utc()
+    repo = args.wa_archive
+    report = {"status": None, "current": None, "candidate": None, "waived_age": waive_age}
+    try:
+        current = required_version(read_go_mod(repo), WHATSMEOW)
+        report["current"] = current
+        queries = [f"{WHATSMEOW}@{current}"] + ([f"{WHATSMEOW}@main"] if waive_age else [])
+        infos = go_module_info(queries)
+        current_time = required_module_time(infos[0])
+        candidates = load_json(args.whatsmeow_state_file, {}).get("candidates", {})
+        if waive_age:
+            head = infos[1]
+            candidate = head["Version"] if required_module_time(head) > current_time else None
+        else:
+            candidate = select_whatsmeow_candidate(candidates, current_time, args.min_age_days, now)
+            report["waiting"] = sorted(
+                version for version, entry in candidates.items()
+                if datetime.fromisoformat(entry["commit_time"]) > current_time and version != candidate)
+        if candidate is None:
+            report["status"] = "waiting" if report.get("waiting") else "current"
+            return report
+        report["candidate"] = candidate
+        blockers = wa_archive_blockers(repo)
+        try:
+            resolution = resolve_whatsmeow_update(repo, candidate)
+        except WhatsmeowStepError as error:
+            if "GOTOOLCHAIN=local" not in str(error):
+                raise
+            report.update(status="deferred", deferred=blockers + [
+                f"{candidate} needs a newer Go than the installed one, which the Homebrew lane updates: {error}"])
+            return report
+        changes = update_changes(resolution, waive_age)
+        report["changes"] = [label for label, _query in changes]
+        if changes:
+            cutoff = now - timedelta(days=args.min_age_days)
+            blockers += [f"not aged {args.min_age_days} days: {blocker}" for blocker in
+                         age_blockers(changes, go_module_info([query for _label, query in changes]), cutoff)]
+        if blockers:
+            report.update(status="deferred", deferred=blockers)
+        elif args.dry_run:
+            report["status"] = "eligible"
+        else:
+            check_commit_signing(repo)
+            apply_whatsmeow_update(repo, candidate, resolution)
+            report["status"] = "updated"
+    except Exception as error:
+        report.update(status="failed", error=str(error))
+    return report
+
+
+def whatsmeow_failure_text(report):
+    target = f" to {report['candidate']}" if report.get("candidate") else ""
+    return (f"wa-archive's whatsmeow update{target} failed: {report['error']} "
+            "After fixing the cause, retry with: "
+            + (WHATSMEOW_WAIVE_COMMAND if report.get("waived_age") else "personal-updates whatsmeow"))
+
+
+def run_whatsmeow_lane(args, *, waive_age=False):
+    """Run the whatsmeow lane, then print, log and (unless a dry run) alert on its outcome."""
+    report = whatsmeow_lane(args, waive_age=waive_age)
+    if args.dry_run:
+        print(json.dumps({"whatsmeow": report}, indent=2, sort_keys=True))
+        return report
+    status = report["status"]
+    if status == "deferred":
+        for reason in report["deferred"]:
+            append_log(args.log_dir, f"whatsmeow deferred {report['candidate']}: {reason}")
+            print(f"Delayed update deferred: whatsmeow {report['candidate']}: {reason}", file=sys.stderr)
+    elif status == "failed":
+        append_log(args.log_dir, f"whatsmeow failed: {report['error']}")
+        print(f"whatsmeow update failed: {report['error']}", file=sys.stderr)
+        send_alert(whatsmeow_failure_text(report))
+    else:
+        if status == "updated":
+            message = f"updated whatsmeow from {report['current']} to {report['candidate']}"
+        elif status == "waiting":
+            message = f"whatsmeow {report['current']}; newer commits waiting: {', '.join(report['waiting'])}"
+        else:
+            message = f"whatsmeow {report['current']} has no newer commit to take"
+        append_log(args.log_dir, message)
+        print(message)
+    return report
+
+
+def command_whatsmeow_scan(args, now=None):
+    """Record whatsmeow's newest commit on main and when it was first seen."""
+    now = now or now_utc()
+    state = load_json(args.whatsmeow_state_file, {})
+    current = required_version(read_go_mod(args.wa_archive), WHATSMEOW)
+    current_info, head = go_module_info([f"{WHATSMEOW}@{current}", f"{WHATSMEOW}@main"])
+    candidates = merge_whatsmeow_candidates(state.get("candidates", {}), head,
+                                            required_module_time(current_info), now)
+    new_state = {"current": current, "candidates": candidates}
+    save_json(args.whatsmeow_state_file, new_state)
+    append_log(args.log_dir, f"scan recorded {len(candidates)} whatsmeow commits newer than {current}")
+    print(json.dumps({"whatsmeow": new_state}, indent=2, sort_keys=True))
+
+
 def command_scan(args):
     state = load_json(args.state_file, {})
     updates = brew_outdated()
@@ -575,6 +919,8 @@ def build_parser():
     parser.add_argument("--hold-file", type=Path, default=DEFAULT_HOLD_FILE)
     parser.add_argument("--excluded-casks-file", type=Path, default=DEFAULT_EXCLUDED_CASKS_FILE)
     parser.add_argument("--fast-brew-file", type=Path, default=DEFAULT_FAST_BREW_FILE)
+    parser.add_argument("--whatsmeow-state-file", type=Path, default=DEFAULT_WHATSMEOW_STATE_FILE)
+    parser.add_argument("--wa-archive", type=Path, default=DEFAULT_WA_ARCHIVE)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("scan")
@@ -582,6 +928,15 @@ def build_parser():
     delayed = subparsers.add_parser("delayed")
     delayed.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
     delayed.add_argument("--dry-run", action="store_true")
+
+    whatsmeow = subparsers.add_parser(
+        "whatsmeow", help="run only the whatsmeow lane of delayed (wa-archive's WhatsApp library)")
+    whatsmeow.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
+    whatsmeow.add_argument("--dry-run", action="store_true")
+    whatsmeow.add_argument(
+        "--waive-age", action="store_true",
+        help="take whatsmeow's current main now, for when WhatsApp reports the client outdated; "
+             "the modules it pulls in must still have aged")
 
     subparsers.add_parser("fast")
 
@@ -594,8 +949,24 @@ def main(argv=None):
     args = build_parser().parse_args(argv)
     try:
         if args.command == "scan":
+            # Each scan runs even when the other fails.
+            whatsmeow_error = None
+            try:
+                command_whatsmeow_scan(args)
+            except Exception as error:
+                whatsmeow_error = error
+                append_log(args.log_dir, f"error: whatsmeow scan: {error}")
+                print(f"whatsmeow scan: {error}", file=sys.stderr)
             command_scan(args)
+            if whatsmeow_error:
+                raise RuntimeError(f"whatsmeow scan: {whatsmeow_error}")
+        elif args.command == "whatsmeow":
+            report = run_whatsmeow_lane(args, waive_age=args.waive_age)
+            return 0 if report["status"] in ("current", "waiting", "eligible", "updated") else 1
         elif args.command in ("delayed", "fast-brew"):
+            # The whatsmeow lane goes first and reports its own failures, so
+            # neither lane's failure stops the other.
+            whatsmeow = run_whatsmeow_lane(args) if args.command == "delayed" else {}
             held = lulu_uncovered_packages()
             if args.command == "delayed":
                 command_delayed(args, lulu_held=held)
@@ -612,6 +983,8 @@ def main(argv=None):
                 if broken:
                     send_alert(linkage_alert_text(broken))
                 send_heartbeat()
+            elif whatsmeow.get("status") == "failed":
+                return 1
         elif args.command == "fast":
             command_fast(args)
     except Exception as error:

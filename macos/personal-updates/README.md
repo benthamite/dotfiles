@@ -97,3 +97,59 @@ because upgrading it would raise a LuLu alert on every connection
 (`claude/context/lulu-firewall.md`). The delayed lane alerts about held
 packages through `launchd-heartbeat`, and both lanes send the `personal-updates`
 heartbeat after a successful run (`claude/context/alerting.md`).
+
+## whatsmeow lane
+
+wa-archive (`~/repos/wa-archive`) is built on whatsmeow (`go.mau.fi/whatsmeow`),
+which has no releases, only commits on `main`, and WhatsApp rejects clients
+that fall too far behind it. The scan and delayed jobs each run a whatsmeow
+lane first, so a failure in either lane does not stop the other.
+
+The scan asks the Go module proxy for the newest commit on `main`
+(`go list -m -json go.mau.fi/whatsmeow@main` in a throwaway module under
+`/private/tmp`) and records each commit newer than `go.mod`'s with its commit
+time and when it was first seen, in
+`~/.local/state/personal-updates/whatsmeow.json`. It does not touch wa-archive.
+
+The delayed job takes the newest recorded commit newer than `go.mod`'s whose
+commit time and first sighting are both at least seven days old; taking the
+newest aged commit, not the newest commit, keeps a busy upstream from
+restarting the wait forever. It runs `go get` and `go mod tidy` for that commit
+on a temporary copy of wa-archive's `HEAD`, and goes ahead only if every module
+version the update adds to `go.mod` or `go.sum` (a version whose code joins a
+`go.sum` that held only its `go.mod` counts), and any changed `go` or
+`toolchain` line, was published at least seven days ago, by the proxy's time
+(`go list -m -json MODULE@VERSION`; Go versions by their
+`golang.org/toolchain` module). Otherwise it defers, naming them. All Go
+commands run with `GOTOOLCHAIN=local`: a commit that needs a newer Go defers
+until Homebrew's delayed lane brings one, rather than downloading an unaged
+toolchain.
+
+It also defers while wa-archive is not on `master` or has uncommitted or
+untracked files, because `install.sh` would deploy them. Deferrals are logged
+and printed, not alerted, like the Homebrew lane's. When the update qualifies,
+the job checks that a signed commit can be made, writes the resolved `go.mod`
+and `go.sum` into wa-archive, runs `go test ./...` and `./install.sh` (which
+rebuilds and restarts the daemon, and itself restores the previous binary
+unless the new one connects), and commits both files as "Update whatsmeow to
+VERSION". If any step fails it restores `go.mod` and `go.sum` and alerts
+through `launchd-heartbeat` (monitor `personal-updates`). A failure after
+`install.sh` succeeded (the commit) leaves the new binary running on the old
+`go.mod`; the alert says which step failed.
+
+When WhatsApp reports the client outdated, wa-archive alerts with the command
+to run, which takes `main` at once:
+
+```sh
+bin/personal-updates whatsmeow --waive-age
+```
+
+The waiver covers whatsmeow alone: modules it pulls in must still have aged,
+and the command names any that have not. `bin/personal-updates whatsmeow`
+without the flag runs only the nightly whatsmeow lane. Either command exits
+nonzero when it defers or fails.
+
+`delayed --dry-run` and `whatsmeow --dry-run` print the lane's report
+(`current`, `candidate`, `changes`, `deferred` or `waiting`) without writing
+state or logs, touching wa-archive or alerting. They still resolve the update
+on the temporary copy, which downloads modules into the Go module cache.

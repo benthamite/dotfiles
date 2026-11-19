@@ -939,8 +939,10 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
                  patch.object(self.mod, "broken_linkage", return_value=list(broken)), \
                  patch.object(self.mod, "command_delayed") as delayed, \
                  patch.object(self.mod, "command_fast_brew") as fast_brew, \
+                 patch.object(self.mod, "whatsmeow_lane", return_value={"status": "current", "current": "v1"}), \
                  patch.object(self.mod, "send_alert") as alert, \
-                 patch.object(self.mod, "send_heartbeat") as heartbeat:
+                 patch.object(self.mod, "send_heartbeat") as heartbeat, \
+                 contextlib.redirect_stdout(io.StringIO()):
                 status = self.mod.main(argv)
         return status, delayed, fast_brew, alert, heartbeat
 
@@ -970,6 +972,286 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
         _status, _delayed, _fast, alert, heartbeat = self.run_main("delayed", set())
         alert.assert_not_called()
         heartbeat.assert_called_once_with()
+
+
+OLD = "v0.0.0-20261017175727-b2b1e71d45e2"
+NEW = "v0.0.0-20261101120000-aaaaaaaaaaaa"
+NEWER = "v0.0.0-20261116172437-19d61352436f"
+GO_MOD = "module example.com/fake\n\ngo 1.27.2\n\nrequire go.mau.fi/whatsmeow {version}\n"
+
+
+class PersonalUpdatesWhatsmeowTest(unittest.TestCase):
+    """The whatsmeow lane, against a throwaway git repository standing in for wa-archive."""
+
+    def setUp(self):
+        self.mod = load_module()
+        self.now = datetime(2026, 11, 19, 5, 0, tzinfo=timezone.utc)
+        self.directory = tempfile.TemporaryDirectory()
+        self.base = pathlib.Path(self.directory.name)
+        self.repo = self.base / "wa-archive"
+        self.repo.mkdir()
+        hooks = self.base / "no-hooks"
+        hooks.mkdir()
+        (self.repo / "go.mod").write_text(GO_MOD.format(version=OLD))
+        (self.repo / "go.sum").write_text(f"go.mau.fi/whatsmeow {OLD} h1:old=\n")
+        (self.repo / "install.sh").write_text(
+            '#!/bin/sh\necho ran >> "$(dirname "$0")/../install-ran"\nexit "${FAKE_INSTALL_STATUS:-0}"\n')
+        (self.repo / "install.sh").chmod(0o755)
+        for command in (["init", "-q", "-b", "master"], ["config", "core.hooksPath", str(hooks)],
+                        ["config", "commit.gpgsign", "false"], ["config", "user.name", "Test"],
+                        ["config", "user.email", "test@example.com"], ["add", "."],
+                        ["commit", "-q", "-m", "init"]):
+            subprocess.run(["git", *command], cwd=self.repo, check=True, capture_output=True)
+        self.state_file = self.base / "whatsmeow.json"
+        self.times = {OLD: "2026-10-17T17:57:27Z", NEW: "2026-11-01T12:00:00Z",
+                      NEWER: "2026-11-16T17:24:37Z", "main": "2026-11-16T17:24:37Z"}
+        self.module_times = {}
+        self.go_test_fails = False
+        self.calls = []
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def args(self, dry_run=False):
+        return Namespace(wa_archive=self.repo, whatsmeow_state_file=self.state_file,
+                         log_dir=self.base / "logs", min_age_days=7, dry_run=dry_run)
+
+    def fake_module_info(self, queries):
+        infos = []
+        for query in queries:
+            path, version = query.split("@", 1)
+            if path == self.mod.WHATSMEOW:
+                resolved = NEWER if version == "main" else version
+                infos.append({"Path": path, "Version": resolved, "Time": self.times[version]})
+            elif query in self.module_times:
+                infos.append({"Path": path, "Version": version, "Time": self.module_times[query]})
+            else:
+                infos.append({"Path": path, "Version": version, "Error": {"Err": "404 Not Found"}})
+        return infos
+
+    def resolution(self, version, extra_sum=""):
+        before = {"Go": "1.27.2", "Require": [{"Path": self.mod.WHATSMEOW, "Version": OLD}]}
+        after = {"Go": "1.27.2", "Require": [{"Path": self.mod.WHATSMEOW, "Version": version}]}
+        go_sum = f"go.mau.fi/whatsmeow {version} h1:new=\n{extra_sum}"
+        return {"before_mod": before, "after_mod": after,
+                "before_sum": (self.repo / "go.sum").read_text(), "after_sum": go_sum,
+                "go_mod": GO_MOD.format(version=version).encode(), "go_sum": go_sum.encode(),
+                "goos": "darwin", "goarch": "arm64"}
+
+    def fake_run_step(self, real):
+        def run_step(step, command, cwd, **kwargs):
+            self.calls.append(step)
+            if command[:2] == ["go", "test"]:
+                if self.go_test_fails:
+                    raise self.mod.WhatsmeowStepError("go test ./... failed (exit 1): FAIL")
+                return b""
+            return real(step, command, cwd, **kwargs)
+        return run_step
+
+    def write_state(self, first_seen):
+        self.state_file.write_text(json.dumps({"current": OLD, "candidates": {
+            NEW: {"commit_time": "2026-11-01T12:00:00+00:00", "first_seen": first_seen}}}))
+
+    def run_lane(self, resolution=None, dry_run=False, waive_age=False, install_status="0"):
+        alerts = []
+        with patch.object(self.mod, "go_module_info", side_effect=self.fake_module_info), \
+             patch.object(self.mod, "resolve_whatsmeow_update",
+                          side_effect=lambda repo, version: resolution or self.resolution(version)), \
+             patch.object(self.mod, "run_step", side_effect=self.fake_run_step(self.mod.run_step)), \
+             patch.object(self.mod, "now_utc", return_value=self.now), \
+             patch.object(self.mod, "send_alert", side_effect=alerts.append), \
+             patch.dict("os.environ", {"FAKE_INSTALL_STATUS": install_status}), \
+             contextlib.redirect_stdout(io.StringIO()) as out, contextlib.redirect_stderr(io.StringIO()):
+            report = self.mod.run_whatsmeow_lane(self.args(dry_run), waive_age=waive_age)
+        return report, alerts, out.getvalue()
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.repo, check=True, capture_output=True,
+                              text=True).stdout
+
+    def assert_untouched(self):
+        self.assertEqual(self.git("status", "--porcelain"), "")
+        self.assertEqual(self.git("log", "--format=%s"), "init\n")
+
+    def test_scan_records_new_head_and_keeps_its_first_sighting(self):
+        earlier = datetime(2026, 11, 17, tzinfo=timezone.utc)
+        with patch.object(self.mod, "go_module_info", side_effect=self.fake_module_info), \
+             contextlib.redirect_stdout(io.StringIO()):
+            self.mod.command_whatsmeow_scan(self.args(), now=earlier)
+            self.mod.command_whatsmeow_scan(self.args(), now=self.now)
+        state = json.loads(self.state_file.read_text())
+        self.assertEqual(state["current"], OLD)
+        self.assertEqual(state["candidates"], {NEWER: {"commit_time": "2026-11-16T17:24:37+00:00",
+                                                       "first_seen": earlier.isoformat()}})
+
+    def test_merge_drops_commits_not_newer_than_go_mod(self):
+        current = datetime(2026, 11, 2, tzinfo=timezone.utc)
+        candidates = {NEW: {"commit_time": "2026-11-01T12:00:00+00:00", "first_seen": "x"}}
+        head = {"Version": NEWER, "Time": "2026-11-16T17:24:37Z"}
+        merged = self.mod.merge_whatsmeow_candidates(candidates, head, current, self.now)
+        self.assertEqual(list(merged), [NEWER])
+
+    def test_selection_takes_newest_commit_whose_commit_and_sighting_have_aged(self):
+        current = datetime(2026, 10, 17, tzinfo=timezone.utc)
+        candidates = {
+            NEW: {"commit_time": "2026-11-01T12:00:00+00:00", "first_seen": "2026-11-02T00:00:00+00:00"},
+            "v0.0.0-20261105000000-bbbbbbbbbbbb": {"commit_time": "2026-11-05T00:00:00+00:00",
+                                                   "first_seen": "2026-11-15T00:00:00+00:00"},
+            NEWER: {"commit_time": "2026-11-16T17:24:37+00:00", "first_seen": "2026-11-17T00:00:00+00:00"},
+        }
+        self.assertEqual(self.mod.select_whatsmeow_candidate(candidates, current, 7, self.now), NEW)
+        self.assertIsNone(self.mod.select_whatsmeow_candidate(
+            candidates, datetime(2026, 11, 2, tzinfo=timezone.utc), 7, self.now))
+
+    def test_changed_versions_include_code_new_to_go_sum(self):
+        before_sum = "golang.org/x/net v0.61.0/go.mod h1:a=\ngolang.org/x/text v0.43.0 h1:b=\n"
+        after_sum = ("golang.org/x/net v0.61.0 h1:c=\ngolang.org/x/net v0.61.0/go.mod h1:a=\n"
+                     "golang.org/x/text v0.43.0 h1:b=\ngolang.org/x/sys v0.50.0/go.mod h1:d=\n")
+        before = {"Require": [{"Path": "go.mau.fi/whatsmeow", "Version": OLD}]}
+        after = {"Require": [{"Path": "go.mau.fi/whatsmeow", "Version": NEW}]}
+        self.assertEqual(self.mod.changed_module_versions(before, after, before_sum, after_sum),
+                         [("go.mau.fi/whatsmeow", NEW), ("golang.org/x/net", "v0.61.0"),
+                          ("golang.org/x/sys", "v0.50.0")])
+
+    def test_go_and_toolchain_line_changes_are_aged_as_toolchain_modules(self):
+        changes = self.mod.toolchain_changes({"Go": "1.27.2"},
+                                             {"Go": "1.27.4", "Toolchain": {"Name": "go1.27.4"}},
+                                             "darwin", "arm64")
+        self.assertEqual(changes, [
+            ("go line 1.27.4", "golang.org/toolchain@v0.0.1-go1.27.4.darwin-arm64"),
+            ("toolchain line go1.27.4", "golang.org/toolchain@v0.0.1-go1.27.4.darwin-arm64")])
+
+    def test_go_list_json_stream_is_split_into_objects(self):
+        self.assertEqual(self.mod.decode_json_stream('{\n "a": 1\n}\n{\n "b": {"c": 2}\n}\n'),
+                         [{"a": 1}, {"b": {"c": 2}}])
+
+    def test_aged_update_is_tested_deployed_and_committed(self):
+        self.write_state("2026-11-02T00:00:00+00:00")
+        report, alerts, _out = self.run_lane()
+        self.assertEqual(report["status"], "updated", report)
+        self.assertEqual(report["candidate"], NEW)
+        self.assertEqual(alerts, [])
+        self.assertLess(self.calls.index("go test ./..."), self.calls.index("install.sh"))
+        self.assertTrue((self.base / "install-ran").exists())
+        self.assertEqual(self.git("status", "--porcelain"), "")
+        self.assertEqual(self.git("log", "-1", "--format=%s"), f"Update whatsmeow to {NEW}\n")
+        self.assertIn(NEW, (self.repo / "go.mod").read_text())
+
+    def test_failed_install_restores_go_files_and_alerts(self):
+        self.write_state("2026-11-02T00:00:00+00:00")
+        report, alerts, _out = self.run_lane(install_status="1")
+        self.assertEqual(report["status"], "failed")
+        self.assertIn("install.sh failed", report["error"])
+        self.assertTrue((self.base / "install-ran").exists())
+        self.assert_untouched()
+        self.assertEqual(len(alerts), 1)
+        self.assertIn(NEW, alerts[0])
+        self.assertIn("personal-updates whatsmeow", alerts[0])
+
+    def test_failed_tests_stop_before_install(self):
+        self.write_state("2026-11-02T00:00:00+00:00")
+        self.go_test_fails = True
+        report, alerts, _out = self.run_lane()
+        self.assertEqual(report["status"], "failed")
+        self.assertNotIn("install.sh", self.calls)
+        self.assert_untouched()
+        self.assertEqual(len(alerts), 1)
+
+    def test_unaged_dependency_defers_and_names_it(self):
+        self.write_state("2026-11-02T00:00:00+00:00")
+        self.module_times = {"go.mau.fi/util@v0.12.0": "2026-11-18T00:00:00Z",
+                             "golang.org/x/text@v0.44.0": "2026-10-01T00:00:00Z"}
+        resolution = self.resolution(NEW, "go.mau.fi/util v0.12.0 h1:u=\ngolang.org/x/text v0.44.0 h1:t=\n"
+                                          "golang.org/x/sys v0.50.0 h1:s=\n")
+        report, alerts, _out = self.run_lane(resolution)
+        self.assertEqual(report["status"], "deferred")
+        self.assertEqual(len(report["deferred"]), 2)
+        self.assertIn("go.mau.fi/util@v0.12.0 (published 2026-11-18", report["deferred"][0])
+        self.assertIn("golang.org/x/sys@v0.50.0 (unchecked: 404 Not Found)", report["deferred"][1])
+        self.assertEqual(alerts, [])
+        self.assertNotIn("install.sh", self.calls)
+        self.assert_untouched()
+
+    def test_unaged_candidate_waits(self):
+        self.write_state("2026-11-15T00:00:00+00:00")
+        report, alerts, _out = self.run_lane()
+        self.assertEqual(report["status"], "waiting")
+        self.assertEqual(report["waiting"], [NEW])
+        self.assertEqual(alerts, [])
+        self.assert_untouched()
+
+    def test_dry_run_reports_without_changing_anything(self):
+        self.write_state("2026-11-02T00:00:00+00:00")
+        state_before = self.state_file.read_text()
+        report, alerts, out = self.run_lane(dry_run=True)
+        self.assertEqual(report["status"], "eligible")
+        self.assertEqual(json.loads(out)["whatsmeow"]["candidate"], NEW)
+        self.assertEqual(alerts, [])
+        self.assertFalse((self.base / "install-ran").exists())
+        self.assertNotIn("commit signing check", self.calls)
+        self.assertEqual(self.state_file.read_text(), state_before)
+        self.assertFalse((self.base / "logs").exists())
+        self.assert_untouched()
+
+    def test_uncommitted_changes_defer_the_update(self):
+        self.write_state("2026-11-02T00:00:00+00:00")
+        (self.repo / "main.go").write_text("package main\n")
+        report, alerts, _out = self.run_lane()
+        self.assertEqual(report["status"], "deferred")
+        self.assertIn("uncommitted changes", report["deferred"][0])
+        self.assertNotIn("install.sh", self.calls)
+        self.assertEqual(alerts, [])
+
+    def test_waived_age_takes_main_now_but_still_ages_its_dependencies(self):
+        report, _alerts, _out = self.run_lane(waive_age=True)
+        self.assertEqual(report["status"], "updated", report)
+        self.assertEqual(report["candidate"], NEWER)
+        self.assertEqual(self.git("log", "-1", "--format=%s"), f"Update whatsmeow to {NEWER}\n")
+
+        self.module_times = {"go.mau.fi/util@v0.12.0": "2026-11-18T00:00:00Z"}
+        self.times[NEWER] = self.times["main"] = "2026-11-18T09:00:00Z"
+        self.git("reset", "-q", "--hard", "HEAD^")
+        resolution = self.resolution(NEWER, "go.mau.fi/util v0.12.0 h1:u=\n")
+        report, _alerts, _out = self.run_lane(resolution, waive_age=True)
+        self.assertEqual(report["status"], "deferred")
+        self.assertEqual(report["changes"], ["go.mau.fi/util@v0.12.0"])
+
+    def test_dry_run_failure_exits_nonzero_without_alerting(self):
+        failed = {"status": "failed", "current": OLD, "candidate": NEW, "error": "go get failed"}
+        with patch.object(self.mod, "whatsmeow_lane", return_value=failed), \
+             patch.object(self.mod, "lulu_uncovered_packages", return_value=set()), \
+             patch.object(self.mod, "command_delayed") as delayed, \
+             patch.object(self.mod, "send_alert") as alert, \
+             patch.object(self.mod, "send_heartbeat") as heartbeat, \
+             contextlib.redirect_stdout(io.StringIO()):
+            status = self.mod.main(["--log-dir", str(self.base / "logs"), "delayed", "--dry-run"])
+        self.assertEqual(status, 1)
+        delayed.assert_called_once()
+        alert.assert_not_called()
+        heartbeat.assert_not_called()
+
+    def test_failed_lane_alerts_and_homebrew_lane_still_runs(self):
+        failed = {"status": "failed", "current": OLD, "candidate": NEW, "error": "go get failed"}
+        with patch.object(self.mod, "whatsmeow_lane", return_value=failed), \
+             patch.object(self.mod, "lulu_uncovered_packages", return_value=set()), \
+             patch.object(self.mod, "broken_linkage", return_value=[]), \
+             patch.object(self.mod, "command_delayed") as delayed, \
+             patch.object(self.mod, "send_alert") as alert, \
+             patch.object(self.mod, "send_heartbeat") as heartbeat, \
+             contextlib.redirect_stderr(io.StringIO()):
+            status = self.mod.main(["--log-dir", str(self.base / "logs"), "delayed"])
+        self.assertEqual(status, 0)
+        delayed.assert_called_once()
+        self.assertIn("go get failed", alert.call_args.args[0])
+        heartbeat.assert_called_once_with()
+
+    def test_failed_whatsmeow_scan_still_runs_homebrew_scan_and_fails_the_job(self):
+        with patch.object(self.mod, "command_whatsmeow_scan", side_effect=RuntimeError("proxy down")), \
+             patch.object(self.mod, "command_scan") as scan, \
+             contextlib.redirect_stderr(io.StringIO()):
+            status = self.mod.main(["--log-dir", str(self.base / "logs"), "scan"])
+        self.assertEqual(status, 1)
+        scan.assert_called_once()
 
 
 if __name__ == "__main__":

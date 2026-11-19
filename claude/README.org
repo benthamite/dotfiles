@@ -1570,7 +1570,11 @@ checks only in agent sessions, identified by =CLAUDE_CODE_SESSION_ID= or
 fixtures: =pre-commit= rejects a commit whose staged Elisp no run
 covered, and =post-commit= records a live check as owed for a production
 package, plus a test as owed when the commit skipped =pre-commit= through
-=--no-verify=. The Stop hook =elisp-evidence stop-check= keeps the committing
+=--no-verify=. A production package is one in an Elpaca checkout or, since
+2026-11-19 (when Protean's package began to build in place from
+=~/repos/protean=), one whose build directory in the active profile links into
+the committing repository; the hook reads those links from disk rather than
+asking Emacs. The Stop hook =elisp-evidence stop-check= keeps the committing
 session's turn from ending until those debts are paid; live evidence for a
 later commit covers earlier ones, and an amended commit that no branch contains
 is dropped. After two consecutive blocks in one turn it lets the turn end and

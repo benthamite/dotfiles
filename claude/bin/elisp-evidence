@@ -247,11 +247,36 @@ def live_label(root: Path, path: str, deleted: bool) -> str | None:
             return f"deleted:{name}" if deleted else name
         return None
     if "/elpaca/sources/" not in f"{root}/" and "/elpaca/repos/" not in f"{root}/":
-        return None
+        return built_package(root)
     name = package_repo_name(root) or root.name
     if deleted and path in (f"{name}.el", f"lisp/{name}.el") and package_repo_name(root) is None:
         return f"deleted:{name}"
     return name
+
+
+def built_package(root: Path) -> str | None:
+    """Return the package the active profile builds from ROOT, if any.
+    Elpaca builds a package whose recipe names a local `:repo' in place, from
+    a checkout outside its sources directory (Protean, from ~/repos/protean),
+    so a commit there changes what Emacs loads.  Such a package is found by
+    its build directory's links into ROOT.  Read from disk, not from Emacs:
+    a hook that called emacsclient could deadlock a git process Emacs runs."""
+    profiles = Path(os.environ.get("EMACS_PROFILES_DIR", Path.home() / ".config" / "emacs-profiles"))
+    builds = profiles / "active" / "elpaca" / "builds"
+    if not builds.is_dir():
+        return None
+    for build in sorted(builds.iterdir()):
+        if build.is_dir() and links_into(build, root):
+            return build.name
+    return None
+
+
+def links_into(build: Path, root: Path) -> bool:
+    """Return non-nil when a link in the build directory BUILD resolves into ROOT."""
+    for entry in build.iterdir():
+        if entry.is_symlink() and entry.resolve().is_relative_to(root):
+            return True
+    return False
 
 
 # --- Evidence store -----------------------------------------------------------

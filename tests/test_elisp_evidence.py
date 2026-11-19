@@ -395,6 +395,39 @@ class ElispEvidenceTest(unittest.TestCase):
         self.git(repo, "commit", "-q", "-am", "tests")
         self.assertIsNone(self.stop(repo))
 
+    def build_in_place(self, package: str, repo: Path, files: list[str]) -> None:
+        """Make the active profile build PACKAGE from FILES of REPO, as Elpaca
+        does for a recipe whose `:repo' is a local path."""
+        profiles = self.base / "profiles"
+        build = profiles / "1.0" / "elpaca" / "builds" / package
+        build.mkdir(parents=True)
+        for path in files:
+            (build / Path(path).name).symlink_to(repo / path)
+        (profiles / "active").symlink_to(profiles / "1.0")
+        self.env["EMACS_PROFILES_DIR"] = str(profiles)
+
+    def test_package_built_in_place_owes_a_live_check(self) -> None:
+        repo = self.make_repo("repos/engine", {"emacs/pkg.el": "(provide 'pkg)\n"})
+        self.build_in_place("pkg", repo, ["emacs/pkg.el"])
+        self.write(repo, "emacs/pkg.el", "(provide 'pkg) ;; v2\n")
+        self.record_test(repo, "file:emacs/pkg.el")
+        self.git(repo, "commit", "-q", "-am", "v2")
+        decision = self.stop(repo)
+        self.assertEqual(decision["decision"], "block")
+        self.assertIn("elisp-live-verify", decision["reason"])
+        self.assertIn("pkg", decision["reason"])
+        self.evidence(repo, "record-live", str(repo), "pkg", "pkg", self.head(repo))
+        self.assertIsNone(self.stop(repo))
+
+    def test_checkout_no_build_links_into_owes_no_live_check(self) -> None:
+        repo = self.make_repo("repos/engine", {"emacs/pkg.el": "(provide 'pkg)\n"})
+        other = self.make_repo("repos/other", {"other.el": "(provide 'other)\n"})
+        self.build_in_place("other", other, ["other.el"])
+        self.write(repo, "emacs/pkg.el", "(provide 'pkg) ;; v2\n")
+        self.record_test(repo, "file:emacs/pkg.el")
+        self.git(repo, "commit", "-q", "-am", "v2")
+        self.assertIsNone(self.stop(repo))
+
     # --- hook chaining ------------------------------------------------------
 
     def test_repository_hooks_still_run(self) -> None:

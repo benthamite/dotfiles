@@ -33,7 +33,9 @@ the "Already tried" list in place.
   is not a fix: the memory refills within ~20 min of every start (see the
   2026-10-10 Drive finding below).
 - Backblaze exclusion rules (2026-10-07): stop index growth, do not shrink
-  the existing 5.5 GB =bzfileids.dat=.
+  the existing 5.5 GB =bzfileids.dat=. By 2026-11-18 it was 12.5 GB
+  (79.8 M paths, mostly from tangodb trees the rules did not cover), and
+  =bztransmit= reached a 16 GB footprint loading it.
 - =gcmh-low-cons-threshold= raised to 128 MB (2026-10-07, =351180ef6=):
   outages continued (30 on 10-10).
 - SIGUSR2 against a sentinel loop (2026-10-13): breaks the chain only
@@ -89,6 +91,37 @@ the "Already tried" list in place.
   file has loaded. Pending Pablo's decision.
 
 * Incidents
+
+** 2026-11-18 19:14 → 21:03: hidden debugger stopped garbage collection; Emacs grew to 22 GB (detection added: dotfiles =136bf815e=)
+
+- Symptom: "Emacs is pretty slow" at ~20:50; load 39, swap 18.3/19.5 GB,
+  compressor 33 GB. The server answered every probe throughout.
+- Cause: at 19:14:40 a =(quit)= during =redisplay_internal= entered the
+  debugger (=debug-on-error= was t, =debug-on-quit= nil at 20:58; how a quit
+  reached the debugger is unknown, as is who pressed C-g). Its
+  =*Backtrace*= window was never shown. Emacs kept running timers and
+  server requests inside its recursive edit (=recursion-depth= 1), but ran
+  no garbage collection: =gcs-done= stayed at 2211 from 19:14 until the
+  debugger was quit, against one or more GCs a minute before. Lisp kept
+  allocating ~0.9 MB/s; the watchdog footprint rose from 2.7 GB at 19:14 to
+  22.6 GB at 20:47, all of it in Malloc Small (12.1 M live allocations,
+  1 % fragmentation). Inferred, not traced in C: GC is suppressed while the
+  debugger sits inside redisplay.
+- Recovery: =debugger-continue= refused ("Cannot continue");
+  =debugger-quit= from a timer at 21:03 returned to top level. The first GC
+  then blocked Emacs ~80 s (=gc-elapsed= 700 → 782 s); footprint fell to
+  8.3 GB at once and 6.2 GB by 21:10; compressor 33 → 11 GB.
+- Detection gap: the state file reported the debugger every 5 s, but the
+  watchdog read it only after a failed probe. Since =136bf815e= it notifies
+  "Emacs stuck in the debugger" once the debugger has been open 5 min,
+  answered or not (live run via a fixture state file verified; not yet seen
+  on a real debugger).
+- Contributing, not causal: two hung Protean ERT batch runs (100 % CPU each,
+  gone by 11-19); Backblaze =bztransmit= at 16 GB footprint, from loading a
+  12.5 GB =bzfileids.dat= of 79.8 M paths (6.8 M files on disk; ~60 % of a
+  1-in-40 sample under tangodb worktrees, scratch and recovery);
+  238 =aggressive-indent--indent-if-changed= idle timers on dead buffers
+  (the function cancels the current buffer's timer, not its own; small).
 
 ** Since 2026-11-13, every 10 min: org-linear personal sync blocks Emacs ~14 s (fixed in org-linear =4470c56=)
 

@@ -3,7 +3,8 @@
 
 Queues a job in wa-archive's outbox (~/.local/share/wa-archive/outbox/); the
 running wa-archive daemon sends it as Pablo, archives it, and writes a receipt
-to outbox/sent/ or outbox/failed/. This command waits for that receipt.
+to outbox/sent/, outbox/failed/ or outbox/uncertain/. This command waits for
+that receipt.
 
 Only for messages Pablo approved: his confirmation of the exact text and
 recipients, his explicit OK in chat, or a step of a skill he invoked that names this
@@ -18,8 +19,11 @@ message. Every receipt stays in outbox/sent/.
 does. Its ID is the part after the slash in a `protean read` ref, or the one
 `wa-read show --ids` prints. A message missing from the archive fails the job;
 it never goes out without the quote.
-Exit status: 0 sent, 1 failed (nothing sent), 3 no receipt in time: the
-message may or may not have gone out, so check `wa-read show` before retrying.
+Exit status: 0 sent, 1 failed (nothing sent), 3 the message may or may not
+have gone out: no receipt arrived in time, or the receipt says "uncertain"
+(the send failed in a way that may still have delivered it; it names the
+message id it would have). On 3, check `wa-read show` before any retry and
+never resend blindly.
 """
 
 import argparse
@@ -90,10 +94,14 @@ def main() -> int:
     os.replace(tmp, OUTBOX / name)
     deadline = time.time() + a.timeout
     while time.time() < deadline:
-        for status in ("sent", "failed"):
+        for status in ("sent", "failed", "uncertain"):
             receipt = OUTBOX / status / name
             if receipt.exists():
                 print(receipt.read_text().strip())
+                if status == "uncertain":
+                    print("wa-send: the message may have gone out; check `wa-read show` "
+                          "before any retry, and never resend blindly", file=sys.stderr)
+                    return 3
                 return 0 if status == "sent" else 1
         time.sleep(1)
     print(json.dumps({"status": "unknown", "job": name,

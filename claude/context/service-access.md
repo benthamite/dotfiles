@@ -137,8 +137,9 @@ and `--reviewed
 FILE` only for text Pablo approved in a review file: the tool checks
 that the text is in an item carrying his comment (`{>>send<<}`), so send before
 removing the comment (no workflow writes such a file since the inbox monitor's
-drafts files were retired on 2026-11-16). A chat OK is neither. Exit 3 means no
-receipt arrived: check `wa-read show` before retrying, never resend blindly.
+drafts files were retired on 2026-11-16). A chat OK is neither. Exit 3 means the
+message may or may not have gone out (no receipt arrived, or an `"uncertain"`
+receipt): check `wa-read show` before any retry, never resend blindly.
 WhatsApp renders `*bold*`, `_italic_`, `~strike~` and ```` ```mono``` ````, so
 drafts must not use those characters by accident (write "unos", not `~`, for
 an approximate figure); `wa-send` refuses text it would format unless given

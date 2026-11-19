@@ -73,6 +73,12 @@ class LuluDirectoryRulesTest(unittest.TestCase):
         self.assertEqual(self.uncovered(rules), [versions])
         self.assertEqual(self.uncovered(rules + [rule(versions + "/*")]), [])
 
+    def test_homebrew_portable_ruby_versions_are_checked(self):
+        vendor = "/opt/homebrew/Library/Homebrew/vendor/portable-ruby"
+        rules = [rule(vendor + "/4.0.10/bin/ruby")]
+        self.assertEqual(self.uncovered(rules), [vendor])
+        self.assertEqual(self.uncovered(rules + [rule(vendor + "/*")]), [])
+
     def test_uninstalled_packages_are_ignored(self):
         rules = [rule("/opt/homebrew/Caskroom/claude-code/2.1.85/claude")]
         self.assertEqual(self.mod.uncovered_packages(rules, installed=lambda _path: False), [])

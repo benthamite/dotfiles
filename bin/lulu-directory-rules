@@ -2,8 +2,9 @@
 """Keep LuLu's allow rules valid across upgrades of versioned installs.
 
 When LuLu does not resolve a binary's code signature, it keys the rule on
-the exact path. Homebrew (ad-hoc signed, /opt/homebrew/Cellar/git/2.56.0/...)
-and Claude Code's native installer (~/.local/share/claude/versions/2.1.303)
+the exact path. Homebrew (ad-hoc signed, /opt/homebrew/Cellar/git/2.56.0/...),
+Homebrew's own Ruby (vendor/portable-ruby/4.0.10/bin/ruby, replaced by
+`brew update`) and Claude Code's native installer (~/.local/share/claude/versions/2.1.303)
 put the version in that path, so an upgrade leaves the rule behind and every
 connection raises a new alert. A LuLu directory rule, a path ending in "*",
 matches by prefix instead, so "/opt/homebrew/Cellar/git/*" covers every
@@ -32,6 +33,7 @@ RULE_ALLOW = 1
 # the directory whose "*" rule covers every version.
 VERSIONED_PATHS = (
     re.compile(r"^(/opt/homebrew/(?:Cellar|Caskroom)/[^/]+)/[^/]+/"),
+    re.compile(r"^(/opt/homebrew/Library/Homebrew/vendor/portable-ruby)/[^/]+/"),
     re.compile("^(" + re.escape(str(Path.home() / ".local/share/claude/versions")) + r")/[^/]+$"),
 )
 

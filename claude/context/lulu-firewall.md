@@ -12,6 +12,8 @@ Pablo's Mac runs LuLu (Objective-See), an outbound firewall. Homebrew binaries a
 
 **Claude Code (19 Oct 2026).** The same happens to Claude Code's native installer, which auto-updates several times a day into `~/.local/share/claude/versions/<version>`. The binary is Developer ID signed, yet LuLu 4.5.1 stores its rules with no signing info, keyed on the versioned path (why its signature check fails is unknown; LuLu's logs were not readable). Overnight sessions then left one `api.anthropic.com` alert per process (eight on 19 Oct, for 2.1.303). `lulu-directory-rules` covers that directory too; `personal-updates` ignores it, since Homebrew cannot strand it.
 
+**Homebrew's portable Ruby (19 Nov 2026).** `brew update` installs Homebrew's own Ruby into `/opt/homebrew/Library/Homebrew/vendor/portable-ruby/<version>/`, outside `Cellar`, so the same stranding raised an alert for 4.0.10 running `bundle install` against `index.rubygems.org`. `lulu-directory-rules` covers that directory too; `personal-updates` reports it as `portable-ruby` in its held-back alert, though no formula upgrade is held back by it.
+
 **Other versioned layouts.** On 19 Oct the rules also held versioned paths under `~/.pyenv/versions`, `~/.nvm/versions/node` and the Playwright cache, each with one or a few rules. They change rarely and are not covered; add a pattern to `VERSIONED_PATHS` if their alerts recur.
 
 **Remaining gap.** A package upgraded only as another package's dependency, or upgraded by hand with `brew upgrade`, is not held. If its alerts appear, answer one with Allow, then run `lulu-directory-rules add`.

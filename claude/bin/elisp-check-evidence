@@ -10,26 +10,38 @@ if [ "${1:-}" = --staged ]; then
   shift
 fi
 
-if [ "$#" -lt 3 ] || [ "$2" != -- ]; then
-  echo "Usage: elisp-check-evidence [--staged] LABEL -- COMMAND [ARG...]" >&2
+usage() {
+  echo "Usage: elisp-check-evidence [--staged] LABEL [LABEL...] -- COMMAND [ARG...]" >&2
   exit 2
-fi
+}
 
-label="$1"
-shift 2
-case "$label" in
-  *$'\n'* | "")
-    echo "Evidence label must be one non-empty line" >&2
-    exit 2
-    ;;
-  file:?*) ;;
-  *)
-    # Package labels need the package runners, which resolve the canonical
-    # source and record their own evidence; they cannot run in a snapshot.
-    echo "Evidence label must be file:RELATIVE-PATH; test package $label with batch-test.sh or elisp-ert" >&2
-    exit 2
-    ;;
-esac
+# One passing run is evidence for every label it names: each label's record
+# carries the same snapshot, so the commit hook still compares every covered
+# path with its exact staged contents.
+labels=()
+while [ "$#" -gt 0 ] && [ "$1" != -- ]; do
+  labels+=("$1")
+  shift
+done
+if [ "${#labels[@]}" -eq 0 ] || [ "$#" -lt 2 ]; then
+  usage
+fi
+shift
+for label in "${labels[@]}"; do
+  case "$label" in
+    *$'\n'* | "")
+      echo "Evidence label must be one non-empty line" >&2
+      exit 2
+      ;;
+    file:?*) ;;
+    *)
+      # Package labels need the package runners, which resolve the canonical
+      # source and record their own evidence; they cannot run in a snapshot.
+      echo "Evidence label must be file:RELATIVE-PATH; test package $label with batch-test.sh or elisp-ert" >&2
+      exit 2
+      ;;
+  esac
+done
 
 script_dir=$(cd -- "$(dirname -- "$0")" && pwd)
 dotfiles_root=$(cd -- "$script_dir/../.." && pwd)
@@ -194,4 +206,4 @@ if grep -qE 'newer than byte-compiled file|using older file' "$output_file"; the
 fi
 
 # Evidence is recorded only for source that did not change during the check.
-"${snapshot_env[@]}" "$evidence" record-test "${revision_arguments[@]}" "$label" "$revision_before"
+"${snapshot_env[@]}" "$evidence" record-test "${revision_arguments[@]}" "${labels[@]}" "$revision_before"

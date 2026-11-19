@@ -12,8 +12,8 @@ unmanaged packages follow their own clean batch workflow:
 ```bash
 ~/repos/dotfiles/claude/bin/batch-test.sh PACKAGE
 ~/repos/dotfiles/claude/bin/batch-test.sh PACKAGE '(message "%S" (PACKAGE-some-fn))'
-~/repos/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
-~/repos/dotfiles/claude/bin/elisp-check-evidence --staged file:RELATIVE-PATH -- PROJECT-CHECK
+~/repos/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH [file:RELATIVE-PATH...] -- PROJECT-CHECK
+~/repos/dotfiles/claude/bin/elisp-check-evidence --staged file:RELATIVE-PATH [file:RELATIVE-PATH...] -- PROJECT-CHECK
 ~/repos/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el
 ~/repos/dotfiles/claude/bin/elisp-ert PACKAGE test/PACKAGE-test.el TEST-NAME
 ```
@@ -54,7 +54,9 @@ For non-package Elisp, replace `RELATIVE-PATH` with the staged path relative to
 the repository root and replace `PROJECT-CHECK` with the owning project's
 actual batch, compile, or test command. The wrapper records evidence only when
 that command is a tracked executable in the repository and succeeds without a
-stale-load warning. For `emacs/config.org`, use the exact
+stale-load warning. When the same check covers several changed files, name
+all their labels in one run; it records evidence for each label it names, and
+only for those. For `emacs/config.org`, use the exact
 `file:emacs/config.org` label and a tracked check that tangles and validates the
 affected output.
 

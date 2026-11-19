@@ -131,6 +131,99 @@ class ElispEvidenceTest(unittest.TestCase):
         result = self.run_cmd([str(script), "file:pkg.el", "--", str(repo / "check")], repo)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    # --- one run, several file labels --------------------------------------
+
+    def make_project(self) -> Path:
+        repo = self.make_repo("proj", {
+            "README": "x\n", "scripts/a.el": "(a)\n", "scripts/b.el": "(b)\n",
+            "check": "#!/bin/sh\nexit \"${CHECK_EXIT:-0}\"\n",
+        })
+        (repo / "check").chmod(0o755)
+        self.git(repo, "add", "check")
+        self.git(repo, "commit", "-q", "-m", "x", env={"CLAUDE_CODE_SESSION_ID": ""})
+        self.write(repo, "scripts/a.el", "(a) ;; changed\n")
+        self.write(repo, "scripts/b.el", "(b) ;; changed\n")
+        self.git(repo, "add", "scripts")
+        return repo
+
+    def check_evidence(self, repo: Path, *labels: str, staged: bool = False, env: dict | None = None):
+        script = ROOT / "claude" / "bin" / "elisp-check-evidence"
+        argv = [str(script), *(["--staged"] if staged else []), *labels, "--", str(repo / "check")]
+        return self.run_cmd(argv, repo, env)
+
+    def test_hint_names_every_file_label_in_one_command(self) -> None:
+        repo = self.make_project()
+        result = self.git(repo, "commit", "-q", "-m", "change", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        lines = [l for l in result.stderr.splitlines() if "elisp-check-evidence" in l and "PROJECT-CHECK" in l]
+        self.assertEqual(len(lines), 1, result.stderr)
+        self.assertIn("file:scripts/a.el file:scripts/b.el -- PROJECT-CHECK", lines[0])
+
+    def test_one_run_covers_every_label_it_names(self) -> None:
+        repo = self.make_project()
+        result = self.check_evidence(repo, "file:scripts/a.el", "file:scripts/b.el")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.git(repo, "commit", "-q", "-m", "change")
+
+    def test_staged_run_covers_every_label_it_names(self) -> None:
+        repo = self.make_project()
+        self.write(repo, "scripts/a.el", "(a) ;; unstaged edit\n")
+        result = self.check_evidence(repo, "file:scripts/a.el", "file:scripts/b.el", staged=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.git(repo, "commit", "-q", "-m", "change")
+
+    def test_label_not_named_is_not_covered(self) -> None:
+        repo = self.make_project()
+        self.assertEqual(self.check_evidence(repo, "file:scripts/a.el").returncode, 0)
+        result = self.git(repo, "commit", "-q", "-m", "change", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("file:scripts/b.el", result.stderr)
+        self.assertNotIn("file:scripts/a.el", result.stderr)
+
+    def test_file_edited_after_the_run_is_refused(self) -> None:
+        repo = self.make_project()
+        self.assertEqual(self.check_evidence(repo, "file:scripts/a.el", "file:scripts/b.el").returncode, 0)
+        self.write(repo, "scripts/b.el", "(b) ;; edited after the run\n")
+        self.git(repo, "add", "scripts/b.el")
+        result = self.git(repo, "commit", "-q", "-m", "change", check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("file:scripts/b.el", result.stderr)
+        self.assertNotIn("file:scripts/a.el", result.stderr)
+
+    def test_failing_run_records_no_label(self) -> None:
+        repo = self.make_project()
+        result = self.check_evidence(repo, "file:scripts/a.el", "file:scripts/b.el", env={"CHECK_EXIT": "1"})
+        self.assertNotEqual(result.returncode, 0)
+        result = self.git(repo, "commit", "-q", "-m", "change", check=False)
+        self.assertIn("file:scripts/a.el file:scripts/b.el", result.stderr)
+
+    def test_source_change_during_the_run_records_no_label(self) -> None:
+        repo = self.make_project()
+        digest = self.evidence(repo, "snapshot", str(repo)).stdout.strip()
+        self.write(repo, "scripts/a.el", "(a) ;; changed during the run\n")
+        result = self.evidence(repo, "record-test", str(repo), "file:scripts/a.el", "file:scripts/b.el", digest)
+        self.assertEqual(result.returncode, 1)
+        self.assertFalse(list(self.state.glob("repos/*/tests.jsonl")))
+
+    def test_check_evidence_rejects_a_package_label_among_file_labels(self) -> None:
+        repo = self.make_project()
+        result = self.check_evidence(repo, "file:scripts/a.el", "proj")
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse(list(self.state.glob("repos/*/tests.jsonl")))
+
+    def test_batch_larger_than_the_record_limit_is_kept_whole(self) -> None:
+        files = {f"scripts/f{i}.el": f"({i})\n" for i in range(205)}
+        repo = self.make_repo("many", {"README": "x\n", **files})
+        for i in range(205):
+            self.write(repo, f"scripts/f{i}.el", f"({i}) ;; changed\n")
+        self.git(repo, "add", "scripts")
+        self.record_test(repo, "file:scripts/old.el")
+        digest = self.evidence(repo, "snapshot", str(repo)).stdout.strip()
+        labels = [f"file:scripts/f{i}.el" for i in range(205)]
+        result = self.evidence(repo, "record-test", str(repo), *labels, digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.git(repo, "commit", "-q", "-m", "change")
+
     def test_tested_commit_passes_whatever_the_command_shape(self) -> None:
         repo = self.make_repo("pkg", {"pkg.el": "(provide 'pkg)\n"})
         shapes = [

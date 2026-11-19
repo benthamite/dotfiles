@@ -94,6 +94,7 @@ unless they also change production code or user documentation.
      the relevant assertion and required project checks as well.
    - For non-package Elisp, run the owning project's clean batch or compile
      check through `elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK`.
+     One run may name several `file:` labels; it covers each of them.
      `PROJECT-CHECK` must be a tracked executable in that repository. Do not
      substitute an unrelated package check.
    - A deleted production file cannot be loaded. Use the same `file:RELATIVE-PATH`
@@ -120,7 +121,7 @@ unless they also change production code or user documentation.
 ~/repos/dotfiles/claude/bin/elpaca-rebuild-wait PACKAGE
 ~/repos/dotfiles/claude/bin/elisp-live-verify PACKAGE -- '(PACKAGE-CHECK)'
 ~/repos/dotfiles/claude/bin/batch-test.sh PACKAGE
-~/repos/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH -- PROJECT-CHECK
+~/repos/dotfiles/claude/bin/elisp-check-evidence file:RELATIVE-PATH [file:RELATIVE-PATH...] -- PROJECT-CHECK
 ~/repos/dotfiles/claude/bin/elisp-ert PACKAGE TEST-FILE [TEST-NAME]
 ```
 

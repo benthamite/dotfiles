@@ -9,7 +9,8 @@ while a commit it made still lacks test or live evidence.
 
 Subcommands:
   snapshot [--index] REPO                 print the digest of REPO's Elisp source
-  record-test [--index] REPO LABEL DIGEST record a passing check of that source
+  record-test [--index] REPO LABEL... DIGEST
+                                          record a passing check of that source
   record-live REPO LABEL PACKAGE COMMIT   record a passing live check of COMMIT
   pre-commit                              git pre-commit hook body
   post-commit                             git post-commit hook body
@@ -295,8 +296,16 @@ def read_records(path: Path) -> list[dict]:
 
 
 def append_record(path: Path, record: dict) -> None:
+    append_records(path, [record])
+
+
+def append_records(path: Path, new: list[dict]) -> None:
+    """Append NEW, dropping the oldest records beyond RECORD_LIMIT.
+    A batch larger than the limit is kept whole: one run's evidence must
+    not discard part of itself."""
     with locked(path):
-        records = read_records(path)[-(RECORD_LIMIT - 1):] + [record]
+        keep = max(RECORD_LIMIT - len(new), 0)
+        records = (read_records(path)[-keep:] if keep else []) + new
         write_records(path, records)
 
 
@@ -388,8 +397,13 @@ def missing_test_message(root: Path, labels: list[str]) -> str:
         f"Elisp evidence: the Elisp being committed in {root} has no passing test of these exact contents.",
         "Run, after the final edit (pipes and chained commands are fine):",
     ]
-    lines += [f"  {test_command(root, label)}" for label in labels]
-    if any(label.startswith("file:") and not extras_test_package(label) for label in labels):
+    # One run of a project check covers every file label it names.
+    project = [label for label in labels if label.startswith("file:") and not extras_test_package(label)]
+    lines += [f"  {test_command(root, label)}" for label in labels if label not in project]
+    if project:
+        tool = shlex.quote(str(TOOL_DIR / "elisp-check-evidence"))
+        lines.append(f"  {tool} {' '.join(shlex.quote(label) for label in project)} -- PROJECT-CHECK")
+    if project:
         lines.append("Replace PROJECT-CHECK with a tracked executable check in the repository.")
     # Only project checks can run against an index snapshot; package
     # runners always test the working tree.
@@ -416,15 +430,19 @@ def cmd_snapshot(args: list[str]) -> int:
 
 def cmd_record_test(args: list[str]) -> int:
     index_mode, args = take_flag(args, "--index")
-    path, label, expected = args
+    if len(args) < 3:
+        raise ValueError("record-test needs REPO LABEL... DIGEST")
+    path, labels, expected = args[0], args[1:-1], args[-1]
     root = repo_root(Path(path))
     source = index_map(root) if index_mode else worktree_map(root)
     if digest(source) != expected:
         print("elisp-evidence: Elisp source changed during the check; no evidence recorded", file=sys.stderr)
         return 1
-    append_record(repo_dir(root) / "tests.jsonl",
-                  {"label": label, "files": source, "time": time.time()})
-    print(f"elisp-evidence: recorded test evidence for {label} in {root}")
+    now = time.time()
+    append_records(repo_dir(root) / "tests.jsonl",
+                   [{"label": label, "files": source, "time": now} for label in labels])
+    for label in labels:
+        print(f"elisp-evidence: recorded test evidence for {label} in {root}")
     return 0
 
 

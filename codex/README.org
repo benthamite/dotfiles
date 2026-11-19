@@ -801,7 +801,10 @@ skills that own each step (=elisp-conventions=, =document-elisp-package=,
 =release-package=), after collecting every decision up front. It publishes and
 registers a skeleton before the first Elisp commit, because the commit guard's
 test runners resolve packages through Elpaca, which needs the recipe and the
-repository first. It deploys the manual to the website before pushing the
+repository first. Since 2026-11-19 that skeleton carries a placeholder
+=NAME-pkg.el=: Elpaca needs a main file to register a package (without one it
+opened the debugger while wsp was set up), and the guard exempts =-pkg.el=
+files where a stub =NAME.el= would already demand the Elpaca test runner. It deploys the manual to the website before pushing the
 =README.md= that links to it.
 
 The =add-to-emacs-packages= workflow checks the list, existing manual and profile

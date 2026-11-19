@@ -44,7 +44,15 @@ asks.
    resolve the package through Elpaca, which knows it only once it has a
    recipe, which needs the repository to exist. So, before committing any
    Elisp:
-   1. commit `COPYING.txt` and `test/run-tests.sh` alone, on the branch `main`;
+   1. commit `COPYING.txt`, `test/run-tests.sh` and a placeholder
+      `NAME-pkg.el` (`(define-package "NAME" "0.1" "SUMMARY" '((emacs "VERSION")))`)
+      alone, on the branch `main`. Elpaca needs a main file to build: without
+      one, registering in step 4 opens the debugger with "Unable to find main
+      elisp file" (wsp, 2026-11-19). A `-pkg.el` file satisfies it, and the
+      commit guard exempts it, whereas a stub `NAME.el` would make the guard
+      demand `batch-test.sh`, which works only after registration. Delete
+      `NAME-pkg.el` in the commit that adds `NAME.el`, or Elpaca keeps reading
+      the placeholder's version and dependencies;
    2. with Pablo's approval, create the public repository and push that
       commit (`gh repo create benthamite/NAME --public --source . --remote origin --push`);
    3. add a `config.org` section in the matching part of the file: a heading

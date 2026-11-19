@@ -10026,7 +10026,7 @@ does not exist."
   (with-eval-after-load 'agent
     (require 'agent-auto)
     (agent-auto-mode 1))
-  ;; The inbox's keys (o conversation, n nothing needed) in the Linear list too.
+  ;; The inbox's keys (o conversation) in the Linear list too.
   (with-eval-after-load 'org-linear
     (add-hook 'org-linear-my-issues-mode-hook #'protean-inbox-mode))
   ;; agent.el's own keys for a list of tasks (s starts a session on the task
@@ -10034,7 +10034,22 @@ does not exist."
   ;; to an unattended session), in the lists that have the inbox's keys.
   ;; Sessions are agent.el's, so the keys are too.
   (add-hook 'protean-inbox-mode-hook
-            (lambda () (agent-task-keys-mode (if protean-inbox-mode 1 -1)))))
+            (lambda () (agent-task-keys-mode (if protean-inbox-mode 1 -1))))
+  ;; A task's decision is agent.el's record, in the property Protean writes
+  ;; (plan of 18 Nov 2026, decisions).  Y answers it in the lists with
+  ;; agent.el's keys and in a conversation, C-c Y on an Org heading.
+  (setopt protean-decision-property "AGENT_DECISION")
+  (keymap-set protean-ticket-mode-map "Y" #'agent-decide)
+  (with-eval-after-load 'org
+    (keymap-set org-mode-map "C-c Y" #'agent-decide))
+  (with-eval-after-load 'agent-decision
+    (dolist (command '(protean-known protean-not-the-same
+                       protean-nothing-needed protean-make-task))
+      (add-to-list 'agent-decision-commands command))
+    (add-hook 'agent-decision-stale-functions #'protean-decision-stale)
+    (add-hook 'agent-decision-task-functions #'protean-decision-task)
+    (add-hook 'agent-decision-functions #'protean-decision-changed)
+    (setopt agent-decision-comment-function #'protean-decision-comment)))
 #+end_src
 
 ** =monet=

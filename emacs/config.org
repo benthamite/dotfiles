@@ -10049,6 +10049,7 @@ does not exist."
     (add-hook 'agent-decision-stale-functions #'protean-decision-stale)
     (add-hook 'agent-decision-task-functions #'protean-decision-task)
     (add-hook 'agent-decision-functions #'protean-decision-changed)
+    (add-hook 'agent-decision-draft-functions #'protean-decision-draft)
     (setopt agent-decision-comment-function #'protean-decision-comment)))
 #+end_src
 

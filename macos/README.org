@@ -50,7 +50,7 @@ updates that should age before installation:
 | =fast-brew= | Upgrades the fast lane; its built-in default is =codex=. Claude Code uses its native updater. |
 | =scan= | Records currently available formula and cask updates, and new whatsmeow commits for wa-archive, and when each first appeared. |
 | =delayed= | Upgrades eligible entries after the configured minimum age, subject to holds and exclusions, and updates wa-archive's whatsmeow. |
-| =whatsmeow= | Runs only the whatsmeow lane; =--waive-age= takes whatsmeow's =main= at once when WhatsApp reports the client outdated. |
+| =whatsmeow= | Runs only the whatsmeow lane; =--waive-age= takes whatsmeow's =main= at once when WhatsApp reports the client outdated, exempting its author's =go.mau.fi/= modules from the wait. |
 | =fast= | Installs recommended macOS system updates manually; it is not scheduled. |
 
 The policy files are [[file:personal-updates/fast-brew.txt][fast-brew.txt]], [[file:personal-updates/hold.txt][hold.txt]], and

@@ -144,7 +144,10 @@ to run, which takes `main` at once:
 bin/personal-updates whatsmeow --waive-age
 ```
 
-The waiver covers whatsmeow alone: modules it pulls in must still have aged,
+The waiver covers whatsmeow and its author's other `go.mau.fi/` modules, such
+as `go.mau.fi/util` and `go.mau.fi/libsignal`, whose same-day releases a fresh
+whatsmeow usually needs (Pablo, 2026-11-19: a real dry run deferred on
+`go.mau.fi/util`). Every other module, and the Go line, must still have aged,
 and the command names any that have not. `bin/personal-updates whatsmeow`
 without the flag runs only the nightly whatsmeow lane. Either command exits
 nonzero when it defers or fails.

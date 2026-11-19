@@ -1202,19 +1202,26 @@ class PersonalUpdatesWhatsmeowTest(unittest.TestCase):
         self.assertNotIn("install.sh", self.calls)
         self.assertEqual(alerts, [])
 
-    def test_waived_age_takes_main_now_but_still_ages_its_dependencies(self):
+    def test_waived_age_takes_main_now_but_still_ages_other_dependencies(self):
         report, _alerts, _out = self.run_lane(waive_age=True)
         self.assertEqual(report["status"], "updated", report)
         self.assertEqual(report["candidate"], NEWER)
         self.assertEqual(self.git("log", "-1", "--format=%s"), f"Update whatsmeow to {NEWER}\n")
 
-        self.module_times = {"go.mau.fi/util@v0.12.0": "2026-11-18T00:00:00Z"}
+        # The author's other modules are waived with whatsmeow ...
+        self.module_times = {"go.mau.fi/util@v0.12.0": "2026-11-18T00:00:00Z",
+                             "golang.org/x/crypto@v0.99.0": "2026-11-18T00:00:00Z"}
         self.times[NEWER] = self.times["main"] = "2026-11-18T09:00:00Z"
         self.git("reset", "-q", "--hard", "HEAD^")
         resolution = self.resolution(NEWER, "go.mau.fi/util v0.12.0 h1:u=\n")
         report, _alerts, _out = self.run_lane(resolution, waive_age=True)
+        self.assertEqual(report["status"], "updated", report)
+        # ... but any other module must still have aged.
+        self.git("reset", "-q", "--hard", "HEAD^")
+        resolution = self.resolution(NEWER, "go.mau.fi/util v0.12.0 h1:u=\ngolang.org/x/crypto v0.99.0 h1:c=\n")
+        report, _alerts, _out = self.run_lane(resolution, waive_age=True)
         self.assertEqual(report["status"], "deferred")
-        self.assertEqual(report["changes"], ["go.mau.fi/util@v0.12.0"])
+        self.assertEqual(report["changes"], ["golang.org/x/crypto@v0.99.0"])
 
     def test_dry_run_failure_exits_nonzero_without_alerting(self):
         failed = {"status": "failed", "current": OLD, "candidate": NEW, "error": "go get failed"}

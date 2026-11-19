@@ -50,6 +50,12 @@ DEFAULT_WHATSMEOW_STATE_FILE = DEFAULT_STATE_FILE.with_name("whatsmeow.json")
 # The lane commits and deploys only from this branch, never from work in progress.
 WA_ARCHIVE_BRANCH = "master"
 WHATSMEOW_WAIVE_COMMAND = "personal-updates whatsmeow --waive-age"
+# The waiver also covers whatsmeow's author's other modules (go.mau.fi/util,
+# go.mau.fi/libsignal, ...): a fresh whatsmeow usually needs their same-day
+# releases, so waiving whatsmeow alone would defer exactly when WhatsApp has
+# rejected the client (Pablo, 2026-11-19, after a real dry run deferred on
+# go.mau.fi/util).
+WHATSMEOW_WAIVED_PREFIX = "go.mau.fi/"
 GO_TIMEOUT_SECONDS = 900
 INSTALL_TIMEOUT_SECONDS = 1200
 
@@ -689,11 +695,12 @@ def resolve_whatsmeow_update(repo, version):
 def update_changes(resolution, waive_age):
     """(label, query) for every module version and Go line the update changes.
 
-    With WAIVE_AGE, whatsmeow itself is exempt; everything it pulls in is not."""
+    With WAIVE_AGE, whatsmeow and its author's other go.mau.fi modules are
+    exempt; every other module and the Go line are not."""
     changes = [(f"{path}@{version}", f"{path}@{version}")
                for path, version in changed_module_versions(resolution["before_mod"], resolution["after_mod"],
                                                             resolution["before_sum"], resolution["after_sum"])
-               if not (waive_age and path == WHATSMEOW)]
+               if not (waive_age and (path == WHATSMEOW or path.startswith(WHATSMEOW_WAIVED_PREFIX)))]
     return changes + toolchain_changes(resolution["before_mod"], resolution["after_mod"],
                                        resolution["goos"], resolution["goarch"])
 
@@ -936,7 +943,7 @@ def build_parser():
     whatsmeow.add_argument(
         "--waive-age", action="store_true",
         help="take whatsmeow's current main now, for when WhatsApp reports the client outdated; "
-             "the modules it pulls in must still have aged")
+             "its author's go.mau.fi modules are exempt too, other modules must still have aged")
 
     subparsers.add_parser("fast")
 

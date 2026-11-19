@@ -5,7 +5,10 @@ Run every minute by launchd. Each run probes the server socket with a short
 `emacsclient --eval (emacs-pid)`. A probe fails when it times out or errors,
 or when a different Emacs answers (a test instance that took over the socket).
 After FAILURES_TO_ALERT consecutive failures it sends one macOS notification,
-then one more when the server answers again.
+then one more when the server answers again. It also notifies once when the
+state file has shown an open debugger for DEBUGGER_ALERT_AFTER, even while
+the server answers: a debugger can sit out of sight while Emacs keeps
+working inside it.
 
 The notification names the cause from the state file that
 `simple-extras-server-state-mode' writes every few seconds: a debugger
@@ -86,6 +89,11 @@ GC_STORM = 30
 # Minimum time between captures, so a long outage keeps a stack every few
 # minutes without filling the disk.
 CAPTURE_INTERVAL = 300
+# A debugger open this long is reported even while the server answers. On
+# 2026-11-18 a quit during redisplay entered a debugger whose window never
+# showed; the server kept answering from inside it, garbage collection
+# stopped, and Emacs grew from 2.7 to 22 GB in 1 h 45 min.
+DEBUGGER_ALERT_AFTER = 300
 
 
 def main() -> int:
@@ -135,11 +143,37 @@ def check_server(now: float) -> dict:
         log(f"outage: {cause} [probe: {outcome['failure']}: {outcome['detail']}]")
         notify(cause, "Emacs server not answering")
         alerted = True
+    debugger = watch_debugger(state, watchdog, now)
     write_json(WATCHDOG_FILE, {
         "failures": failures, "alerted": alerted,
         "socket": identity if answered else watchdog.get("socket"),
-        "gc": gc_counters(state), "last_capture": last_capture})
+        "gc": gc_counters(state), "last_capture": last_capture, **debugger})
     return result
+
+
+def watch_debugger(state: dict, watchdog: dict, now: float) -> dict:
+    """Alert once when STATE has shown a debugger for DEBUGGER_ALERT_AFTER.
+
+    WATCHDOG holds when the debugger was first seen and whether it was
+    reported. Return those fields for the next run. Only a fresh state
+    file counts: a stale one means Emacs is blocked, which the outage
+    alert reports.
+    """
+    fresh = now - float(state.get("time", 0)) <= STALE_AFTER
+    if not (fresh and state.get("debugger")):
+        if watchdog.get("debugger_alerted"):
+            log("debugger left")
+        return {"debugger_since": None, "debugger_alerted": False}
+    since = watchdog.get("debugger_since") or now
+    alerted = watchdog.get("debugger_alerted", False)
+    if now - since >= DEBUGGER_ALERT_AFTER and not alerted:
+        first = " / ".join(state["debugger"].splitlines()[:2])
+        message = (f"Emacs has been in the debugger for {int((now - since) / 60)} min "
+                   f"({first}). Leave it with q in *Backtrace*.")
+        log(f"debugger: {message}")
+        notify(message, "Emacs stuck in the debugger")
+        alerted = True
+    return {"debugger_since": since, "debugger_alerted": alerted}
 
 
 def capture_reason(result: dict) -> str | None:

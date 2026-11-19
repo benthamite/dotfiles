@@ -255,6 +255,35 @@ class MainTest(unittest.TestCase):
             self.run_with_answer(42)
         self.assertEqual(self.notified, [])
 
+    def run_at(self, now, answer=42, **state):
+        self.write_state(time=now, **state)
+        with mock.patch.object(watchdog.time, "time", lambda: now):
+            self.run_with_answer(answer)
+
+    # Regression: on 2026-11-18 a hidden debugger held Emacs for 1 h 45 min
+    # while the server answered, so no outage alert fired.
+    def test_a_debugger_open_five_minutes_alerts_once_while_answering(self):
+        debugger = {"recursion_depth": 1,
+                    "debugger": "Debugger entered--Lisp error: (quit)\n"
+                                "  redisplay_internal (C function)()"}
+        self.run_at(1000.0, **debugger)
+        self.run_at(1240.0, **debugger)
+        self.assertEqual(self.notified, [])
+        self.run_at(1300.0, **debugger)
+        self.run_at(1360.0, **debugger)
+        self.assertEqual(self.notified, ["Emacs stuck in the debugger"])
+        self.assertIn("redisplay_internal", self.logged[0])
+        self.run_at(1420.0)
+        self.assertEqual(self.logged[-1], "debugger left")
+        self.run_at(1480.0, **debugger)
+        self.assertEqual(self.notified, ["Emacs stuck in the debugger"])
+
+    def test_a_short_debugger_visit_stays_silent(self):
+        self.run_at(1000.0, recursion_depth=1, debugger="Debugger entered")
+        self.run_at(1240.0)
+        self.run_at(1600.0, recursion_depth=1, debugger="Debugger entered")
+        self.assertEqual(self.notified, [])
+
     def test_a_single_failure_is_not_an_outage(self):
         self.run_with_answer(None)
         self.run_with_answer(42)

@@ -269,8 +269,8 @@ everything else to `~/repos/correspondence`), so there is no queue. Protean's
 small Emacs part writes each verdict into Org as a task or a note under the
 project's heading: in `~/repos/notes/protean-projects.org` or, for Forethought,
 `~/repos/forethought-notes/sprint.org` (manual
-`~/repos/protean/emacs/README.org`; the system in one page:
-`~/repos/protean/docs/map.md`). Protean ends at the task: Org and org-linear
+`~/repos/protean/README.org`; the system in one page:
+`~/repos/notes/protean/map.md`). Protean ends at the task: Org and org-linear
 own the tasks, and agent.el the sessions. Protean submits nothing to a session
 except a closed wait's notice: there are no message wake-ups, no router
 corrections, no drafts files and no pre-authorized-action policies.

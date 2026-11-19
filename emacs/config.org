@@ -10046,8 +10046,11 @@ does not exist."
   (with-eval-after-load 'org
     (keymap-set org-mode-map "C-c Y" #'agent-decide))
   (with-eval-after-load 'agent-decision
+    ;; The daily check's answers (Protean plan-2026-11-19-architecture.md, R6).
     (dolist (command '(protean-known protean-not-the-same
-                       protean-nothing-needed protean-make-task))
+                       protean-nothing-needed protean-make-task
+                       protean-freshness-close protean-freshness-apply
+                       protean-freshness-keep))
       (add-to-list 'agent-decision-commands command))
     (add-hook 'agent-decision-stale-functions #'protean-decision-stale)
     (add-hook 'agent-decision-task-functions #'protean-decision-task)

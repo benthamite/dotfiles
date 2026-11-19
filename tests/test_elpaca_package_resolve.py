@@ -81,6 +81,29 @@ class OnDiskResolveTests(unittest.TestCase):
         self.assert_refused(result)
         self.assertIn("No active Emacs profile", result.stderr)
 
+    def test_package_built_in_place_resolves_to_its_checkout(self):
+        engine = self.root / "engine"
+        (engine / "emacs").mkdir(parents=True)
+        subprocess.run(["git", "init", "-q", str(engine)], check=True)
+        (engine / "emacs" / "fixture.el").write_text("(provide 'fixture)\n")
+        build = self.profiles / "1.0.0" / "elpaca" / "builds" / "fixture"
+        build.mkdir(parents=True)
+        (build / "fixture.elc").write_text("compiled\n")
+        (build / "fixture.el").symlink_to(engine / "emacs" / "fixture.el")
+        result = self.resolve("fixture")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout), {
+            "label": "engine", "id": "fixture",
+            "source": str(engine), "repo": str(engine)})
+
+    def test_build_without_links_leaves_the_checkout_named_by_the_identifier(self):
+        build = self.profiles / "1.0.0" / "elpaca" / "builds" / "fixture"
+        build.mkdir(parents=True)
+        (build / "fixture.elc").write_text("compiled\n")
+        result = self.resolve("fixture")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["source"], str(self.checkout))
+
     def test_non_git_directory_is_not_a_checkout(self):
         (self.sources / "plain").mkdir()
         self.assert_refused(self.resolve("plain"))

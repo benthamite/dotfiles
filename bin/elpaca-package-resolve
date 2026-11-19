@@ -5,6 +5,21 @@ usage() {
   echo "Usage: elpaca-package-resolve [--on-disk] IDENTIFIER" >&2
 }
 
+# Print the top of the Git checkout that a link in build directory $1
+# resolves into, or nothing when it has no such link.
+built_source() {
+  local link target top
+  [ -d "$1" ] || return 0
+  for link in "$1"/*; do
+    [ -L "$link" ] || continue
+    target=$(realpath -- "$link" 2>/dev/null) || continue
+    if top=$(git -C "$(dirname -- "$target")" rev-parse --show-toplevel 2>/dev/null); then
+      printf '%s\n' "$top"
+      return 0
+    fi
+  done
+}
+
 # --on-disk reads the active profile's checkouts instead of the live Elpaca
 # registry, so jobs that run without Emacs can resolve a package.  It matches
 # only checkout directory names, not recipe package names.
@@ -56,7 +71,12 @@ if [ "$on_disk" = 1 ]; then
     echo "No active Emacs profile at $profiles/active" >&2
     exit 1
   fi
-  source="$profile/elpaca/sources/$identifier"
+  # A package Elpaca builds in place from a checkout outside its sources
+  # directory (a recipe whose :repo is a local path, such as Protean's) is
+  # found through its build directory's links, which name what Emacs loads;
+  # an unused checkout of the same name under sources must not win.
+  source=$(built_source "$profile/elpaca/builds/$identifier")
+  [ -n "$source" ] || source="$profile/elpaca/sources/$identifier"
   if [ ! -d "$source" ]; then
     echo "No Elpaca checkout named $identifier in $profile" >&2
     exit 1

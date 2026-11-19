@@ -76,6 +76,8 @@ messaging channel: a backend per account, Pablo's full client with no agent
 rules, and the agent tools, where every agent rule lives. It came from building
 wsp, the WhatsApp client on wa-archive, whose design had inherited the agent
 tools' restrictions; Signal's backend running inside Emacs is its open TODO.
+The same day the WhatsApp section stopped saying the archive keeps 90 days:
+Pablo lifted that limit for his account so wsp can show the whole history.
 
 Per-project configuration belongs in =<project>/.claude/=. Repo-root
 =.claude/= directories are project-local and are never global symlink targets.

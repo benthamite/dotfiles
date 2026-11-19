@@ -23,7 +23,8 @@ Usage:
 
 CHAT is a JID or a case-insensitive substring of the name of exactly one
 readable chat. Times are local. Results come with the archive's coverage,
-because a missing message may predate it (the archive keeps 90 days).
+because a missing message may predate it (the archive has kept all history
+since 2026-11-19; before that it kept 90 days).
 --ids prints each message's ID, which `wa-send --reply-to` takes to quote it.
 """
 

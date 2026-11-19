@@ -107,9 +107,12 @@ on Pablo's behalf needs his confirmation.
 Read WhatsApp with `wa-read chats|show|search|resolve`. The `wa-archive`
 daemon (`~/repos/wa-archive`, LaunchAgent `com.stafforini.wa-archive`, design
 in `docs/plans/2026-10-20-whatsapp-archive.md`) is linked to Pablo's account as
-a passive companion device ("wa-archive (read-only)") and stores every chat in
-`~/.local/share/wa-archive/messages.db` (90 days kept; excluded from Time
-Machine); `wa-read` opens it read-only. Every chat is readable except those on
+a companion device (still named "wa-archive (read-only)") and stores every chat in
+`~/.local/share/wa-archive/messages.db` (all history kept since 2026-11-19, when
+the 90-day limit was lifted; earlier messages beyond 90 days are gone; excluded
+from Time Machine); `wa-read` opens it read-only. It is also the backend of wsp,
+Pablo's WhatsApp client in Emacs ("Messaging channels" above), which acts
+through its API socket; that socket is wsp's, not an agent send path. Every chat is readable except those on
 the optional `~/.config/wa-archive/denylist` (one JID per line; Pablo decides
 what goes there). Scope searches to the task with `--chat`, since other
 people's private conversations should not enter context needlessly. Results

@@ -517,7 +517,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ol-telega][ol-telega]]
   - [[#sgn][sgn]]
   - [[#wsp][wsp]]
-  - [[#wasabi][wasabi]]
   - [[#ement][ement]]
   - [[#erc][erc]]
   - [[#circe][circe]]
@@ -3312,8 +3311,8 @@ CLOCK: [2021-05-22 Sat 17:22]--[2021-05-22 Sat 17:35] =>  0:13
     (bind-keys :map special-mode-map
                ("k" . previous-line)
                ("l" . next-line)))
-  (with-eval-after-load 'wasabi
-    (bind-keys :map wasabi-mode-map
+  (with-eval-after-load 'wsp-chat
+    (bind-keys :map wsp-chat-message-map
                ("k" . previous-line)
                ("l" . next-line)))
 
@@ -14211,21 +14210,6 @@ wa-archive (=~/repos/wa-archive=) holds the WhatsApp connection and the history;
 (use-package wsp
   :ensure (:host github
            :repo "benthamite/wsp")
-  :defer t)
-#+end_src
-
-** =wasabi=
-:PROPERTIES:
-:ID:       6D2A5268-FC77-401E-A425-EC6F5961ED3B
-:END:
-
-
-/[[https://github.com/xenodium/wasabi/][wasabi]] is a WhatsApp Emacs client powered by wuzapi and whatsmeow./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package wasabi
-  :ensure (:host github
-                 :repo "xenodium/wasabi")
   :defer t)
 #+end_src
 

@@ -1081,7 +1081,10 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 (use-personal-package elpaca-extras
   :after use-package-extras
   :custom
-  (elpaca-extras-write-lock-file-excluded '(tlon)))
+  ;; Protean is built from the checkout its engine runs from, so git, not a
+  ;; lock file, sets its version; and `bin/elpaca-cooldown' cannot read a
+  ;; recipe whose `:repo' is a local path.
+  (elpaca-extras-write-lock-file-excluded '(tlon protean)))
 #+end_src
 
 * foundational

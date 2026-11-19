@@ -112,6 +112,47 @@ class RemoteTest(unittest.TestCase):
         self.assertEqual(classify(tagged, exempt)[0], "tagged")
 
 
+class FetchTipsTest(unittest.TestCase):
+    def setUp(self):
+        self.mod = load_module()
+        self.remotes = {"a": ("https://example.org/a.git", None),
+                        "b": ("https://example.org/b.git", None)}
+
+    def fetch_with(self, failures):
+        """Fetch with remote_tip failing FAILURES[url] times before succeeding."""
+        calls = {}
+
+        def remote_tip(url, branch):
+            calls[url] = calls.get(url, 0) + 1
+            if calls[url] <= failures.get(url, 0):
+                raise RuntimeError(f"empty reply from {url}")
+            return "sha-" + url[-5]
+
+        with patch.object(self.mod, "remote_tip", remote_tip), \
+             patch.object(self.mod.time, "sleep") as sleep:
+            tips, errors = self.mod.fetch_tips(self.remotes)
+        return tips, errors, calls, sleep
+
+    def test_no_retry_when_every_remote_reads(self):
+        tips, errors, calls, sleep = self.fetch_with({})
+        self.assertEqual(tips, {"a": "sha-a", "b": "sha-b"})
+        self.assertEqual(errors, {})
+        sleep.assert_not_called()
+
+    def test_a_remote_that_fails_once_is_read_on_retry(self):
+        tips, errors, calls, sleep = self.fetch_with({"https://example.org/a.git": 1})
+        self.assertEqual(tips, {"a": "sha-a", "b": "sha-b"})
+        self.assertEqual(errors, {})
+        self.assertEqual(calls, {"https://example.org/a.git": 2, "https://example.org/b.git": 1})
+        sleep.assert_called_once_with(self.mod.RETRY_DELAY_SECONDS)
+
+    def test_a_remote_that_fails_twice_is_reported(self):
+        tips, errors, calls, sleep = self.fetch_with({"https://example.org/a.git": 2})
+        self.assertEqual(tips, {"b": "sha-b"})
+        self.assertIn("empty reply", errors["a"])
+        self.assertEqual(calls["https://example.org/a.git"], 2)
+
+
 class ObservationTest(unittest.TestCase):
     def setUp(self):
         self.mod = load_module()

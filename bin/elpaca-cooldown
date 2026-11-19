@@ -21,6 +21,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -43,6 +44,10 @@ HOST_URLS = {
 }
 GIT_TIMEOUT_SECONDS = 120
 WORKERS = 16
+# A remote that fails is read once more after this pause, so that a blip of
+# seconds (an empty reply from GitHub, say) does not fail the whole run.
+# Losing the network is launchd-network-retry's business, not this one's.
+RETRY_DELAY_SECONDS = 30
 
 
 def now_utc():
@@ -209,8 +214,11 @@ def third_party_remotes(packages, exempt_owners):
     return remotes
 
 
-def fetch_tips(remotes):
-    """Return ({key: sha}, {key: error}) for the REMOTES mapping key -> (url, branch)."""
+def fetch_tips(remotes, retry_delay=RETRY_DELAY_SECONDS):
+    """Return ({key: sha}, {key: error}) for the REMOTES mapping key -> (url, branch).
+
+    Remotes that fail are read once more after RETRY_DELAY seconds; only a
+    second failure is reported."""
     tips, errors = {}, {}
 
     def fetch(item):
@@ -220,12 +228,19 @@ def fetch_tips(remotes):
         except Exception as error:
             return key, None, str(error)
 
-    with ThreadPoolExecutor(max_workers=WORKERS) as pool:
-        for key, sha, error in pool.map(fetch, remotes.items()):
-            if error:
-                errors[key] = error
-            else:
-                tips[key] = sha
+    def fetch_all(items):
+        with ThreadPoolExecutor(max_workers=WORKERS) as pool:
+            for key, sha, error in pool.map(fetch, items):
+                if error:
+                    errors[key] = error
+                else:
+                    errors.pop(key, None)
+                    tips[key] = sha
+
+    fetch_all(remotes.items())
+    if errors:
+        time.sleep(retry_delay)
+        fetch_all([(key, remotes[key]) for key in list(errors)])
     return tips, errors
 
 

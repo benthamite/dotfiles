@@ -216,7 +216,7 @@ through the Google APIs via `gdoc`, never by assuming one command covers both.
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN` | epoch | refresh token authenticated as `pablo@epoch.ai`; stored in 1Password at `op://Automations/Google Workspace OAuth - Pablo Epoch/credential` |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_PERSONAL` | personal | refresh token authenticated as `pablo.stafforini@gmail.com`; `password` field of `google-workspace-refresh-token-personal` in the personal 1Password `Automation` vault, injected by the local wrappers |
 | `GOOGLE_WORKSPACE_REFRESH_TOKEN_BAISH` | baish | refresh token authenticated as `pablostafforini@baish.com.ar`, scopes `gmail.modify` and `spreadsheets`; `password` field of `google-workspace-refresh-token-baish` in the personal 1Password `Automation` vault (exception in `secrets.md`), used by `gmail.py` and `sheets.py` |
-| `GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT` | forethought | refresh token authenticated as `pablo@forethought.org`, scope `https://mail.google.com/` only; `password` field of `google-workspace-refresh-token-forethought` in the personal 1Password `Automation` vault (exception in `secrets.md`), read only by `bin/gmail-maildir-sync --account forethought` |
+| `GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT` | forethought | refresh token authenticated as `pablo@forethought.org`, scope `https://mail.google.com/` only; `password` field of `google-workspace-refresh-token-forethought` in the Forethought 1Password `Automation` vault (`op-automations @forethought`), read only by `bin/gmail-maildir-sync --account forethought` |
 
 Pick the account with `--account epoch` (default), `--account personal`, or
 `--account email-triage` on `gmail.py`; `sheets.py` supports the two human

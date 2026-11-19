@@ -25,7 +25,8 @@ codex/
 
 =rules/default.rules= allows generic recurring commands without a prompt, plus
 project commands Pablo approved, written with full paths so they match no other
-project. The only project rule allows the Idea Swipe app deploy (=web/deploy=);
+project. The only project rule allows the Idea Swipe app deploy (=web/deploy=,
+run through =op-automations @forethought= since 19 Nov 2026);
 the server deploy still prompts, because a prefix rule would also allow its
 card-loading, deletion and visibility subcommands.
 

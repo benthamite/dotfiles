@@ -14,11 +14,17 @@ fi
 
 # mu4e runs this every five minutes (through mbsync-parallel), so both reads
 # are the broker's day-long cached ones.  After rotating one of these values by
-# hand, run `op-automations [@personal] cache forget` with its reference.
+# hand, run `op-automations [@personal|@forethought] cache forget` with its
+# reference.
 
 # Read the password field of an item in the personal Automation vault.
 personal_automation() {
   op-automations @personal cache read "op://Automation/$1/password" 2>/dev/null || true
+}
+
+# Read the password field of an item in Forethought's Automation vault.
+forethought_automation() {
+  op-automations @forethought cache read "op://Automation/$1/password" 2>/dev/null || true
 }
 
 op_read() {
@@ -50,12 +56,12 @@ case "$account" in
     GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN:-$(op_read 'op://Automations/Google Workspace OAuth - Pablo Epoch/credential')}"
     ;;
   forethought)
-    # Personal Automation vault: see the Forethought exception in
-    # claude/context/secrets.md.
+    # The OAuth client is Pablo's personal "Pablo Google tools" client, so it
+    # stays in the personal vault; the refresh token is Forethought's.
     GOOGLE_WORKSPACE_CLIENT_ID="${GOOGLE_WORKSPACE_CLIENT_ID:-$(personal_automation google-workspace-client-id)}"
     GOOGLE_WORKSPACE_CLIENT_SECRET="${GOOGLE_WORKSPACE_CLIENT_SECRET:-$(personal_automation google-workspace-client-secret)}"
     GMAIL_SYNC_EMAIL=pablo@forethought.org
-    GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT:-$(personal_automation google-workspace-refresh-token-forethought)}"
+    GOOGLE_WORKSPACE_REFRESH_TOKEN="${GOOGLE_WORKSPACE_REFRESH_TOKEN_FORETHOUGHT:-$(forethought_automation google-workspace-refresh-token-forethought)}"
     ;;
   *)
     printf 'gmail-maildir-sync: unknown account %s\n' "$account" >&2

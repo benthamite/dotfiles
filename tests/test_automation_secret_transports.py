@@ -93,14 +93,14 @@ class SlackTests(OfflineCase):
         with mock.patch.object(SLACK, "_op_read", return_value="epoch-token"):
             SLACK._tokens()
         SLACK._workspace = "altruismo-eficaz"
-        with mock.patch.object(SLACK, "_automation_field", side_effect=lambda item, field, cached: "personal-" + field) as read:
+        with mock.patch.object(SLACK, "_automation_field", side_effect=lambda item, field, cached, account: "personal-" + field) as read:
             self.assertEqual(SLACK._tokens(), ("personal-token", "personal-cookie"))
-            self.assertEqual(read.call_args_list, [mock.call("slack.com/altruismo-eficaz", "token", False), mock.call("slack.com/altruismo-eficaz", "cookie", False)])
+            self.assertEqual(read.call_args_list, [mock.call("slack.com/altruismo-eficaz", "token", False, "personal"), mock.call("slack.com/altruismo-eficaz", "cookie", False, "personal")])
 
     def test_forethought_reads_through_the_broker_cache(self):
         SLACK._workspace = "forethought"
         def broker(argv, **kw):
-            self.assertEqual(argv[:4], ["op-automations", "@personal", "cache", "read"])
+            self.assertEqual(argv[:4], ["op-automations", "@forethought", "cache", "read"])
             self.assertIn(argv[4], ["op://Automation/slack-forethought/token", "op://Automation/slack-forethought/cookie"])
             return subprocess.CompletedProcess(argv, 0, MARKER, "")
         with mock.patch.object(SLACK.subprocess, "run", side_effect=broker) as run:

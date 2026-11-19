@@ -145,7 +145,7 @@ text may still be there, so tell him. Do not type messages into Slack in Chrome.
 (`pablo@forethought.org`) through the GraphQL API: `list` filters by date or
 keyword, `get ID` prints the summary and transcript as Markdown
 (`--summary-only` for the summary). The key is the `fireflies-forethought` item
-in the personal `Automation` vault (see `secrets.md`). There is no write path.
+in the Forethought `Automation` vault (see `secrets.md`). There is no write path.
 
 ## Granola
 

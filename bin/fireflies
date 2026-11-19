@@ -2,8 +2,8 @@
 """fireflies — read-only access to Pablo's Forethought Fireflies meetings.
 
 Uses the Fireflies GraphQL API as pablo@forethought.org. The API key is the
-`password` field of `fireflies-forethought` in the personal 1Password
-Automation vault (Forethought exception in claude/context/secrets.md), read
+`password` field of `fireflies-forethought` in Forethought's 1Password
+Automation vault, read
 in-process through op-automations and never printed. No write operations.
 
 Usage:
@@ -31,7 +31,7 @@ def fail(message, code=1):
 def api_key():
     try:
         out = subprocess.run(
-            ["op-automations", "@personal", "item", "get", "fireflies-forethought",
+            ["op-automations", "@forethought", "item", "get", "fireflies-forethought",
              "--vault", "Automation", "--fields", "label=password", "--reveal"],
             check=False, capture_output=True, text=True, timeout=REQUEST_TIMEOUT)
     except (OSError, subprocess.TimeoutExpired):

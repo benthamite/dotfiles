@@ -16,8 +16,8 @@ Multiple workspaces are supported via the WORKSPACES registry and the global
                  (.../xoxc_token -> Bearer token, .../xoxd_token -> 'd' cookie)
   altruismo-eficaz -> personal 1Password Automation vault: slack.com/altruismo-eficaz
                  (token: field -> Bearer token, cookie: field -> 'd' cookie)
-  forethought -> personal 1Password Automation vault: slack-forethought
-                 (same fields; see the Forethought exception in secrets.md)
+  forethought -> Forethought 1Password Automation vault: slack-forethought
+                 (same fields)
   becas-aisar, baish -> personal 1Password Automation vault: slack-becas-aisar,
                  slack-baish (same fields; see the BAISH exception in secrets.md)
 
@@ -161,8 +161,10 @@ def _open_authenticated(request):
 # Workspace registry. Each entry describes where this workspace's xoxc/xoxd
 # session tokens come from. Two source kinds:
 #   "op"         -> 1Password: read <op_path>/xoxc_token and <op_path>/xoxd_token.
-#   "automation" -> item <item> of the personal 1Password Automation vault, with
-#                   fields <token_field> (xoxc) and <cookie_field> (xoxd).
+#   "automation" -> item <item> of an `Automation` vault, with fields
+#                   <token_field> (xoxc) and <cookie_field> (xoxd); <account>
+#                   is the op-automations account selector ("personal" when
+#                   omitted, "forethought" for Forethought's own vault).
 # Credentials are read through the broker's 24h cache (`cache read`): a bulk
 # job runs this script hundreds of times, and uncached reads exhausted the
 # personal account's ~1,000-requests-per-day quota on 2026-10-12 (secrets.md,
@@ -185,6 +187,7 @@ WORKSPACES = {
     "forethought": {
         "domain": "forethought-ea.slack.com",
         "source": "automation",
+        "account": "forethought",
         "item": "slack-forethought",
         "token_field": "token",
         "cookie_field": "cookie",
@@ -253,26 +256,26 @@ def _automation_ref(item, field):
     return f"op://Automation/{item}/{field}"
 
 
-def _automation_field(item, field, cached=True):
-    """Return FIELD of ITEM in the personal 1Password Automation vault.
+def _automation_field(item, field, cached=True, account="personal"):
+    """Return FIELD of ITEM in ACCOUNT's 1Password Automation vault.
 
     With CACHED, read through the broker's 24h cache; otherwise use an uncached
     `item get`, for items that have no valid op:// reference.
     """
     if cached:
-        command = ["op-automations", "@personal", "cache", "read",
+        command = ["op-automations", f"@{account}", "cache", "read",
                    _automation_ref(item, field)]
     else:
-        command = ["op-automations", "@personal", "item", "get", item, "--vault",
+        command = ["op-automations", f"@{account}", "item", "get", item, "--vault",
                    "Automation", "--fields", f"label={field}", "--reveal"]
     try:
         out = subprocess.run(
             command, check=False, capture_output=True, text=True, timeout=REQUEST_TIMEOUT,
         )
     except (OSError, UnicodeError, subprocess.TimeoutExpired):
-        _fail("personal Slack credential lookup failed")
+        _fail(f"{account} Slack credential lookup failed")
     if out.returncode != 0:
-        _fail(f"personal Slack credential lookup failed: {_broker_hint(out.stderr)}")
+        _fail(f"{account} Slack credential lookup failed: {_broker_hint(out.stderr)}")
     value = out.stdout.strip()
     if not value:
         sys.stderr.write(f"ERROR: Automation item {item} has no '{field}' field\n")
@@ -318,8 +321,9 @@ def _tokens():
             xoxd = _op_read(f"{ws['op_path']}/xoxd_token", cached=True)
         elif ws["source"] == "automation":
             cached = ws.get("cached", True)
-            xoxc = _automation_field(ws["item"], ws["token_field"], cached)
-            xoxd = _automation_field(ws["item"], ws["cookie_field"], cached)
+            account = ws.get("account", "personal")
+            xoxc = _automation_field(ws["item"], ws["token_field"], cached, account)
+            xoxd = _automation_field(ws["item"], ws["cookie_field"], cached, account)
         else:
             sys.stderr.write(
                 f"ERROR: workspace '{_workspace}' has invalid source '{ws['source']}'\n"
@@ -357,7 +361,7 @@ def _cached_refs(ws):
     if ws["source"] == "op":
         return [], [f"{ws['op_path']}/xoxc_token", f"{ws['op_path']}/xoxd_token"]
     if ws["source"] == "automation" and ws.get("cached", True):
-        return ["@personal"], [_automation_ref(ws["item"], ws["token_field"]),
+        return [f"@{ws.get('account', 'personal')}"], [_automation_ref(ws["item"], ws["token_field"]),
                                _automation_ref(ws["item"], ws["cookie_field"])]
     return None
 

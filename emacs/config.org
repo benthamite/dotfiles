@@ -5798,10 +5798,10 @@ I use it for the Autumn Sprint's board, where projects' milestones show as =MILE
   (org-linear-closed-retention-days 0)
   (org-linear-milestone-keywords '("MILESTONE"))
   (org-linear-api-key-command
-   '("op-automations" "@personal" "cache" "read"
+   '("op-automations" "@forethought" "cache" "read"
      "op://Automation/linear-api-key-forethought/password"))
   (org-linear-api-key-forget-command
-   '("op-automations" "@personal" "cache" "forget"
+   '("op-automations" "@forethought" "cache" "forget"
      "op://Automation/linear-api-key-forethought/password"))
   (org-linear-profiles
    `((personal
@@ -14438,8 +14438,8 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
                     :animate-image t :websocket-nowait t
                     :fallback
                     (lambda ()
-                      (cons (auth-source-extras-op-get "slack-forethought" "token")
-                            (auth-source-extras-op-get "slack-forethought" "cookie"))))
+                      (cons (auth-source-extras-op-get "slack-forethought" "token" 'forethought)
+                            (auth-source-extras-op-get "slack-forethought" "cookie" 'forethought))))
               (list :name "BAISH" :domain "baish.slack.com"
                     :animate-image t :websocket-nowait t
                     :fallback

@@ -43,15 +43,15 @@ TOKEN_OP_ENTRIES = {
         "item": "google-workspace-refresh-token-personal",
         "field": "password",
     },
-    # Forethought has no Automation vault; see the exception in
-    # claude/context/secrets.md.
     "forethought": {
-        "account": "my.1password.com",
+        "account": "forethought.1password.eu",
+        "selector": "@forethought",
         "vault": "Automation",
         "item": "google-workspace-refresh-token-forethought",
         "field": "password",
     },
-    # BAISH has no 1Password of its own; same exception as Forethought.
+    # BAISH has no 1Password of its own; see the exception in
+    # claude/context/secrets.md.
     "baish": {
         "account": "my.1password.com",
         "vault": "Automation",
@@ -190,7 +190,7 @@ def authorized_email(access_token):
 
 def forget_cached_token(spec):
     """Drop op-automations' cached copy of the old token so timers read the new one."""
-    selector = [] if spec["vault"] == "Automations" else ["@personal"]
+    selector = [] if spec["vault"] == "Automations" else [spec.get("selector", "@personal")]
     ref = f"op://{spec['vault']}/{spec['item']}/{spec['field']}"
     subprocess.run(
         ["op-automations", *selector, "cache", "forget", ref],

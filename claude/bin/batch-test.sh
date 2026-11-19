@@ -65,16 +65,30 @@ case "$SOURCE_DIR/" in
   *) echo "Canonical source is outside its repository" >&2; exit 1 ;;
 esac
 
+CANONICAL_DOTFILES=$(cd -- "${DOTFILES_ROOT:-$TOOL_ROOT}" && pwd -P)
+# A dotfiles extras package's source is always emacs/extras, which the
+# resolver found on disk; the running Emacs knows it only once the config
+# has declared it, so a package's first commit must not need that.  Without
+# an Elpaca entry, its own build is the one Elpaca would give it, excluded
+# from the dependencies whether or not it exists.
+EXTRAS_SOURCE=nil
+if [ "$SOURCE_REPO" = "$CANONICAL_DOTFILES" ] &&
+   [ "$SOURCE_DIR" = "$CANONICAL_DOTFILES/emacs/extras" ]; then
+  EXTRAS_SOURCE="(decode-coding-string (base64-decode-string \"$(printf '%s' "$SOURCE_DIR" | base64 | tr -d '\n')\") 'utf-8)"
+fi
 # Query actual dependency locations, not a guessed profile filesystem layout.
 QUERY="(progn (require 'json) (require 'seq)
   ;; elpaca-batch-context-v1
   (let* ((root (and (boundp 'elpaca-builds-directory) elpaca-builds-directory))
-         (entry (elpaca-get '$PACKAGE))
-         (source (and entry (or (elpaca<-source-dir entry) (elpaca-source-dir entry))))
-         (build (and entry (elpaca<-build-dir entry))))
+         (entry (and (fboundp 'elpaca-get) (elpaca-get '$PACKAGE)))
+         (extras $EXTRAS_SOURCE)
+         (source (or (and entry (or (elpaca<-source-dir entry) (elpaca-source-dir entry)))
+                     extras))
+         (build (or (and entry (elpaca<-build-dir entry))
+                    (and extras root (expand-file-name \"$PACKAGE\" root)))))
     (unless (and root (not (file-remote-p root)) (file-directory-p root))
       (error \"No local Elpaca builds directory\"))
-    (unless (and entry (stringp source) (not (file-remote-p source))
+    (unless (and (or entry extras) (stringp source) (not (file-remote-p source))
                  (file-directory-p source) (stringp build)
                  (file-name-absolute-p build) (not (file-remote-p build)))
       (error \"Cannot identify package source and own build\"))
@@ -123,7 +137,6 @@ if ! RUNTIME_SOURCE=$(cd -- "$RUNTIME_SOURCE" && pwd -P); then
   echo "Active registry source is unavailable" >&2
   exit 1
 fi
-CANONICAL_DOTFILES=$(cd -- "${DOTFILES_ROOT:-$TOOL_ROOT}" && pwd -P)
 if { [ "$SOURCE_REPO" != "$CANONICAL_DOTFILES" ] ||
      [ "$SOURCE_DIR" != "$CANONICAL_DOTFILES/emacs/extras" ]; } &&
    [ "$RUNTIME_SOURCE" != "$SOURCE_DIR" ]; then

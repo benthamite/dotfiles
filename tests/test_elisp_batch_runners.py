@@ -54,7 +54,7 @@ if "elpaca-extras-resolve-package" in form:
     print(json.dumps(os.environ["FAKE_PACKAGE_ID"] + ":" + encode(os.environ["FAKE_SOURCE"]) + ":" + encode(pathlib.Path(os.environ["FAKE_SOURCE"]).name)))
 elif "elpaca-batch-context-v1" in form:
     if os.environ.get("FAKE_NATIVE_CONTEXT"):
-        setup = "(progn (setq elpaca-builds-directory " + json.dumps(str(pathlib.Path(os.environ["FAKE_BUILD"]).parent)) + ") (defun elpaca-get (_id) t) (defun elpaca<-source-dir (_e) " + json.dumps(os.environ["FAKE_SOURCE"]) + ") (defun elpaca<-build-dir (_e) " + json.dumps(os.environ["FAKE_BUILD"]) + "))"
+        setup = "(progn (setq elpaca-builds-directory " + json.dumps(str(pathlib.Path(os.environ["FAKE_BUILD"]).parent)) + ") (defun elpaca-get (_id) " + ("nil" if os.environ.get("FAKE_NO_ENTRY") else "t") + ") (defun elpaca<-source-dir (_e) " + json.dumps(os.environ["FAKE_SOURCE"]) + ") (defun elpaca<-build-dir (_e) " + json.dumps(os.environ["FAKE_BUILD"]) + "))"
         result = subprocess.run([os.environ["NATIVE_EMACS"], "-Q", "--batch", "--eval", setup, "--eval", "(prin1 " + sys.argv[-1] + ")"], text=True, capture_output=True)
         print(result.stdout, end="")
         print(result.stderr, end="", file=sys.stderr)
@@ -212,6 +212,33 @@ else:
         result = self.run_helper(self.batch, "example")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("Registry source changed", result.stderr)
+        self.assertNotIn("recorded test evidence", result.stdout)
+
+    def test_extras_package_the_running_emacs_has_not_declared(self):
+        """A new extras package is tested before the config declares it."""
+        extras = self.tool / "emacs/extras"
+        extras.mkdir(parents=True)
+        (extras / "fresh-extras.el").write_text(
+            "(defun fresh-extras-value () 'fresh)\n(provide 'fresh-extras)\n")
+        stale = self.build.parent / "fresh-extras"
+        stale.mkdir()
+        (stale / "fresh-extras.el").write_text(
+            "(defun fresh-extras-value () 'stale)\n(provide 'fresh-extras)\n")
+        for args in (["init", "-q"], ["config", "user.email", "fixture@example.invalid"],
+                     ["config", "user.name", "Fixture"], ["add", "."],
+                     ["commit", "-qm", "fixture"]):
+            subprocess.run(["git", "-C", str(self.tool), *args], env=self.env,
+                           check=True, capture_output=True, text=True)
+        self.env.update(FAKE_NATIVE_CONTEXT="1", FAKE_NO_ENTRY="1")
+        result = self.run_helper(self.batch, "fresh-extras",
+                                 "(unless (eq (fresh-extras-value) 'fresh) (error \"stale\"))")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("recorded test evidence", result.stdout)
+
+    def test_unregistered_package_outside_extras_is_still_refused(self):
+        self.env.update(FAKE_NATIVE_CONTEXT="1", FAKE_NO_ENTRY="1")
+        result = self.run_helper(self.batch, "example")
+        self.assertNotEqual(result.returncode, 0)
         self.assertNotIn("recorded test evidence", result.stdout)
 
     def add_worktree(self, value):

@@ -191,6 +191,16 @@ All five findings accepted as defects and folded in above: `tap_lag` lost by
 200-record retention dropping part of a large batch; untested alert-delivery
 failure. None changes a fixed decision.
 
+## Build notes
+
+- Streaks live in their own file, `tap-lag.json`, following the whatsmeow
+  lane's `whatsmeow.json`, rather than in `state.json`: neither `scan` nor
+  `delayed` rewrites it, which settles review finding 1 without touching
+  `merge_scan`.
+- wuzapi and its tap were removed by the wsp work before the build, so the
+  live check reports the two other formulae. One upstream repository
+  redirects, so requests follow redirects.
+
 ## Decisions (fixed)
 
 1. Tap lag is detection only; `delayed` and `fast-brew` are untouched. (Pablo's brief.)

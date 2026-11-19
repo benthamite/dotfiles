@@ -47,6 +47,14 @@ INSTALLED_VERSION_SOURCES = {
 WHATSMEOW = "go.mau.fi/whatsmeow"
 DEFAULT_WA_ARCHIVE = Path.home() / "repos/wa-archive"
 DEFAULT_WHATSMEOW_STATE_FILE = DEFAULT_STATE_FILE.with_name("whatsmeow.json")
+# Tap lag: a third-party tap can stop following its upstream, and `brew
+# outdated' then reports its formula current forever (wuzapi, 2026-11).
+DEFAULT_TAP_LAG_STATE_FILE = DEFAULT_STATE_FILE.with_name("tap-lag.json")
+DEFAULT_TAP_LAG_EXEMPT_FILE = DEFAULT_POLICY_DIR / "tap-lag-exempt.txt"
+OFFICIAL_TAPS = ("homebrew/core", "homebrew/cask")
+GITHUB_API = "https://api.github.com"
+TAG_PAGE_LIMIT = 10
+TAP_LAG_FAILURE_STREAK = 3
 # The lane commits and deploys only from this branch, never from work in progress.
 WA_ARCHIVE_BRANCH = "master"
 WHATSMEOW_WAIVE_COMMAND = "personal-updates whatsmeow --waive-age"
@@ -833,6 +841,177 @@ def command_whatsmeow_scan(args, now=None):
     print(json.dumps({"whatsmeow": new_state}, indent=2, sort_keys=True))
 
 
+class TapLagFetchError(Exception):
+    """GitHub could not be read; the next scan retries."""
+
+
+class TapLagUncheckable(Exception):
+    """The upstream has no comparable version; retrying will not help."""
+
+
+def load_tap_lag_exempt(path):
+    """Return the exempt taps and tap/name entries, ignoring `#' reasons."""
+    if not path.exists():
+        return set()
+    return {line.split("#", 1)[0].strip() for line in path.read_text().splitlines()
+            if line.split("#", 1)[0].strip()}
+
+
+def third_party_packages(info, exempt):
+    """Installed formulae and casks from taps other than Homebrew's own."""
+    packages = []
+    for formula in info.get("formulae", []):
+        urls = formula.get("urls", {})
+        packages.append({
+            "name": formula["full_name"], "tap": formula.get("tap") or "",
+            "version": (formula.get("versions") or {}).get("stable"),
+            "urls": [(urls.get("stable") or {}).get("url"), (urls.get("head") or {}).get("url"),
+                     formula.get("homepage")],
+        })
+    for cask in info.get("casks", []):
+        packages.append({
+            "name": cask["full_token"], "tap": cask.get("tap") or "",
+            "version": cask.get("version"), "urls": [cask.get("url"), cask.get("homepage")],
+        })
+    return [package for package in packages
+            if package["tap"] and package["tap"] not in OFFICIAL_TAPS
+            and package["tap"] not in exempt and package["name"] not in exempt]
+
+
+def github_repository(urls):
+    """Return OWNER/REPO of the first github.com URL among URLS, if any."""
+    for url in urls:
+        match = re.match(r"https?://github\.com/([^/\s]+)/([^/\s#?]+)", url or "")
+        if match:
+            return f"{match.group(1)}/{match.group(2).removesuffix('.git')}"
+    return None
+
+
+def http_get(url):
+    """GET URL from GitHub's API; return (status, headers, body) or raise TapLagFetchError."""
+    with tempfile.TemporaryDirectory() as directory:
+        headers, body = Path(directory) / "headers", Path(directory) / "body"
+        result = subprocess.run(
+            ["/usr/bin/curl", "-sSL", "--max-time", "20", "-H", "Accept: application/vnd.github+json",
+             "-D", str(headers), "-o", str(body), "-w", "%{http_code}", url],
+            text=True, capture_output=True)
+        if result.returncode != 0:
+            raise TapLagFetchError(f"{url}: {result.stderr.strip() or f'curl exit {result.returncode}'}")
+        return int(result.stdout.strip() or 0), headers.read_text(), body.read_text()
+
+
+def tag_version(tag):
+    """Return TAG's version without a leading `v', or nil when it is not version-like."""
+    version = tag.removeprefix("v")
+    return version if numeric_version(version) else None
+
+
+def upstream_version(repository, get=http_get):
+    """Return {version, date, source} for REPOSITORY's newest release or tag."""
+    status, _, body = get(f"{GITHUB_API}/repos/{repository}/releases/latest")
+    if status == 200:
+        release = json.loads(body)
+        return {"version": release["tag_name"].removeprefix("v"),
+                "date": (release.get("published_at") or "")[:10] or None, "source": "release"}
+    if status != 404:
+        raise TapLagFetchError(f"{repository} latest release: HTTP {status}")
+    # No release: the highest version-like tag, read in full or not at all.
+    url, versions = f"{GITHUB_API}/repos/{repository}/tags?per_page=100", []
+    for _ in range(TAG_PAGE_LIMIT):
+        status, headers, body = get(url)
+        if status != 200:
+            raise TapLagFetchError(f"{repository} tags: HTTP {status}")
+        versions += [version for tag in json.loads(body) if (version := tag_version(tag["name"]))]
+        match = re.search(r'<([^>]+)>;\s*rel="next"', headers)
+        if not match:
+            break
+        url = match.group(1)
+    else:
+        raise TapLagFetchError(f"{repository} has more than {TAG_PAGE_LIMIT} pages of tags")
+    if not versions:
+        raise TapLagUncheckable(f"{repository} has no release and no version-like tag")
+    # A tag carries no release date; a commit date would misstate it.
+    return {"version": max(versions, key=numeric_version), "date": None, "source": "tag"}
+
+
+def check_tap_lag(packages, get=http_get):
+    """Return {name: result} with status lagging, current, uncheckable or failed."""
+    results = {}
+    for package in packages:
+        name, tap_version = package["name"], package["version"]
+        repository = github_repository(package["urls"])
+        result = {"tap_version": tap_version, "repository": repository}
+        try:
+            if not repository:
+                raise TapLagUncheckable("its source is not on github.com")
+            upstream = upstream_version(repository, get)
+            result.update(upstream=upstream["version"], date=upstream["date"], source=upstream["source"])
+            ours, theirs = numeric_version(tap_version or ""), numeric_version(upstream["version"])
+            if ours is None or theirs is None:
+                raise TapLagUncheckable(
+                    f"versions {tap_version} and {upstream['version']} ({repository}) are not comparable")
+            result["status"] = "lagging" if theirs > ours else "current"
+        except TapLagUncheckable as error:
+            result.update(status="uncheckable", reason=str(error))
+        except (TapLagFetchError, ValueError, KeyError) as error:
+            result.update(status="failed", reason=str(error))
+        results[name] = result
+    return results
+
+
+def merge_tap_lag_state(previous, results, now):
+    """Carry each package's consecutive failure count forward; a success resets it."""
+    packages = {}
+    for name, result in results.items():
+        failures = previous.get("packages", {}).get(name, {}).get("failures", 0)
+        packages[name] = {**result, "failures": failures + 1 if result["status"] == "failed" else 0}
+    return {"checked": now.isoformat(), "packages": packages}
+
+
+def tap_lag_alert_text(state):
+    """Return the alert for lagging and uncheckable packages, or nil when none."""
+    packages = state["packages"]
+    lagging = [f"{name} {entry['tap_version']} (upstream {entry['upstream']}, "
+               f"{entry['date'] or 'date unavailable'}, https://github.com/{entry['repository']})"
+               for name, entry in sorted(packages.items()) if entry["status"] == "lagging"]
+    unchecked = [f"{name}: {entry['reason']}" for name, entry in sorted(packages.items())
+                 if entry["status"] == "uncheckable"
+                 or (entry["status"] == "failed" and entry["failures"] >= TAP_LAG_FAILURE_STREAK)]
+    parts = []
+    if lagging:
+        parts.append("Homebrew taps behind their upstream; `brew outdated' cannot see these updates, "
+                     "so upgrade by hand or switch source: " + "; ".join(lagging) + ".")
+    if unchecked:
+        parts.append("Cannot check these third-party tap packages against upstream; add each to "
+                     "macos/personal-updates/tap-lag-exempt.txt with a reason, or fix its source: "
+                     + "; ".join(unchecked) + ".")
+    return " ".join(parts) or None
+
+
+def command_tap_lag(args, now=None, get=None):
+    """Compare third-party tap packages with their GitHub upstream and alert on lag."""
+    now = now or now_utc()
+    get = get or http_get
+    info = run(["brew", "info", "--json=v2", "--installed"],
+               env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1"})
+    packages = third_party_packages(json.loads(info.stdout), load_tap_lag_exempt(args.tap_lag_exempt_file))
+    state = merge_tap_lag_state(load_json(args.tap_lag_state_file, {}), check_tap_lag(packages, get), now)
+    text = tap_lag_alert_text(state)
+    if getattr(args, "dry_run", False):
+        print(json.dumps({"tap_lag": state, "alert": text}, indent=2, sort_keys=True))
+        return state
+    # Saved before alerting, so a failed delivery keeps the failure streaks.
+    save_json(args.tap_lag_state_file, state)
+    for name, entry in sorted(state["packages"].items()):
+        if entry["status"] != "current":
+            append_log(args.log_dir, f"tap lag {name}: {entry['status']} "
+                       f"{entry.get('reason') or entry.get('upstream')}")
+    append_log(args.log_dir, f"tap lag checked {len(state['packages'])} third-party packages")
+    if text:
+        send_alert(text)
+    return state
+
+
 def command_scan(args):
     state = load_json(args.state_file, {})
     updates = brew_outdated()
@@ -928,9 +1107,15 @@ def build_parser():
     parser.add_argument("--fast-brew-file", type=Path, default=DEFAULT_FAST_BREW_FILE)
     parser.add_argument("--whatsmeow-state-file", type=Path, default=DEFAULT_WHATSMEOW_STATE_FILE)
     parser.add_argument("--wa-archive", type=Path, default=DEFAULT_WA_ARCHIVE)
+    parser.add_argument("--tap-lag-state-file", type=Path, default=DEFAULT_TAP_LAG_STATE_FILE)
+    parser.add_argument("--tap-lag-exempt-file", type=Path, default=DEFAULT_TAP_LAG_EXEMPT_FILE)
     subparsers = parser.add_subparsers(dest="command", required=True)
 
     subparsers.add_parser("scan")
+
+    tap_lag = subparsers.add_parser(
+        "tap-lag", help="alert when a third-party Homebrew tap lags its GitHub upstream (also run by scan)")
+    tap_lag.add_argument("--dry-run", action="store_true")
 
     delayed = subparsers.add_parser("delayed")
     delayed.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
@@ -965,8 +1150,13 @@ def main(argv=None):
                 append_log(args.log_dir, f"error: whatsmeow scan: {error}")
                 print(f"whatsmeow scan: {error}", file=sys.stderr)
             command_scan(args)
+            # Detection only, after the brew update the scan ran; it changes
+            # nothing the other lanes install.
+            command_tap_lag(args)
             if whatsmeow_error:
                 raise RuntimeError(f"whatsmeow scan: {whatsmeow_error}")
+        elif args.command == "tap-lag":
+            command_tap_lag(args)
         elif args.command == "whatsmeow":
             report = run_whatsmeow_lane(args, waive_age=args.waive_age)
             return 0 if report["status"] in ("current", "waiting", "eligible", "updated") else 1

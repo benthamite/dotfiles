@@ -1,0 +1,4 @@
+# Third-party taps (or tap/name packages) that `personal-updates tap-lag'
+# does not compare with an upstream. Every entry needs a reason.
+d12frosted/emacs-plus  # the tap repository publishes its own builds, so there is no separate upstream; brew outdated already sees them
+benthamite/local       # Pablo's private local tap with no remote; its cask points at a vendor bucket, not a repository

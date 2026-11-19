@@ -78,6 +78,33 @@ An additional unpacking helper discovered only during a download is refused if
 it would need installation and has no age-qualified observation. The guard does
 not silently exempt those helpers.
 
+## Tap lag
+
+`brew outdated` compares an install only with what its tap advertises, so a
+third-party tap that stops following its upstream looks current forever
+(wuzapi's tap stayed at 1.0.5 for a year while upstream released v1.1.1).
+After each `scan`, `personal-updates tap-lag` compares every installed formula
+and cask from a tap other than `homebrew/core` and `homebrew/cask` with its
+GitHub upstream: the repository of the first github.com URL among its stable
+URL, head URL and homepage; its latest release, or, when it has none, its
+highest version-like tag (all pages, or the check fails). A newer upstream is
+alerted through the `personal-updates` monitor with both versions and the
+release date ("date unavailable" for a tag). It is detection only: nothing the
+other lanes install changes.
+
+A package with no GitHub source, no release or version-like tag, or versions
+that do not compare is alerted as "cannot check", so none goes unchecked
+silently; exempt it with a reason in `tap-lag-exempt.txt` (a tap or a
+`tap/name`). A failed GitHub request is only logged, unless the same package
+has failed three scans in a row. Streaks and last results live in
+`~/.local/state/personal-updates/tap-lag.json`. `tap-lag --dry-run` prints the
+findings without saving or alerting. Requests use `/usr/bin/curl` without a
+token, about one per package a day.
+
+`brew livecheck` is not used: it is a developer command whose first run
+installs Homebrew's developer gems from rubygems.org, unaged, and for these
+taps it would read the same GitHub data.
+
 Claude Code uses its native installer and updater, outside Homebrew.
 The fast lane for Codex, additional entries in `fast-brew.txt`,
 the macOS update lane, and the existing hold/exclusion files retain their roles.

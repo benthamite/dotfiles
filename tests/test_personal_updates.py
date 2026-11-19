@@ -1263,3 +1263,175 @@ class PersonalUpdatesWhatsmeowTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TapLagTest(unittest.TestCase):
+    """Third-party taps compared with their GitHub upstream (detection only)."""
+
+    def setUp(self):
+        self.mod = load_module()
+        self.now = datetime(2026, 11, 19, 2, 0, tzinfo=timezone.utc)
+        self.temp = tempfile.TemporaryDirectory()
+        base = pathlib.Path(self.temp.name)
+        self.exempt = base / "exempt.txt"
+        self.exempt.write_text("d12frosted/emacs-plus  # self-published\nother/tap/tool # reason\n")
+        self.args = Namespace(tap_lag_state_file=base / "tap-lag.json", tap_lag_exempt_file=self.exempt,
+                              state_file=base / "state.json", log_dir=base / "logs", dry_run=False)
+        self.info = {
+            "formulae": [
+                {"full_name": "asternic/wuzapi/wuzapi", "tap": "asternic/wuzapi",
+                 "versions": {"stable": "1.0.5"}, "homepage": "https://github.com/asternic/wuzapi",
+                 "urls": {"stable": {"url": "https://github.com/asternic/wuzapi/archive/refs/heads/main.tar.gz"}}},
+                {"full_name": "ripgrep", "tap": "homebrew/core", "versions": {"stable": "14.0"},
+                 "homepage": "https://github.com/BurntSushi/ripgrep", "urls": {}},
+                {"full_name": "other/tap/tool", "tap": "other/tap", "versions": {"stable": "1.0"},
+                 "homepage": "https://github.com/o/tool", "urls": {}},
+            ],
+            "casks": [
+                {"full_token": "d12frosted/emacs-plus/emacs-plus-app", "tap": "d12frosted/emacs-plus",
+                 "version": "31.1-406", "url": "https://github.com/d12frosted/homebrew-emacs-plus/x.zip"},
+                {"full_token": "firefox", "tap": "homebrew/cask", "version": "1", "url": "https://x"},
+            ],
+        }
+
+    def tearDown(self):
+        self.temp.cleanup()
+
+    def responses(self, table):
+        def get(url):
+            response = table[url]
+            if isinstance(response, Exception):
+                raise response
+            return response
+        return get
+
+    def release(self, tag, date="2026-11-13T14:10:48Z"):
+        return (200, "", json.dumps({"tag_name": tag, "published_at": date}))
+
+    def brew_info(self, info=None):
+        return patch.object(self.mod, "run", return_value=Namespace(stdout=json.dumps(info or self.info)))
+
+    API = "https://api.github.com/repos/"
+
+    def test_only_unexempted_third_party_packages_are_checked(self):
+        packages = self.mod.third_party_packages(self.info, self.mod.load_tap_lag_exempt(self.exempt))
+        self.assertEqual([p["name"] for p in packages], ["asternic/wuzapi/wuzapi"])
+
+    def test_repository_comes_from_the_first_github_url(self):
+        self.assertEqual(self.mod.github_repository(
+            [None, "https://example.com/x", "https://github.com/a/b.git", "https://github.com/c/d"]), "a/b")
+        self.assertEqual(self.mod.github_repository(
+            ["https://github.com/a/b/releases/download/v1/x.zip"]), "a/b")
+        self.assertIsNone(self.mod.github_repository(["https://storage.googleapis.com/x.dmg", None]))
+
+    def test_lagging_release_is_alerted_with_its_date(self):
+        get = self.responses({self.API + "asternic/wuzapi/releases/latest": self.release("v1.1.1")})
+        with self.brew_info(), patch.object(self.mod, "send_alert") as alert:
+            state = self.mod.command_tap_lag(self.args, now=self.now, get=get)
+        self.assertEqual(state["packages"]["asternic/wuzapi/wuzapi"]["status"], "lagging")
+        text = alert.call_args.args[0]
+        self.assertIn("asternic/wuzapi/wuzapi 1.0.5 (upstream 1.1.1, 2026-11-13", text)
+
+    def test_current_package_sends_no_alert(self):
+        get = self.responses({self.API + "asternic/wuzapi/releases/latest": self.release("1.0.5")})
+        with self.brew_info(), patch.object(self.mod, "send_alert") as alert:
+            state = self.mod.command_tap_lag(self.args, now=self.now, get=get)
+        self.assertEqual(state["packages"]["asternic/wuzapi/wuzapi"]["status"], "current")
+        alert.assert_not_called()
+
+    def test_tags_are_read_across_pages_and_have_no_date(self):
+        base = self.API + "asternic/wuzapi/tags?per_page=100"
+        page2 = self.API + "asternic/wuzapi/tags?per_page=100&page=2"
+        get = self.responses({
+            self.API + "asternic/wuzapi/releases/latest": (404, "", "{}"),
+            base: (200, f'link: <{page2}>; rel="next"\n', json.dumps([{"name": "v1.0.9"}, {"name": "nightly"}])),
+            page2: (200, "", json.dumps([{"name": "v1.10.0"}, {"name": "v1.2.0"}])),
+        })
+        self.assertEqual(self.mod.upstream_version("asternic/wuzapi", get),
+                         {"version": "1.10.0", "date": None, "source": "tag"})
+        with self.brew_info(), patch.object(self.mod, "send_alert") as alert:
+            self.mod.command_tap_lag(self.args, now=self.now, get=get)
+        self.assertIn("upstream 1.10.0, date unavailable", alert.call_args.args[0])
+
+    def test_incomplete_tag_pages_are_a_failure_not_current(self):
+        base = self.API + "asternic/wuzapi/tags?per_page=100"
+        page2 = base + "&page=2"
+        get = self.responses({
+            self.API + "asternic/wuzapi/releases/latest": (404, "", "{}"),
+            base: (200, f'link: <{page2}>; rel="next"\n', json.dumps([{"name": "v1.0.5"}])),
+            page2: (502, "", ""),
+        })
+        result = self.mod.check_tap_lag(
+            self.mod.third_party_packages(self.info, self.mod.load_tap_lag_exempt(self.exempt)), get)
+        self.assertEqual(result["asternic/wuzapi/wuzapi"]["status"], "failed")
+
+    def test_endless_tag_pages_are_a_failure(self):
+        base = self.API + "asternic/wuzapi/tags?per_page=100"
+        table = {self.API + "asternic/wuzapi/releases/latest": (404, "", "{}")}
+        url = base
+        for page in range(self.mod.TAG_PAGE_LIMIT):
+            following = f"{base}&page={page + 2}"
+            table[url] = (200, f'link: <{following}>; rel="next"\n', json.dumps([{"name": "v1.0"}]))
+            url = following
+        with self.assertRaises(self.mod.TapLagFetchError):
+            self.mod.upstream_version("asternic/wuzapi", self.responses(table))
+
+    def test_uncheckable_package_is_alerted_at_once(self):
+        info = {"formulae": [{"full_name": "a/b/tool", "tap": "a/b", "versions": {"stable": "1.0"},
+                              "homepage": "https://example.com", "urls": {}}], "casks": []}
+        with self.brew_info(info), patch.object(self.mod, "send_alert") as alert:
+            self.mod.command_tap_lag(self.args, now=self.now, get=self.responses({}))
+        self.assertIn("Cannot check", alert.call_args.args[0])
+        self.assertIn("a/b/tool: its source is not on github.com", alert.call_args.args[0])
+
+    def test_fetch_failures_alert_only_on_the_third_consecutive_scan(self):
+        failing = self.responses({self.API + "asternic/wuzapi/releases/latest": (503, "", "")})
+        alerts = []
+        with self.brew_info(), patch.object(self.mod, "send_alert", side_effect=alerts.append):
+            for _ in range(3):
+                self.mod.command_tap_lag(self.args, now=self.now, get=failing)
+                # The Homebrew scan and delayed lane rewrite state.json in
+                # between; the streak lives in its own file and survives.
+                self.mod.save_json(self.args.state_file, self.mod.merge_scan({}, {}, self.now))
+                self.assertLessEqual(len(alerts), 1)
+        self.assertEqual(len(alerts), 1)
+        self.assertIn("HTTP 503", alerts[0])
+        ok = self.responses({self.API + "asternic/wuzapi/releases/latest": self.release("1.0.5")})
+        with self.brew_info(), patch.object(self.mod, "send_alert", side_effect=alerts.append):
+            state = self.mod.command_tap_lag(self.args, now=self.now, get=ok)
+        self.assertEqual(state["packages"]["asternic/wuzapi/wuzapi"]["failures"], 0)
+        self.assertEqual(len(alerts), 1)
+
+    def test_dry_run_writes_and_sends_nothing(self):
+        self.args.dry_run = True
+        get = self.responses({self.API + "asternic/wuzapi/releases/latest": self.release("v1.1.1")})
+        with self.brew_info(), patch.object(self.mod, "send_alert") as alert, \
+             contextlib.redirect_stdout(io.StringIO()) as out:
+            self.mod.command_tap_lag(self.args, now=self.now, get=get)
+        alert.assert_not_called()
+        self.assertFalse(self.args.tap_lag_state_file.exists())
+        self.assertFalse(self.args.log_dir.exists())
+        self.assertIn("lagging", out.getvalue())
+
+    def test_failed_alert_fails_the_scan_and_keeps_the_state(self):
+        get = self.responses({self.API + "asternic/wuzapi/releases/latest": self.release("v1.1.1")})
+        argv = ["--tap-lag-state-file", str(self.args.tap_lag_state_file),
+                "--tap-lag-exempt-file", str(self.exempt), "--log-dir", str(self.args.log_dir),
+                "--state-file", str(self.args.state_file), "scan"]
+        def get_or_fail(url):
+            if url not in (self.API + "asternic/wuzapi/releases/latest",):
+                raise AssertionError(url)
+            return get(url)
+        with self.brew_info(), \
+             patch.object(self.mod, "http_get", side_effect=get_or_fail) as fetch, \
+             patch.object(self.mod, "command_whatsmeow_scan"), \
+             patch.object(self.mod, "command_scan"), \
+             patch.object(self.mod, "send_alert", side_effect=RuntimeError("alert not delivered: down")), \
+             contextlib.redirect_stderr(io.StringIO()):
+            status = self.mod.main(argv)
+        self.assertEqual(status, 1)
+        fetch.assert_called_once()
+        saved = json.loads(self.args.tap_lag_state_file.read_text())
+        self.assertEqual(saved["packages"]["asternic/wuzapi/wuzapi"]["status"], "lagging")
+        log = "".join(p.read_text() for p in self.args.log_dir.glob("*.log"))
+        self.assertIn("error: alert not delivered: down", log)

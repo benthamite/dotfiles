@@ -23,6 +23,39 @@ Relative paths are under the dotfiles root, `~/repos/dotfiles/`. For
 Google account and auth details, read `google-services.md` in this
 directory.
 
+## Messaging channels: backend, client and agent tools
+
+One rule for every messaging channel (Pablo, 2026-11-19). Each channel has
+three parts: a backend that holds the connection and the history, Pablo's
+client, and the agent tools.
+
+1. Where the service's servers keep the history and accept many
+   connections (email, Slack, Telegram), the server is the backend. Pablo's
+   client and the agent tools connect on their own.
+2. Where the service allows only a few linked devices and history lives on
+   the device (Signal, WhatsApp), one daemon per account holds the only
+   connection and the history. It runs independently of Emacs and belongs to
+   neither side.
+3. Pablo's client is a full client. It talks to the backend and carries no
+   agent rules. What affects his contacts (read receipts, typing, presence)
+   and what history is kept are settings of the client, decided by him.
+4. The agent tools are a separate layer, and every agent rule lives there
+   only: approval before sending, the deny-list, the `[agent] ` prefix. They
+   read the backend's store and send through the backend.
+5. Protean opens a message in Pablo's client by the backend's message id.
+
+| Channel | Backend | Client | Agent tools |
+|---|---|---|---|
+| Email | Gmail (mirrored to Maildir) | mu4e | `gmail.py` |
+| Slack | Slack | emacs-slack | `slack.py` |
+| Telegram | Telegram | telega | none (Protean reads telega's data) |
+| Signal | signal-cli | sgn | `sgn-read` |
+| WhatsApp | wa-archive | wsp | `wa-read`, `wa-send`, `wa-fetch` |
+
+TODO: Signal's backend breaks rule 2: sgn starts signal-cli inside Emacs, so
+nothing arrives while sgn is closed (13 Oct to 2 Nov 2026). Run signal-cli as
+its own LaunchAgent and have sgn connect to it.
+
 ## Gmail
 
 Automated email to Pablo (Pablo, 2026-11-09): every email a job, script or

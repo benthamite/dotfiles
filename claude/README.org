@@ -71,6 +71,11 @@ prunes =~/.codex/sessions/=, and =history.jsonl= is trimmed only when
 The [[file:context/service-access.md][service routing table]] maps paper downloads and book candidate inspection to
 =paper-fetch=; its [[file:../docs/book-acquisition.md][book acquisition contract]] and shared bibliography policy
 keep the procedure and eligibility decisions in one place each.
+Its "Messaging channels" section (2026-11-19) holds the one rule for every
+messaging channel: a backend per account, Pablo's full client with no agent
+rules, and the agent tools, where every agent rule lives. It came from building
+wsp, the WhatsApp client on wa-archive, whose design had inherited the agent
+tools' restrictions; Signal's backend running inside Emacs is its open TODO.
 
 Per-project configuration belongs in =<project>/.claude/=. Repo-root
 =.claude/= directories are project-local and are never global symlink targets.

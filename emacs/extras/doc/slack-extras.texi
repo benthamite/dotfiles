@@ -35,6 +35,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Tab-bar notifications::
 * Credentials from Chrome::
 * Reachability before connecting::
+* Completing to-dos::
 * Indices::
 
 @detailmenu
@@ -68,6 +69,8 @@ Local ActivityWatch channel context for selected channel and thread buffers (@re
 A tab-bar notification element showing Slack unreads and mentions (@ref{Tab-bar notifications, , Tab-bar notifications}).
 @item
 Team registration with session credentials read from Chrome (@ref{Credentials from Chrome, , Credentials from Chrome}).
+@item
+Completing a Slack to-do when the Protean task made from it is closed (@ref{Completing to-dos, , Completing to-dos}).
 @end itemize
 
 The package depends on @samp{slack} and @samp{ol}.
@@ -139,6 +142,21 @@ The function @code{slack-extras-chrome-credentials} runs @code{slack-extras-chro
 On macOS@comma{} opening a websocket resolves its host on Emacs's main thread@comma{} so a reconnect while the resolver is slow freezes Emacs. @samp{slack-extras} therefore advises @code{slack-ws-open} to check first@comma{} from a subprocess with @code{simple-extras-probe-url} (see the @samp{simple-extras} manual)@comma{} whether the websocket host answers. Only the host is probed@comma{} never the URL's token. If the host answers@comma{} the websocket opens as before. If not@comma{} the open is skipped and @code{slack-ws-reconnect} schedules another attempt@comma{} with its usual backoff and attempt limit.
 
 Only one probe per team runs at a time; an open requested meanwhile is dropped. When the probe ends@comma{} the open is also dropped@comma{} with no reconnect@comma{} if the team was unregistered or replaced@comma{} reconnection was turned off@comma{} the websocket got connected@comma{} or another connection attempt was made in the meantime.
+
+@node Completing to-dos
+@chapter Completing to-dos
+
+A message marked with Slack's ``Add to to-do'' becomes a task through Protean@comma{} whose task carries the properties @samp{PROTEAN_SLACK_WORKSPACE}@comma{} @samp{PROTEAN_SLACK_CHANNEL}@comma{} @samp{PROTEAN_SLACK_TS} and @samp{PROTEAN_SLACK_MARK} (the mark's creation time@comma{} which tells a later re-mark of the same message apart). This section closes the loop: when the task is closed in Org@comma{} the to-do is completed in Slack. Protean's engine never writes to Slack@comma{} so the write happens here.
+
+@findex slack-extras-protean-todo-closed
+The function @code{slack-extras-protean-todo-closed} belongs on @code{protean-user-closed-functions}@comma{} which runs only for a closure the user made and saved@comma{} never for one Protean's own code made. For a task with all four properties it adds the to-do to a queue and starts completing it; any other task is ignored.
+
+@findex slack-extras-todo-flush
+@vindex slack-extras-todo-queue-file
+@vindex slack-extras-slack-program
+@vindex slack-extras-todo-retry-seconds
+@vindex slack-extras-todo-timeout-seconds
+The queue lives in @code{slack-extras-todo-queue-file}@comma{} so it survives a restart. @code{slack-extras-todo-flush} runs @code{slack-extras-slack-program} (@samp{claude/bin/slack.py -w WORKSPACE complete-todo CHANNEL TS --mark=MARK}) asynchronously for each queued to-do. That command lists every page of the workspace's saved items and completes the to-do@comma{} as Slack's own client does@comma{} only if the message is still a to-do with the same mark; a to-do already completed or removed@comma{} turned into a plain saved item@comma{} or marked again is left alone. Either way the entry leaves the queue. A failure@comma{} or an attempt still running after @code{slack-extras-todo-timeout-seconds}@comma{} leaves it queued@comma{} says so in the echo area@comma{} and a timer tries again every @code{slack-extras-todo-retry-seconds} while the queue holds entries. Call @code{slack-extras-todo-flush} after startup to resume a queue left by an earlier session.
 
 @node Indices
 @chapter Indices

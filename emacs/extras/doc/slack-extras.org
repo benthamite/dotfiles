@@ -24,6 +24,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 - Local ActivityWatch channel context for selected channel and thread buffers ([[#h:activity-watch][ActivityWatch context]]).
 - A tab-bar notification element showing Slack unreads and mentions ([[#h:tab-bar-notifications][Tab-bar notifications]]).
 - Team registration with session credentials read from Chrome ([[#h:chrome-credentials][Credentials from Chrome]]).
+- Completing a Slack to-do when the Protean task made from it is closed ([[#h:completing-todos][Completing to-dos]]).
 
 The package depends on =slack= and =ol=.
 
@@ -104,6 +105,23 @@ The function ~slack-extras-chrome-credentials~ runs ~slack-extras-chrome-program
 On macOS, opening a websocket resolves its host on Emacs's main thread, so a reconnect while the resolver is slow freezes Emacs. =slack-extras= therefore advises ~slack-ws-open~ to check first, from a subprocess with ~simple-extras-probe-url~ (see the =simple-extras= manual), whether the websocket host answers. Only the host is probed, never the URL's token. If the host answers, the websocket opens as before. If not, the open is skipped and ~slack-ws-reconnect~ schedules another attempt, with its usual backoff and attempt limit.
 
 Only one probe per team runs at a time; an open requested meanwhile is dropped. When the probe ends, the open is also dropped, with no reconnect, if the team was unregistered or replaced, reconnection was turned off, the websocket got connected, or another connection attempt was made in the meantime.
+
+* Completing to-dos
+:PROPERTIES:
+:CUSTOM_ID: h:completing-todos
+:END:
+
+A message marked with Slack's "Add to to-do" becomes a task through Protean, whose task carries the properties =PROTEAN_SLACK_WORKSPACE=, =PROTEAN_SLACK_CHANNEL=, =PROTEAN_SLACK_TS= and =PROTEAN_SLACK_MARK= (the mark's creation time, which tells a later re-mark of the same message apart). This section closes the loop: when the task is closed in Org, the to-do is completed in Slack. Protean's engine never writes to Slack, so the write happens here.
+
+#+findex: slack-extras-protean-todo-closed
+The function ~slack-extras-protean-todo-closed~ belongs on ~protean-user-closed-functions~, which runs only for a closure the user made and saved, never for one Protean's own code made. For a task with all four properties it adds the to-do to a queue and starts completing it; any other task is ignored.
+
+#+findex: slack-extras-todo-flush
+#+vindex: slack-extras-todo-queue-file
+#+vindex: slack-extras-slack-program
+#+vindex: slack-extras-todo-retry-seconds
+#+vindex: slack-extras-todo-timeout-seconds
+The queue lives in ~slack-extras-todo-queue-file~, so it survives a restart. ~slack-extras-todo-flush~ runs ~slack-extras-slack-program~ (=claude/bin/slack.py -w WORKSPACE complete-todo CHANNEL TS --mark=MARK=) asynchronously for each queued to-do. That command lists every page of the workspace's saved items and completes the to-do, as Slack's own client does, only if the message is still a to-do with the same mark; a to-do already completed or removed, turned into a plain saved item, or marked again is left alone. Either way the entry leaves the queue. A failure, or an attempt still running after ~slack-extras-todo-timeout-seconds~, leaves it queued, says so in the echo area, and a timer tries again every ~slack-extras-todo-retry-seconds~ while the queue holds entries. Call ~slack-extras-todo-flush~ after startup to resume a queue left by an earlier session.
 
 * Indices
 :PROPERTIES:

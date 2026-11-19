@@ -516,6 +516,7 @@ The extras come with their own manuals and user options: everything is documente
   - [[#telega-extras][telega-extras]]
   - [[#ol-telega][ol-telega]]
   - [[#sgn][sgn]]
+  - [[#wsp][wsp]]
   - [[#wasabi][wasabi]]
   - [[#ement][ement]]
   - [[#erc][erc]]
@@ -14195,6 +14196,22 @@ functions after it."
       (error (message "sgn: Signal did not start: %s"
                       (error-message-string err)))))
   (add-hook 'elpaca-after-init-hook #'init-sgn-start 90))
+#+end_src
+
+** =wsp=
+:PROPERTIES:
+:ID:       A6B14B6C-3D27-4F22-B423-61248A2EA164
+:END:
+
+/[[https://github.com/benthamite/wsp][wsp]] is a WhatsApp client for Emacs on wa-archive./
+
+wa-archive (=~/repos/wa-archive=) holds the WhatsApp connection and the history; wsp reads its store and acts through its local API, as sgn does with signal-cli. The repository is private.
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-package wsp
+  :ensure (:host github
+           :repo "benthamite/wsp")
+  :defer t)
 #+end_src
 
 ** =wasabi=

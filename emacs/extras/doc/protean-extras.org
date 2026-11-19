@@ -1,0 +1,57 @@
+#+title: protean-extras: Open Protean's messages in their own clients
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: protean-extras.info
+#+texinfo_filename: protean-extras.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Protean Extras: (protean-extras)
+#+texinfo_dir_desc: Open Protean's messages in their own clients
+
+This manual describes the features and customization options for the Emacs Lisp file =protean-extras.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+Protean's inbox shows, beside the line at point, the task above and the message it is about below (Protean's manual, "The preview"). Protean names no client: it asks the functions of ~protean-message-open-functions~ to open the message. =protean-extras.el= provides one such function per channel I read in Emacs, each of which prepares its client's buffer at the message and hands it to Protean without displaying anything itself:
+
+| Channel  | Function                         | Client                                   |
+|----------+----------------------------------+------------------------------------------|
+| email    | ~protean-extras-open-email~      | mu4e's renderer, in a buffer of its own   |
+| Slack    | ~protean-extras-open-slack~      | emacs-slack, the room or the thread      |
+| Signal   | ~protean-extras-open-signal~     | sgn (~sgn-message-buffer~)               |
+| Telegram | ~protean-extras-open-telegram~   | telega                                   |
+
+WhatsApp has none yet: Protean shows its own view of those messages, saying so, until wsp can open a message.
+
+~protean-extras-openers~ lists the four, for ~protean-message-open-functions~.
+
+* Email
+:PROPERTIES:
+:CUSTOM_ID: h:email
+:END:
+
+#+findex: protean-extras-open-email
+~protean-extras-open-email~ finds the message by its Message-ID with =mu find=, and renders its file in =*Protean mail*= with mu4e's own renderer, in ~mu4e-view-mode~, so that it reads as in mu4e. mu4e's view and headers buffers are left as they are, and the message's flags are not changed. A Message-ID mu does not know is an error, which Protean shows as the reason for its own view.
+
+* Slack
+:PROPERTIES:
+:CUSTOM_ID: h:slack
+:END:
+
+#+findex: protean-extras-open-slack
+#+vindex: protean-extras-slack-teams
+~protean-extras-open-slack~ opens the message's room at it, or, for a reply in a thread, the thread, and hands over the buffer once the message is loaded. The team is the one ~protean-extras-slack-teams~ names for the message's Protean account, an alist of (ACCOUNT . TEAM-NAME); it must be registered and connected. An account with no team, a team not connected and a room emacs-slack does not know are errors.
+
+* Signal and Telegram
+:PROPERTIES:
+:CUSTOM_ID: h:signal-telegram
+:END:
+
+#+findex: protean-extras-open-signal
+#+findex: protean-extras-open-telegram
+~protean-extras-open-signal~ hands over sgn's chat buffer at the message (~sgn-message-buffer~). ~protean-extras-open-telegram~ hands over telega's chat buffer once telega has gone to the message; Telegram must be running.

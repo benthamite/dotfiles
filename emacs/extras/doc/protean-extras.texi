@@ -1,0 +1,84 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename protean-extras.info
+@settitle protean-extras: Open Protean's messages in their own clients
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Protean Extras: (protean-extras). Open Protean's messages in their own clients.
+@end direntry
+
+@finalout
+@titlepage
+@title protean-extras: Open Protean's messages in their own clients
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top protean-extras: Open Protean's messages in their own clients
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{protean-extras.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* Email::
+* Slack::
+* Signal and Telegram::
+@end menu
+
+@node Overview
+@chapter Overview
+
+Protean's inbox shows@comma{} beside the line at point@comma{} the task above and the message it is about below (Protean's manual@comma{} ``The preview''). Protean names no client: it asks the functions of @code{protean-message-open-functions} to open the message. @samp{protean-extras.el} provides one such function per channel I read in Emacs@comma{} each of which prepares its client's buffer at the message and hands it to Protean without displaying anything itself:
+
+@multitable {aaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Channel
+@tab Function
+@tab Client
+@item email
+@tab @code{protean-extras-open-email}
+@tab mu4e's renderer@comma{} in a buffer of its own
+@item Slack
+@tab @code{protean-extras-open-slack}
+@tab emacs-slack@comma{} the room or the thread
+@item Signal
+@tab @code{protean-extras-open-signal}
+@tab sgn (@code{sgn-message-buffer})
+@item Telegram
+@tab @code{protean-extras-open-telegram}
+@tab telega
+@end multitable
+
+WhatsApp has none yet: Protean shows its own view of those messages@comma{} saying so@comma{} until wsp can open a message.
+
+@code{protean-extras-openers} lists the four@comma{} for @code{protean-message-open-functions}.
+
+@node Email
+@chapter Email
+
+@findex protean-extras-open-email
+@code{protean-extras-open-email} finds the message by its Message-ID with @samp{mu find}@comma{} and renders its file in @samp{*Protean mail*} with mu4e's own renderer@comma{} in @code{mu4e-view-mode}@comma{} so that it reads as in mu4e. mu4e's view and headers buffers are left as they are@comma{} and the message's flags are not changed. A Message-ID mu does not know is an error@comma{} which Protean shows as the reason for its own view.
+
+@node Slack
+@chapter Slack
+
+@findex protean-extras-open-slack
+@vindex protean-extras-slack-teams
+@code{protean-extras-open-slack} opens the message's room at it@comma{} or@comma{} for a reply in a thread@comma{} the thread@comma{} and hands over the buffer once the message is loaded. The team is the one @code{protean-extras-slack-teams} names for the message's Protean account@comma{} an alist of (ACCOUNT . TEAM-NAME); it must be registered and connected. An account with no team@comma{} a team not connected and a room emacs-slack does not know are errors.
+
+@node Signal and Telegram
+@chapter Signal and Telegram
+
+@findex protean-extras-open-signal
+@findex protean-extras-open-telegram
+@code{protean-extras-open-signal} hands over sgn's chat buffer at the message (@code{sgn-message-buffer}). @code{protean-extras-open-telegram} hands over telega's chat buffer once telega has gone to the message; Telegram must be running.
+
+@bye

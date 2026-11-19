@@ -10050,7 +10050,30 @@ does not exist."
     (add-hook 'agent-decision-task-functions #'protean-decision-task)
     (add-hook 'agent-decision-functions #'protean-decision-changed)
     (add-hook 'agent-decision-draft-functions #'protean-decision-draft)
-    (setopt agent-decision-comment-function #'protean-decision-comment)))
+    (setopt agent-decision-comment-function #'protean-decision-comment))
+  ;; The inbox's preview (plan of 19 Nov 2026, inbox preview): above, what
+  ;; the task's session last reported, in agent.el's words.
+  (add-hook 'protean-task-report-functions #'agent-auto-task-report))
+#+end_src
+
+** =protean-extras=
+:PROPERTIES:
+:ID:       15499D3A-50ED-4FF1-9F74-06E995B6AECA
+:END:
+
+/[[file:extras/protean-extras.el][protean-extras]] opens a message of Protean's inbox preview in its own client: email rendered as mu4e renders it, Slack in emacs-slack, Signal in sgn, Telegram in telega. WhatsApp shows Protean's own view until wsp can open a message./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package protean-extras
+  :after protean
+  :demand t
+  :custom
+  ;; Protean's Slack accounts and my emacs-slack teams.
+  (protean-extras-slack-teams '(("epoch" . "Epoch AI")
+                                ("forethought" . "Forethought")
+                                ("baish" . "BAISH")))
+  :config
+  (setq protean-message-open-functions (copy-sequence protean-extras-openers)))
 #+end_src
 
 ** =monet=
@@ -11448,6 +11471,8 @@ Enable speed keys. To trigger a speed key, point must be at the very beginning o
      ("c" . (org-copy-subtree))
      ("v" . (org-yank))
      ("Other")
+     ;; Answer the task's decision (agent.el), as Y does in the inbox.
+     ("Y" . (agent-decide))
      ("I" . (org-id-copy))
      ("p" . (org-priority))
      ("u" . (org-speed-command-help))

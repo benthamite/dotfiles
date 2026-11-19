@@ -66,7 +66,10 @@ never changes what `delayed` or `fast-brew` installs.
    URL.
 3. Upstream version: `GET https://api.github.com/repos/OWNER/REPO/releases/latest`
    (excludes drafts and prereleases). If the repository has no release (404),
-   the highest version-like tag from `/tags`. Requests go through
+   the highest version-like tag from `/tags`, read page by page
+   (`per_page=100`, following `Link: rel="next"`, at most 10 pages); a page
+   that fails, or a tenth page that still has a next link, makes the whole
+   check a fetch failure, never a "current" result. Requests go through
    `/usr/bin/curl`, unauthenticated (no credential; about six requests a day
    against a 60/hour limit), 20 s timeout.
 4. Compare with the tap's version (`versions.stable`, cask `version`) after
@@ -74,7 +77,8 @@ never changes what `delayed` or `fast-brew` installs.
    Upstream strictly greater means the tap lags.
 5. One alert per scan through `launchd-heartbeat alert personal-updates`
    listing every lagging package: name, tap version, upstream version and
-   its date, the upstream URL, and the action ("the tap has not caught up;
+   its date (the release's `published_at`; for a tag result "date
+   unavailable", never a commit date), the upstream URL, and the action ("the tap has not caught up;
    upgrade by hand or switch source"). The Worker's noise rules already send a
    repeated text once and log it for 7 days. No lag, no alert.
 6. Uncheckable package (no GitHub URL, no release or version-like tag,
@@ -85,7 +89,10 @@ never changes what `delayed` or `fast-brew` installs.
    "nothing to do, no alert" rule, a transient failure is not alerted; a
    package whose check has failed on 3 consecutive scans is alerted under
    "cannot check". The streak lives in `state.json` under `tap_lag`, together
-   with the last result per package; a success resets it.
+   with the last result per package; a success resets it. `merge_scan`
+   rebuilds state from the update kinds only, and both `scan` and `delayed`
+   save that rebuilt state, so both carry `tap_lag` over unchanged (no
+   change to what either installs).
 8. Alert delivery failure makes `scan` exit 1 with the error logged, as other
    alert sends in the script do.
 9. `--dry-run` prints the findings as JSON and sends nothing, writes nothing.
@@ -102,7 +109,12 @@ never changes what `delayed` or `fast-brew` installs.
 Pure functions with injected `brew info` JSON and fake HTTP responses:
 third-party filtering and exemptions; repository extraction from each URL
 field; release, tag fallback, prerelease exclusion; lag/no-lag/incomparable;
-failure streak reaching 3 and resetting; alert text; dry run writes nothing.
+failure streak reaching 3 and resetting, including three failing scans with
+a `delayed` run between them; tag pagination with the highest version on a
+later page, and an incomplete page sequence counted as a failure; the
+tag-result alert showing "date unavailable"; alert text; dry run writes
+nothing; a failing alert command through `scan` giving exit 1, a logged
+error, and the detection state still saved.
 
 ### Verification
 
@@ -138,7 +150,10 @@ its own, which the gate never asked for (hook output at 11:32:45). The extra
   Package labels stay rejected.
 - After a passing run, `elisp-evidence record-test` (now taking several
   labels) checks the snapshot digest once and appends one record per label,
-  all carrying the same snapshot, under one lock. The store format, `covers`,
+  all carrying the same snapshot, under one lock. Retention keeps the whole
+  new batch even when it exceeds the 200-record limit (older records are
+  dropped first; the limit becomes max(200, batch size) for that write). The
+  store format, `covers`,
   pre-commit, post-commit debts and the Stop hook are unchanged: each label's
   record still has to match the exact staged (or committed) contents of every
   path it covers.
@@ -157,6 +172,7 @@ its own, which the gate never asked for (hook output at 11:32:45). The extra
 - A failing check records nothing for any label; a mid-run source change
   records nothing for any label.
 - `--staged` with several labels.
+- A run naming more than 200 labels keeps evidence for all of them.
 - Hook message lists the labels in one command.
 
 ### Verification
@@ -167,6 +183,13 @@ agent session id with `AGENT_ELISP_EVIDENCE_CHECK_TEMP=1` and a scratch
 `AGENT_ELISP_EVIDENCE_DIR`: the commit is refused with a single suggested
 command, passes after one run of it, and is refused again after editing one
 file post-run.
+
+## Review adjudication (Codex, run 9d7b0500)
+
+All five findings accepted as defects and folded in above: `tap_lag` lost by
+`merge_scan` between scans; `/tags` pagination; no date for tag results;
+200-record retention dropping part of a large batch; untested alert-delivery
+failure. None changes a fixed decision.
 
 ## Decisions (fixed)
 

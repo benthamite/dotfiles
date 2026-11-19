@@ -14452,7 +14452,13 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
                     (lambda ()
                       (cons (auth-source-extras-op-get "slack-becas-aisar" "token")
                             (auth-source-extras-op-get "slack-becas-aisar" "cookie"))))))
-  (slack-extras-register-teams))
+  (slack-extras-register-teams)
+  ;; A Slack to-do that became a Protean task is completed in Slack when I
+  ;; close the task (Pablo, 19 Nov 2026; plan:
+  ;; ~/repos/notes/protean/plan-2026-11-19-slack-todos.md).  The queue a
+  ;; previous session left is retried at startup.
+  (add-hook 'protean-user-closed-functions #'slack-extras-protean-todo-closed)
+  (slack-extras-todo-flush))
 #+end_src
 
 ** =ol-emacs-slack=

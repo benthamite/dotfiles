@@ -513,6 +513,8 @@ Every =.el= file, including a throwaway script loaded into a live Emacs, starts
 with a =lexical-binding= cookie, since Emacs 31 warns on each load without one. The
 guard policy =elisp_cookie= enforces this for new files, heredocs included
 (=claude/hooks/README.org=).
+Such a script cancels its timers and removes its hooks and advice before it
+unbinds its symbols, so no pending timer fires against them afterwards.
 
 The documentation guard reads generated-output declarations from the proposed
 commit's manual bytes, including explicit selections and inherited amendments.

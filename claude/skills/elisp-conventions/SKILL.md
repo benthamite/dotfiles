@@ -32,6 +32,13 @@ refreshed.
 - Start every `.el` file with a `lexical-binding: t` cookie on its first line,
   including throwaway scripts loaded into a live Emacs. Emacs 31 warns each
   time it loads a file without one.
+- A throwaway script loaded into a live Emacs must undo its own setup before
+  it is removed. First cancel its timers with `cancel-timer`, and remove any
+  hooks, advice and `add-function` wrappers it added. Only then run
+  `fmakunbound` and `makunbound` on its symbols. To make the timers findable,
+  keep every timer the script starts in one variable. Otherwise a pending
+  timer fires later against unbound symbols and opens the debugger in Pablo's
+  Emacs (`void-variable restore--current`, 2026-11-19).
 - Add comments only when the code cannot make the reason clear.
 - Keep the echo area for things the user must see. Code that runs without a
   command (hooks, timers, sentinels) logs routine progress and success to

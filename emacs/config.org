@@ -10020,6 +10020,9 @@ does not exist."
   ;; agent marked it and its sender is known.
   (with-eval-after-load 'agent-auto
     (add-hook 'agent-auto-eligible-functions #'protean-auto-eligible-p)
+    ;; A task made from a message starts unattended only on text I approved,
+    ;; shown in full first (Pablo, 19 Nov 2026; Protean plan-2026-11-19-architecture.md, R2).
+    (add-hook 'agent-auto-approval-functions #'protean-auto-approval-required-p)
     ;; A task a closing session left waiting comes back when Protean says
     ;; its wait is over.
     (add-hook 'agent-auto-wait-over-functions #'protean-wait-over-p))

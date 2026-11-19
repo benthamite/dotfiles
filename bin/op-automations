@@ -3,12 +3,13 @@
 #
 # Usage: op-automations [@ACCOUNT] OP-ARGS...
 #
-# Without @ACCOUNT the service account is Epoch's Automations one; @personal
-# and @tlon select the read-only service accounts of those 1Password accounts'
-# "Automation" vaults.  Every token lives in the login Keychain as a generic
-# password named op-service-account/ACCOUNT-automation.  Epoch reads reuse an
-# inherited OP_SERVICE_ACCOUNT_TOKEN, which Epoch tools set; @personal and
-# @tlon ignore it, so that another account's token is never used by mistake.
+# Without @ACCOUNT the service account is Epoch's Automations one; @personal,
+# @tlon and @forethought select the read-only service accounts of those
+# 1Password accounts' "Automation" vaults.  Every token lives in the login
+# Keychain as a generic password named op-service-account/ACCOUNT-automation.
+# Epoch reads reuse an inherited OP_SERVICE_ACCOUNT_TOKEN, which Epoch tools
+# set; the other accounts ignore it, so that another account's token is never
+# used by mistake.
 
 set -euo pipefail
 
@@ -19,7 +20,7 @@ if [[ "${1:-}" == @* ]]; then
 fi
 
 case "$account" in
-  epoch | personal | tlon) ;;
+  epoch | personal | tlon | forethought) ;;
   *)
     printf 'op-automations: unknown account @%s\n' "$account" >&2
     exit 2

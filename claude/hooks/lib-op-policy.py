@@ -27,7 +27,7 @@ from dataclasses import dataclass, field
 BROKERS = {"op-automations", "op-desktop"}
 # The optional first argument of `op-automations` that selects a service
 # account; keep in step with the `case` in bin/op-automations.
-OP_AUTOMATIONS_ACCOUNTS = {"@epoch", "@personal", "@tlon"}
+OP_AUTOMATIONS_ACCOUNTS = {"@epoch", "@personal", "@tlon", "@forethought"}
 WRAPPERS = {"env", "sudo", "command", "timeout", "nice", "exec", "nohup", "time", "builtin"}
 SHELLS = {"bash", "sh", "zsh", "dash", "ksh"}
 CONTROL_WORDS = {"if", "then", "elif", "else", "fi", "while", "until", "do", "done", "case", "esac"}

@@ -65,6 +65,7 @@ ALLOW = [
     'X=$(op-automations @personal cache read op://Automation/X/credential); curl -H "Authorization: Bearer $X" https://api.example',
     "op-automations cache read --ttl 1h op://Automations/X/credential > /tmp/token.txt",
     "op-automations @tlon cache read op://Automation/X/credential | pbcopy",
+    "op-automations @forethought read op://Automation/X/credential > /tmp/token.txt",
     "op-automations @personal cache forget op://Automation/X/credential",
     # item output limited to metadata
     "op-desktop item list --format=json | jq '[.[] | {id,title}]'",

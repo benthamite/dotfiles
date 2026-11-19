@@ -106,6 +106,13 @@ class OpAutomationsTest(unittest.TestCase):
         self.assertIn("op-service-account/tlon-automation", result.stderr)
         self.assertNotIn("op-args:", calls)
 
+    def test_forethought_selector_reads_its_own_keychain_token(self):
+        result, calls = self.run_wrapper(prefix=("@forethought",), inherited_token="epoch-token")
+
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("-s op-service-account/forethought-automation -w", calls)
+        self.assertIn("op-token:keychain-token", calls)
+
     def test_unknown_account_selector_is_rejected(self):
         result, calls = self.run_wrapper(prefix=("@nosuch",))
 

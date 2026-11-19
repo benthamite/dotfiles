@@ -55,6 +55,11 @@ Usage:
       Fetch one response from the internal saved.list endpoint.
   slack.py unsave <channel-id> <ts>
       Remove that exact message from Later using internal saved.delete.
+  slack.py complete-todo <channel-id> <ts> --mark=<date_created>
+      Mark that message's to-do completed (internal saved.update, as Slack's
+      web client does), only if it is still a to-do created at <date_created>.
+      Prints {"status": completed|absent|not-todo|remarked}; exit 0 means
+      settled, nonzero means retry.
   slack.py send (--permalink <url> | --channel <id> [--thread-ts <ts>]) (--text <text> | --stdin) [--rich]
       Post a message Pablo approved, as him (chat.postMessage). --permalink
       replies in that message's thread; --channel posts at top level unless
@@ -991,6 +996,50 @@ def cmd_saved_list(args):
     print(json.dumps(out, indent=2))
 
 
+def _saved_items():
+    """Every uncompleted saved item, from a complete paged saved.list."""
+    items, cursor, seen = [], "", set()
+    while True:
+        params = {"limit": 50}
+        if cursor:
+            params["cursor"] = cursor
+        out = call("saved.list", **params)
+        page = out.get("saved_items")
+        if not isinstance(page, list):
+            _fail("saved.list returned no saved_items list")
+        items.extend(page)
+        cursor = (out.get("response_metadata") or {}).get("next_cursor") or ""
+        if not cursor:
+            return items
+        if cursor in seen:
+            _fail("saved.list repeated a cursor")
+        seen.add(cursor)
+
+
+def cmd_complete_todo(args):
+    """Complete a message's to-do if it is still the same mark.
+    The mark is Slack's date_created for the item, so a message marked again
+    after completion is a different mark and is left alone."""
+    if not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
+        _fail("complete-todo requires an exact channel ID")
+    if not re.fullmatch(r"[0-9]+\.[0-9]{6}", args.ts):
+        _fail("complete-todo requires an exact message timestamp")
+    match = [i for i in _saved_items()
+             if i.get("item_type") == "message" and i.get("item_id") == args.channel
+             and i.get("ts") == args.ts]
+    if not match:
+        status = "absent"
+    elif match[0].get("todo_state") != "to_do":
+        status = "not-todo"
+    elif str(match[0].get("date_created")) != str(args.mark):
+        status = "remarked"
+    else:
+        call("saved.update", item_type="message", item_id=args.channel,
+             ts=args.ts, mark="completed")
+        status = "completed"
+    print(json.dumps({"status": status, "channel": args.channel, "ts": args.ts}))
+
+
 def cmd_unsave(args):
     """Remove a "Save for later" item (internal saved.delete endpoint).
     For message items, item_id is the CHANNEL id and ts the message ts."""
@@ -1244,6 +1293,12 @@ def main():
     un.add_argument("channel")
     un.add_argument("ts")
     un.set_defaults(func=cmd_unsave)
+
+    ct = sub.add_parser("complete-todo")
+    ct.add_argument("channel")
+    ct.add_argument("ts")
+    ct.add_argument("--mark", required=True)
+    ct.set_defaults(func=cmd_complete_todo)
 
     se = sub.add_parser("send", help="post a message Pablo approved, as him")
     target = se.add_mutually_exclusive_group(required=True)

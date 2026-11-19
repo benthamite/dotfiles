@@ -145,7 +145,29 @@ if [ -n "$deleted_package" ]; then
     exit 1
   fi
 elif [ "$repo" = "$dotfiles_root" ] && [ -f "$repo/emacs/extras/$package_id.el" ]; then
-  "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$package_id"
+  # A new extras package has no Elpaca entry until the running Emacs has
+  # read the config that declares it, so Elpaca cannot rebuild it.  Its
+  # committed source, which is what Elpaca would build, is loaded instead,
+  # and the run says so.
+  registered=$(timeout 10 emacsclient --eval \
+    "(and (fboundp 'elpaca-get) (elpaca-get '$package_id) t)" 2>/dev/null) || {
+    echo "Cannot ask the running Emacs about $package_id" >&2
+    exit 1
+  }
+  if [ "$registered" = t ]; then
+    "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$package_id"
+  else
+    source_b64=$(printf '%s' "$repo/emacs/extras/$package_id.el" | base64 | tr -d '\n')
+    loaded=$(timeout 30 emacsclient --eval "(progn (load (decode-coding-string (base64-decode-string \"$source_b64\") 'utf-8) nil t) (and (featurep '$package_id) t))") || {
+      echo "Cannot load $package_id from its source" >&2
+      exit 1
+    }
+    if [ "$loaded" != t ]; then
+      echo "Loading $package_id from its source did not provide it" >&2
+      exit 1
+    fi
+    echo "elisp-live-verify: $package_id is not declared in the running Emacs yet; loaded its committed source instead of an Elpaca rebuild"
+  fi
 elif [[ "$label" != file:* ]]; then
   DOTFILES_ROOT="$dotfiles_root" \
     "$dotfiles_root/claude/bin/elpaca-rebuild-wait" "$package_id"

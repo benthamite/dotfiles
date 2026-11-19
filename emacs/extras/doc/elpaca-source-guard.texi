@@ -1,0 +1,52 @@
+\input texinfo    @c -*- texinfo -*-
+@c %**start of header
+@setfilename elpaca-source-guard.info
+@settitle elpaca-source-guard: Keep Elpaca from deleting checkouts it does not own
+@documentencoding UTF-8
+@documentlanguage en
+@c %**end of header
+
+@dircategory Emacs misc features
+@direntry
+* Elpaca Source Guard: (elpaca-source-guard). Keep Elpaca from deleting checkouts it does not own.
+@end direntry
+
+@finalout
+@titlepage
+@title elpaca-source-guard: Keep Elpaca from deleting checkouts it does not own
+@author Pablo Stafforini (@email{pablo@@stafforini.com})
+@end titlepage
+
+@contents
+
+@ifnottex
+@node Top
+@top elpaca-source-guard: Keep Elpaca from deleting checkouts it does not own
+
+This manual describes the features and customization options for the Emacs Lisp file @samp{elpaca-source-guard.el}.
+
+@end ifnottex
+
+@menu
+* Overview::
+* The guard::
+@end menu
+
+@node Overview
+@chapter Overview
+
+@code{elpaca-delete} removes a package's build directory and@comma{} recursively@comma{} its source directory. For most packages the source directory is Elpaca's own clone under @code{elpaca-sources-directory}. For a recipe whose @samp{:repo} is a local path@comma{} though@comma{} Elpaca builds the package in place@comma{} and the source directory is that checkout itself: Protean's package@comma{} for instance@comma{} is built from @samp{~/repos/protean}@comma{} the checkout its engine runs from. Deleting the package would delete the engine's checkout with it@comma{} unpushed branches included@comma{} and not to the trash.
+
+@samp{elpaca-source-guard.el} makes Elpaca refuse that.
+
+@node The guard
+@chapter The guard
+
+@findex elpaca-source-guard-mode
+@findex elpaca-source-guard-refuse
+@findex elpaca-source-guard-owned-p
+The global minor mode @code{elpaca-source-guard-mode} runs @code{elpaca-source-guard-refuse} before Elpaca's deletion (@code{elpaca--delete}@comma{} which @code{elpaca-delete} calls once you confirm). It signals an error@comma{} and Elpaca deletes nothing@comma{} neither source nor build@comma{} when the package's source directory lies outside @code{elpaca-sources-directory}. @code{elpaca-source-guard-owned-p} compares the two by their true names@comma{} so a link under the sources directory to a checkout elsewhere does not pass for one of Elpaca's own. Packages whose source is Elpaca's own clone are deleted as before.
+
+To remove a package built in place@comma{} take its declaration out of the configuration and delete its build directory; the checkout stays where it is.
+
+@bye

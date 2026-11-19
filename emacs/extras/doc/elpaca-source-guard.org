@@ -1,0 +1,34 @@
+#+title: elpaca-source-guard: Keep Elpaca from deleting checkouts it does not own
+#+author: Pablo Stafforini
+#+email: pablo@stafforini.com
+#+language: en
+#+options: ':t toc:t author:t email:t num:t
+#+startup: content
+#+export_file_name: elpaca-source-guard.info
+#+texinfo_filename: elpaca-source-guard.info
+#+texinfo_dir_category: Emacs misc features
+#+texinfo_dir_title: Elpaca Source Guard: (elpaca-source-guard)
+#+texinfo_dir_desc: Keep Elpaca from deleting checkouts it does not own
+
+This manual describes the features and customization options for the Emacs Lisp file =elpaca-source-guard.el=.
+
+* Overview
+:PROPERTIES:
+:CUSTOM_ID: h:overview
+:END:
+
+~elpaca-delete~ removes a package's build directory and, recursively, its source directory. For most packages the source directory is Elpaca's own clone under ~elpaca-sources-directory~. For a recipe whose =:repo= is a local path, though, Elpaca builds the package in place, and the source directory is that checkout itself: Protean's package, for instance, is built from =~/repos/protean=, the checkout its engine runs from. Deleting the package would delete the engine's checkout with it, unpushed branches included, and not to the trash.
+
+=elpaca-source-guard.el= makes Elpaca refuse that.
+
+* The guard
+:PROPERTIES:
+:CUSTOM_ID: h:guard
+:END:
+
+#+findex: elpaca-source-guard-mode
+#+findex: elpaca-source-guard-refuse
+#+findex: elpaca-source-guard-owned-p
+The global minor mode ~elpaca-source-guard-mode~ runs ~elpaca-source-guard-refuse~ before Elpaca's deletion (~elpaca--delete~, which ~elpaca-delete~ calls once you confirm). It signals an error, and Elpaca deletes nothing, neither source nor build, when the package's source directory lies outside ~elpaca-sources-directory~. ~elpaca-source-guard-owned-p~ compares the two by their true names, so a link under the sources directory to a checkout elsewhere does not pass for one of Elpaca's own. Packages whose source is Elpaca's own clone are deleted as before.
+
+To remove a package built in place, take its declaration out of the configuration and delete its build directory; the checkout stays where it is.

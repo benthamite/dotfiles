@@ -1087,6 +1087,20 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
   (elpaca-extras-write-lock-file-excluded '(tlon protean)))
 #+end_src
 
+** =elpaca-source-guard=
+:PROPERTIES:
+:ID:       0C28F087-3670-4EBA-BC20-090502D99378
+:END:
+
+/[[file:extras/elpaca-source-guard.el][elpaca-source-guard]] makes =elpaca-delete= refuse to delete a package whose source is outside Elpaca's sources directory: for a package built in place from a local =:repo=, such as Protean from =~/repos/protean=, that source is the checkout itself./
+
+#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
+(use-personal-package elpaca-source-guard
+  :demand t
+  :config
+  (elpaca-source-guard-mode))
+#+end_src
+
 * foundational
 :PROPERTIES:
 :ID:       B2CADEA2-F8B7-4E8E-8FB0-D6B59658933D

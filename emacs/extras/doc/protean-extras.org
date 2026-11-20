@@ -48,6 +48,15 @@ The same clients take a task's draft as a reply, for Protean's =R= (Protean's ma
 #+vindex: protean-extras-slack-teams
 ~protean-extras-open-slack~ opens the message's room at it, or, for a reply in a thread, the thread, and hands over the buffer once the message is loaded. The team is the one ~protean-extras-slack-teams~ names for the message's Protean account, an alist of (ACCOUNT . TEAM-NAME); it must be registered and connected. An account with no team, a team not connected and a room emacs-slack does not know are errors.
 
+* Closings by the sweep
+:PROPERTIES:
+:CUSTOM_ID: h:sweep
+:END:
+
+#+findex: protean-extras-closed-by-sweep
+#+vindex: protean-extras-sweep-note-regexp
+On Forethought's board a shared sweep closes tasks that its evidence shows are done. It writes a note on the Linear issue first ("Sweep op sweep:DATE:N: closed as done: REASON Evidence: …") and org-linear brings the note and the Done state into Org together, where the closing looks like my own. ~protean-extras-closed-by-sweep~ is the value of ~protean-outside-closure-function~: called with point on a task Protean found closed, it returns =("sweep" REASON)= when the newest note of the entry is the sweep's closing note (~protean-extras-sweep-note-regexp~) taken within a day of the entry's =CLOSED= date, and nil otherwise, so that Protean records the closing as the sweep's finding, lists it with the tasks agents closed, and lets me undo it like any of them. A task I reopen and then close myself the same day, without a note, would still be taken for the sweep's.
+
 * Signal and Telegram
 :PROPERTIES:
 :CUSTOM_ID: h:signal-telegram

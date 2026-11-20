@@ -31,6 +31,7 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Overview::
 * Email::
 * Slack::
+* Closings by the sweep::
 * Signal and Telegram::
 * WhatsApp::
 * Replies::
@@ -78,6 +79,13 @@ The same clients take a task's draft as a reply@comma{} for Protean's @samp{R} (
 @findex protean-extras-open-slack
 @vindex protean-extras-slack-teams
 @code{protean-extras-open-slack} opens the message's room at it@comma{} or@comma{} for a reply in a thread@comma{} the thread@comma{} and hands over the buffer once the message is loaded. The team is the one @code{protean-extras-slack-teams} names for the message's Protean account@comma{} an alist of (ACCOUNT . TEAM-NAME); it must be registered and connected. An account with no team@comma{} a team not connected and a room emacs-slack does not know are errors.
+
+@node Closings by the sweep
+@chapter Closings by the sweep
+
+@findex protean-extras-closed-by-sweep
+@vindex protean-extras-sweep-note-regexp
+On Forethought's board a shared sweep closes tasks that its evidence shows are done. It writes a note on the Linear issue first (``Sweep op sweep:DATE:N: closed as done: REASON Evidence: …'') and org-linear brings the note and the Done state into Org together@comma{} where the closing looks like my own. @code{protean-extras-closed-by-sweep} is the value of @code{protean-outside-closure-function}: called with point on a task Protean found closed@comma{} it returns @samp{("sweep" REASON)} when the newest note of the entry is the sweep's closing note (@code{protean-extras-sweep-note-regexp}) taken within a day of the entry's @samp{CLOSED} date@comma{} and nil otherwise@comma{} so that Protean records the closing as the sweep's finding@comma{} lists it with the tasks agents closed@comma{} and lets me undo it like any of them. A task I reopen and then close myself the same day@comma{} without a note@comma{} would still be taken for the sweep's.
 
 @node Signal and Telegram
 @chapter Signal and Telegram

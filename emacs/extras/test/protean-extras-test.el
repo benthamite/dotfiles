@@ -339,6 +339,51 @@ the room's; a compose buffer with text in it is left alone."
                            #'protean-extras-stage-telegram
                            '(:channel "telegram" :ref "77/5") "Hi."))
                      (list nil "Telegram has no chat 77"))))))
+;;;; Closings by the sweep
+
+(defun protean-extras-test--closed-by-sweep (entry)
+  "Return what `protean-extras-closed-by-sweep' says of ENTRY, an Org entry's text."
+  (require 'org)
+  (with-temp-buffer
+    (org-mode)
+    (insert entry)
+    (goto-char (point-min))
+    (protean-extras-closed-by-sweep)))
+
+(defconst protean-extras-test--sweep-note
+  (concat "- Note taken on [2026-11-11 Wed 12:55] (ph-ps Automations) \\\\\n"
+          "  2026-11-11 (Automation): Sweep op sweep:2026-11-11:1: closed as done: The call was moved as agreed."
+          " Evidence: [[https://example.org/a][a]]\n")
+  "The note the sweep leaves on a task it closes, as org-linear writes it.")
+
+(ert-deftest protean-extras-sweep-closing-is-recognised ()
+  (should (equal (protean-extras-test--closed-by-sweep
+                  (concat "** DONE Reschedule the call\nCLOSED: [2026-11-11 Wed 12:00]\n:STATES:\n"
+                          protean-extras-test--sweep-note ":END:\nBody.\n"))
+                 '("sweep" "The call was moved as agreed."))))
+
+(ert-deftest protean-extras-own-closing-is-not-the-sweeps ()
+  (should-not (protean-extras-test--closed-by-sweep
+               "** DONE Reschedule the call\nCLOSED: [2026-11-11 Wed 12:00]\nBody.\n"))
+  (should-not (protean-extras-test--closed-by-sweep
+               (concat "** DONE Reschedule the call\nCLOSED: [2026-11-11 Wed 12:00]\n:STATES:\n"
+                       "- Note taken on [2026-11-11 Wed 11:45] (Pablo Stafforini) \\\\\n"
+                       "  2026-11-11 (Pablo): Done by phone.\n:END:\n"))))
+
+(ert-deftest protean-extras-older-sweep-note-does-not-claim-a-later-closing ()
+  (should-not (protean-extras-test--closed-by-sweep
+               (concat "** DONE Reschedule the call\nCLOSED: [2026-11-20 Fri 12:00]\n:STATES:\n"
+                       protean-extras-test--sweep-note ":END:\n")))
+  (should-not (protean-extras-test--closed-by-sweep
+               (concat "** DONE Reschedule the call\nCLOSED: [2026-11-12 Thu 12:00]\n:STATES:\n"
+                       "- Note taken on [2026-11-12 Thu 09:00] (Pablo Stafforini) \\\\\n"
+                       "  2026-11-12 (Pablo): Reopened, then done.\n"
+                       protean-extras-test--sweep-note ":END:\n"))))
+
+(ert-deftest protean-extras-sweep-note-of-a-child-is-not-the-parents ()
+  (should-not (protean-extras-test--closed-by-sweep
+               (concat "** DONE Parent\nCLOSED: [2026-11-11 Wed 12:00]\n*** DONE Child\n:STATES:\n"
+                       protean-extras-test--sweep-note ":END:\n"))))
 
 (provide 'protean-extras-test)
 ;;; protean-extras-test.el ends here

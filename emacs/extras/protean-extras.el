@@ -74,6 +74,9 @@
 (declare-function slack-create-room-message-compose-buffer "slack-room-message-compose-buffer")
 (declare-function slack-buffer-buffer "slack-buffer")
 (declare-function protean-message-property-bounds "protean-preview")
+(declare-function org-back-to-heading "org")
+(declare-function org-entry-get "org")
+(declare-function outline-next-heading "outline")
 (defvar slack-teams-by-token)
 (defvar mu4e--view-message)
 (defvar telega-chatbuf--input-marker)
@@ -346,6 +349,69 @@ For `protean-message-stage-functions'.  No typing indicator is sent."
      (let ((wsp-send-typing nil))
        (wsp-chat--set-input text))
      (current-buffer))))
+;;;; Closings by the sweep
+
+(defconst protean-extras-sweep-note-regexp
+  "Sweep op sweep:[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}:[0-9]+: closed as done: *"
+  "Regexp matching the start of the note the ph-ps sweep leaves on a task it closes.
+The sweep writes the note on the Linear issue before it sets it Done, and
+org-linear brings both into Org.  The reason follows the match.")
+
+(defconst protean-extras--note-regexp
+  "^[ \t]*- Note taken on \\[\\([0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}\\)[^]]*\\]"
+  "Regexp matching the first line of a note in a task's log drawer.
+The first group is the note's date.")
+
+(defun protean-extras-closed-by-sweep ()
+  "Return (\"sweep\" REASON) if the ph-ps sweep closed the task at point, else nil.
+For `protean-outside-closure-function', which calls it with point on the
+heading of a task found closed.  The sweep closed the task when the
+newest note of the entry is the sweep's closing note
+\(`protean-extras-sweep-note-regexp') and was taken within a day of the
+entry's CLOSED date, if it has one.  REASON is what the note gives as the
+reason, without the evidence it lists, or nil."
+  (when-let* ((note (protean-extras--newest-note))
+              ((string-match protean-extras-sweep-note-regexp (cdr note)))
+              (reason (substring (cdr note) (match-end 0)))
+              ((protean-extras--near-closing-p (car note))))
+    (list "sweep" (protean-extras--sweep-reason reason))))
+
+(defun protean-extras--newest-note ()
+  "Return the newest note of the entry at point as (DATE . TEXT), or nil.
+DATE is the day the note was taken, as YYYY-MM-DD, and TEXT its lines
+joined by spaces.  Notes are newest first, as Org and org-linear write
+them."
+  (save-excursion
+    (org-back-to-heading t)
+    (let ((end (save-excursion (outline-next-heading) (point))))
+      (when (re-search-forward protean-extras--note-regexp end t)
+        (let ((date (match-string-no-properties 1))
+              (lines nil))
+          (forward-line 1)
+          (while (and (< (point) end)
+                      (looking-at "^[ \t]+\\([^ \t\n].*\\)$")
+                      (not (looking-at protean-extras--note-regexp))
+                      (not (looking-at "^[ \t]*:END:")))
+            (push (match-string-no-properties 1) lines)
+            (forward-line 1))
+          (cons date (string-join (nreverse lines) " ")))))))
+
+(defun protean-extras--near-closing-p (date)
+  "Return non-nil if DATE is within a day of when the entry at point was closed.
+DATE is a day as YYYY-MM-DD.  An entry with no CLOSED date passes."
+  (let ((closed (org-entry-get nil "CLOSED")))
+    (or (null closed)
+        (not (string-match "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\}" closed))
+        (<= (abs (- (time-to-days (date-to-time (concat date " 12:00")))
+                    (time-to-days (date-to-time (concat (match-string 0 closed) " 12:00")))))
+            1))))
+
+(defun protean-extras--sweep-reason (text)
+  "Return the reason in TEXT, what follows the start of a sweep's closing note.
+The evidence the note lists after it is left out.  Return nil when no
+reason is left."
+  (let ((reason (string-trim (car (split-string text " Evidence: ")))))
+    (unless (string-empty-p reason) reason)))
 
 (provide 'protean-extras)
 ;;; protean-extras.el ends here

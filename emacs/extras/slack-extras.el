@@ -356,127 +356,99 @@ TEAM-ID is TEAM's id and CONN its connection when the open was requested."
 
 (advice-add 'slack-ws-open :around #'slack-extras--open-when-reachable)
 
-;;;;; Completing to-dos
+;;;;; Keeping to-dos in step with Protean's tasks
 
 (defvar slack-extras-slack-program "~/repos/dotfiles/claude/bin/slack.py"
-  "The Slack client script whose `complete-todo' command completes a to-do.")
+  "The Slack client script that completes and restores a to-do.
+Its commands `complete-todo' and `uncomplete-todo' do the writing.")
 
-(defvar slack-extras-todo-queue-file
-  (expand-file-name "slack-extras/todo-queue.eld"
-                    (or (getenv "XDG_STATE_HOME") "~/.local/state"))
-  "File holding the to-dos still to be completed in Slack.
-Each entry is a list (WORKSPACE CHANNEL TS MARK).  The file outlives a
-restart, so a completion that failed is tried again.")
-
-(defvar slack-extras-todo-retry-seconds 600
-  "Seconds between attempts to complete the to-dos still queued.")
+(defvar slack-extras-todo-retry-seconds 300
+  "Seconds before a to-do write Protean still asks for is tried again.")
 
 (defvar slack-extras-todo-timeout-seconds 120
-  "Seconds after which an attempt to complete a to-do is abandoned.")
+  "Seconds after which an attempt to write a to-do is abandoned.")
 
-(defconst slack-extras--todo-properties
-  '("PROTEAN_SLACK_WORKSPACE" "PROTEAN_SLACK_CHANNEL" "PROTEAN_SLACK_TS"
-    "PROTEAN_SLACK_MARK")
-  "Task properties naming a Slack to-do, in queue entry order.")
+(defvar slack-extras--todo-attempts (make-hash-table :test #'equal)
+  "When each to-do write was last tried.
+The keys are lists (ACTION WORKSPACE CHANNEL TS MARK), the values times
+as `float-time' returns them.")
 
-(defvar slack-extras--todo-in-flight nil
-  "Queue entries whose completion is running.")
+(defun slack-extras-protean-slack-todo (item action)
+  "Complete or restore in Slack the to-do ITEM names, as ACTION says.
+ITEM is the plist `protean-slack-todo-function' passes, with the strings
+`:workspace', `:channel', `:ts' and `:mark' of a to-do whose task Protean
+keeps.  ACTION is the symbol `complete', for a to-do whose task is
+closed, or `restore', for one Protean completed whose task is open again.
 
-(defvar slack-extras--todo-timer nil
-  "Timer retrying the queued to-dos, or nil when the queue is empty.")
+Protean asks again at each pass until Slack's own list shows the write,
+so nothing is queued here and a failed write is tried again.  A write
+tried less than `slack-extras-todo-retry-seconds' ago is skipped, which
+also covers one still running."
+  (when-let* ((key (slack-extras--todo-key item action))
+              ((slack-extras--todo-due-p key)))
+    (puthash key (float-time) slack-extras--todo-attempts)
+    (slack-extras--todo-start key)))
 
-(defun slack-extras-protean-todo-closed (closure)
-  "Complete in Slack the to-do behind the task that CLOSURE describes.
-CLOSURE is the plist `protean-user-closed-functions' passes: a task the
-user closed and saved.  A task without the Slack to-do properties is
-ignored.  The to-do is queued, then completed asynchronously."
-  (when-let* ((entry (slack-extras--todo-entry (plist-get closure :properties))))
-    (slack-extras--todo-write (cl-adjoin entry (slack-extras--todo-read)
-                                         :test #'equal))
-    (slack-extras-todo-flush)))
+(defun slack-extras--todo-key (item action)
+  "Return the list (ACTION WORKSPACE CHANNEL TS MARK) for ITEM, or nil.
+ITEM is a plist naming a Slack to-do and ACTION the symbol `complete' or
+`restore'.  Return nil when ACTION is neither or a value is missing."
+  (let ((values (mapcar (lambda (key) (plist-get item key))
+                        '(:workspace :channel :ts :mark))))
+    (when (and (memq action '(complete restore))
+               (seq-every-p (lambda (value)
+                              (and (stringp value) (not (string-empty-p value))))
+                            values))
+      (cons action values))))
 
-(defun slack-extras--todo-entry (properties)
-  "Return the queue entry PROPERTIES name, or nil if they name no to-do.
-PROPERTIES is an alist of a task's Org properties."
-  (let ((values (mapcar (lambda (key) (cdr (assoc key properties)))
-                        slack-extras--todo-properties)))
-    (when (seq-every-p (lambda (value) (and (stringp value)
-                                            (not (string-empty-p value))))
-                       values)
-      values)))
+(defun slack-extras--todo-due-p (key)
+  "Return non-nil if the to-do write KEY names was not tried lately.
+KEY is a list (ACTION WORKSPACE CHANNEL TS MARK)."
+  (let ((tried (gethash key slack-extras--todo-attempts)))
+    (or (null tried)
+        (>= (- (float-time) tried) slack-extras-todo-retry-seconds))))
 
-(defun slack-extras--todo-read ()
-  "Return the entries of `slack-extras-todo-queue-file'."
-  (when (file-exists-p slack-extras-todo-queue-file)
-    (with-temp-buffer
-      (insert-file-contents slack-extras-todo-queue-file)
-      (read (current-buffer)))))
+(defun slack-extras--todo-command (key)
+  "Return the command that makes the to-do write KEY names.
+KEY is a list (ACTION WORKSPACE CHANNEL TS MARK)."
+  (pcase-let ((`(,action ,workspace ,channel ,ts ,mark) key))
+    (append (list (expand-file-name slack-extras-slack-program) "-w" workspace)
+            (if (eq action 'complete)
+                (list "complete-todo" channel ts (concat "--mark=" mark))
+              (list "uncomplete-todo" channel ts)))))
 
-(defun slack-extras--todo-write (entries)
-  "Save ENTRIES as the queue in `slack-extras-todo-queue-file'."
-  (make-directory (file-name-directory slack-extras-todo-queue-file) t)
-  (with-temp-file slack-extras-todo-queue-file
-    (prin1 entries (current-buffer))))
-
-(defun slack-extras-todo-flush ()
-  "Try to complete every queued to-do not already being completed.
-A timer retries while the queue holds entries."
-  (interactive)
-  (let ((entries (slack-extras--todo-read)))
-    (dolist (entry entries)
-      (unless (member entry slack-extras--todo-in-flight)
-        (slack-extras--todo-start entry)))
-    (slack-extras--todo-schedule entries)))
-
-(defun slack-extras--todo-schedule (entries)
-  "Keep the retry timer running while ENTRIES is non-nil, else cancel it."
-  (cond ((and entries (not slack-extras--todo-timer))
-         (setq slack-extras--todo-timer
-               (run-with-timer slack-extras-todo-retry-seconds
-                               slack-extras-todo-retry-seconds
-                               #'slack-extras-todo-flush)))
-        ((and (not entries) slack-extras--todo-timer)
-         (cancel-timer slack-extras--todo-timer)
-         (setq slack-extras--todo-timer nil))))
-
-(defun slack-extras--todo-start (entry)
-  "Start completing the to-do of queue ENTRY in Slack."
-  (pcase-let* ((`(,workspace ,channel ,ts ,mark) entry)
-               (process
-                (make-process
-                 :name "slack-extras-todo"
-                 :buffer (generate-new-buffer " *slack-extras-todo*")
-                 :command (list (expand-file-name slack-extras-slack-program)
-                                "-w" workspace "complete-todo" channel ts
-                                (concat "--mark=" mark))
-                 :connection-type 'pipe
-                 :sentinel (lambda (process _event)
-                             (unless (process-live-p process)
-                               (slack-extras--todo-finished entry process))))))
-    (push entry slack-extras--todo-in-flight)
+(defun slack-extras--todo-start (key)
+  "Start the to-do write KEY names in Slack.
+KEY is a list (ACTION WORKSPACE CHANNEL TS MARK)."
+  (let ((process
+         (make-process
+          :name "slack-extras-todo"
+          :buffer (generate-new-buffer " *slack-extras-todo*")
+          :command (slack-extras--todo-command key)
+          :connection-type 'pipe
+          :sentinel (lambda (process _event)
+                      (unless (process-live-p process)
+                        (slack-extras--todo-finished key process))))))
     (run-with-timer slack-extras-todo-timeout-seconds nil
                     (lambda ()
                       (when (process-live-p process)
                         (delete-process process))))))
 
-(defun slack-extras--todo-finished (entry process)
-  "Record how PROCESS, completing queue ENTRY, ended.
-Exit status 0 means the to-do is settled: completed, or no longer the
-same to-do.  Anything else leaves ENTRY queued for the next attempt."
+(defun slack-extras--todo-finished (key process)
+  "Report how PROCESS, making the to-do write KEY names, ended.
+KEY is a list (ACTION WORKSPACE CHANNEL TS MARK).  Exit status 0 means
+the write is settled, which is logged quietly.  Anything else is said in
+the echo area, and Protean's next request after
+`slack-extras-todo-retry-seconds' tries again."
   (let ((output (with-current-buffer (process-buffer process)
                   (string-trim (buffer-string)))))
     (kill-buffer (process-buffer process))
-    (setq slack-extras--todo-in-flight
-          (delete entry slack-extras--todo-in-flight))
     (if (and (eq (process-status process) 'exit)
              (zerop (process-exit-status process)))
-        (let ((entries (delete entry (slack-extras--todo-read)))
-              (inhibit-message t))
-          (slack-extras--todo-write entries)
-          (slack-extras--todo-schedule entries)
-          (message "Slack to-do %s: %s" (nth 2 entry) output))
-      (message "Slack to-do %s not completed yet, will retry: %s"
-               (nth 2 entry) (car (last (split-string output "\n")))))))
+        (let ((inhibit-message t))
+          (message "Slack to-do %s, %s: %s" (nth 3 key) (car key) output))
+      (message "Slack to-do %s: %s failed, will retry: %s"
+               (nth 3 key) (car key) (car (last (split-string output "\n")))))))
 
 (provide 'slack-extras)
 ;;; slack-extras.el ends here

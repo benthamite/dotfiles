@@ -177,55 +177,83 @@ reconnects scheduled."
         (should-not opened)
         (should (= reconnects 0))))))
 
-;;;; Completing to-dos
+;;;; Keeping to-dos in step with Protean's tasks
 
-(defconst slack-extras-test--todo-properties
-  '(("PROTEAN_SLACK_WORKSPACE" . "forethought") ("PROTEAN_SLACK_CHANNEL" . "C12345678")
-    ("PROTEAN_SLACK_TS" . "1710000000.000001") ("PROTEAN_SLACK_MARK" . "1700")
-    ("ITEM" . "Reply to Max"))
-  "Properties of a task made from a Slack to-do.")
+(defconst slack-extras-test--todo-item
+  '(:ticket 7 :workspace "forethought" :channel "C12345678"
+    :ts "1710000000.000001" :mark "1700")
+  "A to-do as `protean-slack-todo-function' passes it.")
 
-(defun slack-extras-test--close-todo (exit-code)
-  "Close a to-do task with a fake client exiting EXIT-CODE; return the result.
-The result is (QUEUE-AFTER . ARGUMENTS-THE-CLIENT-GOT)."
-  (let* ((dir (make-temp-file "slack-extras-todo" t))
-         (args-file (expand-file-name "args" dir))
-         (slack-extras-slack-program (expand-file-name "fake-slack" dir))
-         (slack-extras-todo-queue-file (expand-file-name "queue.eld" dir))
-         (slack-extras--todo-in-flight nil)
-         (slack-extras--todo-timer nil))
-    (unwind-protect
-        (progn
-          (with-temp-file slack-extras-slack-program
-            (insert (format "#!/bin/sh\necho \"$@\" > %s\necho '{\"status\": \"completed\"}'\nexit %d\n"
-                            (shell-quote-argument args-file) exit-code)))
-          (set-file-modes slack-extras-slack-program #o700)
-          (slack-extras-protean-todo-closed
-           (list :state "DONE" :properties slack-extras-test--todo-properties))
-          (with-timeout (10 (error "Fake client did not finish"))
-            (while slack-extras--todo-in-flight
-              (accept-process-output nil 0.05)))
-          (cons (slack-extras--todo-read)
-                (with-temp-buffer (insert-file-contents args-file)
-                                  (string-trim (buffer-string)))))
-      (when slack-extras--todo-timer (cancel-timer slack-extras--todo-timer))
-      (delete-directory dir t))))
+(defun slack-extras-test--todo-running-p ()
+  "Return non-nil while a to-do write is running."
+  (seq-some (lambda (process)
+              (string-prefix-p "slack-extras-todo" (process-name process)))
+            (process-list)))
 
-(ert-deftest slack-extras-todo-completed-leaves-queue ()
-  (let ((result (slack-extras-test--close-todo 0)))
-    (should-not (car result))
-    (should (equal (cdr result)
-                   "-w forethought complete-todo C12345678 1710000000.000001 --mark=1700"))))
+(defmacro slack-extras-test--with-fake-client (exit-code &rest body)
+  "Run BODY with a fake Slack client that exits with EXIT-CODE.
+Return the arguments the client got, one call per line, once every
+write BODY started has ended."
+  (declare (indent 1))
+  `(let* ((dir (make-temp-file "slack-extras-todo" t))
+          (args-file (expand-file-name "args" dir))
+          (slack-extras-slack-program (expand-file-name "fake-slack" dir))
+          (slack-extras--todo-attempts (make-hash-table :test #'equal)))
+     (unwind-protect
+         (progn
+           (with-temp-file slack-extras-slack-program
+             (insert (format "#!/bin/sh\necho \"$@\" >> %s\necho '{\"status\": \"done\"}'\nexit %d\n"
+                             (shell-quote-argument args-file) ,exit-code)))
+           (set-file-modes slack-extras-slack-program #o700)
+           ,@body
+           (with-timeout (10 (error "Fake client did not finish"))
+             (while (slack-extras-test--todo-running-p)
+               (accept-process-output nil 0.05)))
+           (when (file-exists-p args-file)
+             (with-temp-buffer (insert-file-contents args-file)
+                               (string-trim (buffer-string)))))
+       (delete-directory dir t))))
 
-(ert-deftest slack-extras-todo-failure-stays-queued ()
-  (should (equal (car (slack-extras-test--close-todo 1))
-                 '(("forethought" "C12345678" "1710000000.000001" "1700")))))
+(ert-deftest slack-extras-todo-complete-runs-complete-todo ()
+  (should (equal (slack-extras-test--with-fake-client 0
+                   (slack-extras-protean-slack-todo slack-extras-test--todo-item 'complete))
+                 "-w forethought complete-todo C12345678 1710000000.000001 --mark=1700")))
 
-(ert-deftest slack-extras-todo-ignores-other-tasks ()
-  (let ((slack-extras-todo-queue-file (make-temp-name "/nonexistent/queue")))
-    (should-not (slack-extras-protean-todo-closed
-                 (list :state "DONE" :properties '(("ITEM" . "Other")))))
-    (should-not (file-exists-p slack-extras-todo-queue-file))))
+(ert-deftest slack-extras-todo-restore-runs-uncomplete-todo ()
+  (should (equal (slack-extras-test--with-fake-client 0
+                   (slack-extras-protean-slack-todo slack-extras-test--todo-item 'restore))
+                 "-w forethought uncomplete-todo C12345678 1710000000.000001")))
+
+(ert-deftest slack-extras-todo-repeated-request-waits-for-retry-time ()
+  (should (equal (slack-extras-test--with-fake-client 1
+                   (dotimes (_ 3)
+                     (slack-extras-protean-slack-todo slack-extras-test--todo-item 'complete)))
+                 "-w forethought complete-todo C12345678 1710000000.000001 --mark=1700")))
+
+(ert-deftest slack-extras-todo-request-after-retry-time-runs-again ()
+  (let ((slack-extras-todo-retry-seconds 0))
+    (should (equal (length (split-string
+                            (slack-extras-test--with-fake-client 1
+                              (dotimes (_ 2)
+                                (slack-extras-protean-slack-todo
+                                 slack-extras-test--todo-item 'complete)))
+                            "\n"))
+                   2))))
+
+(ert-deftest slack-extras-todo-complete-and-restore-are-separate-writes ()
+  (should (equal (length (split-string
+                          (slack-extras-test--with-fake-client 0
+                            (slack-extras-protean-slack-todo slack-extras-test--todo-item 'complete)
+                            (slack-extras-protean-slack-todo slack-extras-test--todo-item 'restore))
+                          "\n"))
+                 2)))
+
+(ert-deftest slack-extras-todo-ignores-what-names-no-write ()
+  (should-not (slack-extras-test--with-fake-client 0
+                (slack-extras-protean-slack-todo slack-extras-test--todo-item 'delete)
+                (slack-extras-protean-slack-todo '(:ticket 7 :workspace "forethought") 'complete)
+                (slack-extras-protean-slack-todo
+                 (plist-put (copy-sequence slack-extras-test--todo-item) :mark "") 'complete))))
 
 (provide 'slack-extras-test)
 ;;; slack-extras-test.el ends here

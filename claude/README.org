@@ -461,7 +461,9 @@ effects before running diagnostics.
 The =dotfiles-context= skill resolves canonical sources without guessing from
 stale profile directories. It checks buffer and profile identity before tangling,
 preserves runtime-specific pairing, and binds local PR pins to the exact reviewed
-change while keeping generated files distinct from live activation. Agent-facing
+change while keeping generated files distinct from live activation. A package
+that also runs code outside Emacs (Protean) keeps its GitHub recipe, and that
+code runs from the Elpaca clone, its only copy. Agent-facing
 guidance changes go through the paired =instruction-placement= skill instead.
 
 The =instruction-placement= skill delivers the canonical placement policy,

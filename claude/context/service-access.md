@@ -257,7 +257,7 @@ Before any browser step, load the `chrome-use` skill; it holds the browser rules
 
 ## Protean
 
-`~/repos/protean` (launchd job `com.stafforini.protean`; its `README.md`)
+`~/.local/share/protean/src`, Elpaca's clone and the only copy (launchd job `com.stafforini.protean`; its `README.md`)
 absorbed the inbox monitor on 2026-11-16 (Pablo's decision). It collects
 email (personal and Forethought), WhatsApp (every chat not on the deny-list),
 Signal, Telegram and Slack (becas-aisar, baish, forethought) into
@@ -269,14 +269,14 @@ everything else to `~/repos/correspondence`), so there is no queue. Protean's
 small Emacs part writes each verdict into Org as a task or a note under the
 project's heading: in `~/repos/notes/protean-projects.org` or, for Forethought,
 `~/repos/forethought-notes/sprint.org` (manual
-`~/repos/protean/README.org`; the system in one page:
+`~/.local/share/protean/src/README.org`; the system in one page:
 `~/repos/notes/protean/map.md`). Protean ends at the task: Org and org-linear
 own the tasks, and agent.el the sessions. Protean submits nothing to a session
 except a closed wait's notice: there are no message wake-ups, no router
 corrections, no drafts files and no pre-authorized-action policies.
 
 - Read a project's messages with `protean read --project P` (dotfiles
-  `bin/protean` runs `~/repos/protean/bin/protean`; P is the owner key, the
+  `bin/protean` runs `~/.local/share/protean/src/bin/protean`; P is the owner key, the
   project's title or its directory name). It shows the new messages routed to
   the project, Pablo's own replies in those conversations, and wait notices,
   and prints the `--ack-upto`/`--ack-waits` command to acknowledge them; `--all`

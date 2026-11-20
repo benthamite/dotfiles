@@ -24,6 +24,14 @@ Before adding or changing agent-facing guidance, use the
   live package registry. It is usually `elpaca/sources/<package>/`; a legacy
   registry may report `elpaca/repos/<package>/`. Do not choose between profiles
   or directories by scanning for whichever checkout happens to exist.
+- A package of Pablo's that also has code running outside Emacs (a daemon,
+  a command line), such as Protean, still uses its GitHub recipe like every
+  other package, and its Elpaca clone is the only copy: the outside code runs
+  from that clone through a fixed path (`~/.local/share/<package>/src`, a link
+  the package's `config.org` `:init` keeps), restarts itself when the clone's
+  code changes, and is never given a second checkout. Nobody edits the clone:
+  work happens in worktrees under `~/repos/.worktrees/<package>/` and reaches
+  it through `main` (Pablo, 20 Nov 2026).
 
 Resolve package paths with the deterministic helper instead of guessing a
 profile or using `locate-library` or `symbol-file`:

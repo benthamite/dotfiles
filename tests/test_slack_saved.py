@@ -134,6 +134,32 @@ class CompleteTodoTests(unittest.TestCase):
             self.run_cmd()
         self.assertEqual(self.updates(), [])
 
+    def restore(self):
+        self.mod.cmd_uncomplete_todo(SimpleNamespace(channel=self.CH, ts=self.TS))
+        return json.loads(self.output.getvalue())["status"]
+
+    def test_restores_a_to_do_no_longer_listed(self):
+        self.pages(([self.item(ts="1.000001")], ""))
+        self.assertEqual(self.restore(), "restored")
+        self.assertEqual(self.updates(), [mock.call("saved.update", item_type="message",
+                                                     item_id=self.CH, ts=self.TS, mark="uncompleted")])
+
+    def test_a_listed_message_is_left_as_it_is(self):
+        for items, status in (([self.item()], "listed"), ([self.item(todo_state="saved")], "not-todo")):
+            with self.subTest(status=status):
+                self.call.reset_mock()
+                self.output.seek(0)
+                self.output.truncate()
+                self.pages((items, ""))
+                self.assertEqual(self.restore(), status)
+                self.assertEqual(self.updates(), [])
+
+    def test_restore_fails_without_write_on_an_incomplete_listing(self):
+        self.pages(([], "1"), ([], "1"))
+        with self.assertRaises(SystemExit):
+            self.restore()
+        self.assertEqual(self.updates(), [])
+
 
 if __name__ == "__main__":
     unittest.main()

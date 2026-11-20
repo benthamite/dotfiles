@@ -1519,6 +1519,14 @@ Slack's pages are sparse (a page can hold two channels and a cursor), so a
 single page once passed for the whole list and hid 56 of 58 channels; the
 command now fails rather than return a partial list.
 
+=slack.py complete-todo CHANNEL TS --mark=CREATED= completes a message's to-do
+and =slack.py uncomplete-todo CHANNEL TS= makes a completed one a to-do again
+(since 2026-11-20), both through Slack's internal =saved.update=. Each reads the
+whole =saved.list= first and writes only when the message is in the state the
+command expects, so repeating either is harmless. They are the writes Protean's
+Emacs side asks for when a task made from a Slack to-do is closed or reopened;
+Protean itself never writes to Slack.
+
 =slack.py send= (2026-10-28) posts a message Pablo approved, as him, with
 =chat.postMessage=: =--permalink= replies in that message's thread, =--channel=
 posts at top level. Until then agents had no Slack send path and left every

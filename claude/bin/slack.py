@@ -60,6 +60,11 @@ Usage:
       web client does), only if it is still a to-do created at <date_created>.
       Prints {"status": completed|absent|not-todo|remarked}; exit 0 means
       settled, nonzero means retry.
+  slack.py uncomplete-todo <channel-id> <ts>
+      Make that message's completed to-do a to-do again (internal
+      saved.update, mark=uncompleted), unless the message is listed among
+      the open saved items already. Prints {"status": restored|listed|
+      not-todo}; exit 0 means settled, nonzero means retry.
   slack.py send (--permalink <url> | --channel <id> [--thread-ts <ts>]) (--text <text> | --stdin) [--rich]
       Post a message Pablo approved, as him (chat.postMessage). --permalink
       replies in that message's thread; --channel posts at top level unless
@@ -1040,6 +1045,28 @@ def cmd_complete_todo(args):
     print(json.dumps({"status": status, "channel": args.channel, "ts": args.ts}))
 
 
+def cmd_uncomplete_todo(args):
+    """Make a message's completed to-do a to-do again.
+    saved.list holds only open items, so a message listed there is left as
+    it is: a to-do already (listed), or saved for later by the user
+    (not-todo). Otherwise the write is the one Slack's web client makes to
+    undo a completion."""
+    if not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
+        _fail("uncomplete-todo requires an exact channel ID")
+    if not re.fullmatch(r"[0-9]+\.[0-9]{6}", args.ts):
+        _fail("uncomplete-todo requires an exact message timestamp")
+    match = [i for i in _saved_items()
+             if i.get("item_type") == "message" and i.get("item_id") == args.channel
+             and i.get("ts") == args.ts]
+    if match:
+        status = "listed" if match[0].get("todo_state") == "to_do" else "not-todo"
+    else:
+        call("saved.update", item_type="message", item_id=args.channel,
+             ts=args.ts, mark="uncompleted")
+        status = "restored"
+    print(json.dumps({"status": status, "channel": args.channel, "ts": args.ts}))
+
+
 def cmd_unsave(args):
     """Remove a "Save for later" item (internal saved.delete endpoint).
     For message items, item_id is the CHANNEL id and ts the message ts."""
@@ -1299,6 +1326,11 @@ def main():
     ct.add_argument("ts")
     ct.add_argument("--mark", required=True)
     ct.set_defaults(func=cmd_complete_todo)
+
+    ut = sub.add_parser("uncomplete-todo")
+    ut.add_argument("channel")
+    ut.add_argument("ts")
+    ut.set_defaults(func=cmd_uncomplete_todo)
 
     se = sub.add_parser("send", help="post a message Pablo approved, as him")
     target = se.add_mutually_exclusive_group(required=True)

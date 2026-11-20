@@ -92,6 +92,21 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-20 15:49 →: idle =ns_select= stopped servicing timers and the server while the display was off (investigation, no change)
+
+- Watchdog: outage logged 15:50:20; state file last written 15:49:02.
+  Display off from 15:44:50, on for 30 s at 15:56:10, off again.
+- 3 s sample at 15:57: main thread idle in =read_char= →
+  =wait_reading_process_output= → =ns_select_1= → =-[NSApplication run]= →
+  =mach_msg= wait, 0% CPU; no Lisp running. Same stack as the 11-11
+  appearance-switch and 11-08 incidents. A 5 s =(emacs-pid)= probe on the
+  verified socket timed out.
+- Host: swap 8.0/9.2 GB, load 5-14, falling. An agent session had just
+  run batch Emacs test suites (=emacs/check= of Protean, 15:46-15:52), no
+  live evaluation in the minute before onset.
+- No recovery attempted: an agent waited for the state file to be written
+  again. Samples: =/tmp/emacs-freeze.UNy39O/=.
+
 ** 2026-11-18 19:14 → 21:03: hidden debugger stopped garbage collection; Emacs grew to 22 GB (detection added: dotfiles =136bf815e=)
 
 - Symptom: "Emacs is pretty slow" at ~20:50; load 39, swap 18.3/19.5 GB,

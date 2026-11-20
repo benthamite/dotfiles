@@ -14254,13 +14254,15 @@ functions after it."
 
 /[[https://github.com/benthamite/wsp][wsp]] is a WhatsApp client for Emacs on wa-archive./
 
-wa-archive (=~/repos/wa-archive=) holds the WhatsApp connection and the history; wsp reads its store and acts through its local API, as sgn does with signal-cli. The repository is private.
+wa-archive (=~/repos/wa-archive=) holds the WhatsApp connection and the history; wsp reads its store and acts through its local API, as sgn does with signal-cli. Both repositories are public.
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package wsp
   :ensure (:host github
            :repo "benthamite/wsp")
-  :defer t)
+  :defer t
+  :custom
+  (wsp-notify nil))
 #+end_src
 
 ** =ement=

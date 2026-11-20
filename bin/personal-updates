@@ -724,7 +724,7 @@ def apply_whatsmeow_update(repo, version, resolution):
         run_step("go test ./...", ["go", "test", "./..."], repo, env_overrides=go_environment())
         # install.sh restores the previous binary itself when the new one does not connect.
         run_step("install.sh", ["./install.sh"], repo, timeout=INSTALL_TIMEOUT_SECONDS,
-                 env_overrides=go_environment())
+                 env_overrides=go_environment(WA_ARCHIVE_LABEL="com.stafforini.wa-archive"))
         run_step("git commit", ["git", "commit", "--quiet", "-m", f"Update whatsmeow to {version}",
                                 "--", "go.mod", "go.sum"], repo)
         committed = True

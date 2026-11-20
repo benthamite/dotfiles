@@ -103,13 +103,13 @@ The same clients take a task's draft as a reply@comma{} for Protean's @samp{R} (
 @vindex protean-extras-stagers
 Protean's @samp{R} puts a task's draft in its message's client@comma{} as a reply that you send@comma{} through @code{protean-message-stage-functions}. @code{protean-extras-stagers} lists one stager per channel:
 
-@multitable {aaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@multitable {aaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
 @headitem Channel
 @tab Function
 @tab Where the draft waits
 @item email
 @tab @code{protean-extras-stage-email}
-@tab a reply in mu4e (@code{mu4e-compose-reply})@comma{} above the quote
+@tab a reply in mu4e (@code{mu4e-compose-reply}@comma{} org-msg's buffer when it composes)@comma{} above the quote
 @item Slack
 @tab @code{protean-extras-stage-slack}
 @tab emacs-slack's compose buffer of the thread@comma{} or of the room

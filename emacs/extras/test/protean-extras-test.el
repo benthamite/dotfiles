@@ -303,6 +303,33 @@ the room's; a compose buffer with text in it is left alone."
             (should (equal (with-current-buffer compose (buffer-string)) "Hi all.")))
         (kill-buffer compose)))))
 
+(ert-deftest protean-extras-test-email-takes-a-reply-above-the-quote ()
+  "The draft opens the body of mu4e's reply, in a plain or an org-msg buffer."
+  (dolist (org-msg '(nil t))
+    (let ((draft (get-buffer-create " *reply*"))
+          (rendered (get-buffer-create " *mail*")))
+      (unwind-protect
+          (cl-letf (((symbol-function 'protean-extras-open-email)
+                     (lambda (_message done) (funcall done rendered) t))
+                    ((symbol-function 'mu4e-compose-reply) (lambda () draft))
+                    ((symbol-function 'org-msg-goto-body)
+                     (lambda () (goto-char (point-min)) (search-forward "BODY\n"))))
+            (with-current-buffer draft
+              (if org-msg
+                  (progn (insert "#+OPTIONS: x\nBODY\n> quoted\n")
+                         (setq major-mode 'org-msg-edit-mode))
+                (require 'message)
+                (insert "To: a@b.c\n" mail-header-separator "\n> quoted\n")
+                (message-mode)))
+            (should (equal (cdr (protean-extras-test--staged
+                                 #'protean-extras-stage-email
+                                 '(:channel "email" :ref "<id@x>") "Yes."))
+                           (list draft nil)))
+            (with-current-buffer draft
+              (should (string-search "Yes.\n\n> quoted" (buffer-string)))))
+        (kill-buffer draft)
+        (kill-buffer rendered)))))
+
 (ert-deftest protean-extras-test-a-client-that-cannot-open-the-message-says-why ()
   "When the message does not open, the stager gives its opener's reason."
   (protean-extras-test--with-features '(telega)

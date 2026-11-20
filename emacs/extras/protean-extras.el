@@ -69,6 +69,7 @@
 (declare-function sgn-chat--set-input "sgn-chat")
 (declare-function mu4e-compose-reply "mu4e-compose")
 (declare-function message-goto-body "message")
+(declare-function org-msg-goto-body "org-msg")
 (declare-function slack-create-thread-message-compose-buffer "slack-thread-message-compose-buffer")
 (declare-function slack-create-room-message-compose-buffer "slack-room-message-compose-buffer")
 (declare-function slack-buffer-buffer "slack-buffer")
@@ -279,9 +280,17 @@ For `protean-message-stage-functions'."
        (unless (buffer-live-p draft)
          (error "mu4e did not start a reply"))
        (with-current-buffer draft
-         (message-goto-body)
+         (protean-extras--mail-goto-body)
          (save-excursion (insert text "\n\n")))
        draft))))
+
+(defun protean-extras--mail-goto-body ()
+  "Move point to where a reply's text goes, in the mail being composed.
+org-msg's buffers have no header separator: their body starts where
+`org-msg-goto-body' says."
+  (if (derived-mode-p 'org-msg-edit-mode)
+      (org-msg-goto-body)
+    (message-goto-body)))
 
 (defun protean-extras-stage-slack (message text done)
   "Give DONE an emacs-slack compose buffer holding TEXT, a reply to MESSAGE.

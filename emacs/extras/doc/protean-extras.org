@@ -80,7 +80,7 @@ Protean's =R= puts a task's draft in its message's client, as a reply that you s
 
 | Channel  | Function                          | Where the draft waits                                         |
 |----------+-----------------------------------+---------------------------------------------------------------|
-| email    | ~protean-extras-stage-email~      | a reply in mu4e (~mu4e-compose-reply~), above the quote        |
+| email    | ~protean-extras-stage-email~      | a reply in mu4e (~mu4e-compose-reply~, org-msg's buffer when it composes), above the quote |
 | Slack    | ~protean-extras-stage-slack~      | emacs-slack's compose buffer of the thread, or of the room     |
 | Signal   | ~protean-extras-stage-signal~     | sgn's input, replying to the message                          |
 | Telegram | ~protean-extras-stage-telegram~   | telega's input, replying to the message                       |

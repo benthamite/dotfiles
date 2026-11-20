@@ -1334,12 +1334,19 @@ running, start none and return nil; otherwise return the probe process."
              simple-extras--reachability-probes)))
 
 (defun simple-extras--probe-sentinel (process key callback)
-  "Call CALLBACK with whether PROCESS, the probe for KEY, succeeded."
+  "Call CALLBACK with whether PROCESS, the probe for KEY, succeeded.
+Emacs runs a sentinel in whatever buffer is current, so a process that
+CALLBACK starts would inherit that buffer's `default-directory'.  When that
+directory has been deleted, call CALLBACK from the home directory instead,
+as the timer that started the probe would have been."
   (unless (process-live-p process)
     (when (eq (gethash key simple-extras--reachability-probes) process)
       (remhash key simple-extras--reachability-probes))
-    (funcall callback (and (eq (process-status process) 'exit)
-                           (zerop (process-exit-status process))))))
+    (let ((default-directory (if (file-directory-p default-directory)
+                                 default-directory
+                               (expand-file-name "~/"))))
+      (funcall callback (and (eq (process-status process) 'exit)
+                             (zerop (process-exit-status process)))))))
 
 ;;;###autoload
 (defun simple-extras-call-when-reachable (url function &rest args)

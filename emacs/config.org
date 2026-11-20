@@ -4566,6 +4566,12 @@ probe failed this way because the current buffer belonged to a removed project
 directory. No timer depends on a directory that no longer exists, so every
 timer runs from the home directory in that case.
 
+Process sentinels have the same problem, but Emacs calls them from C, so no
+Lisp advice can cover them all. The reachability probe that timers use
+(~simple-extras-call-when-reachable~) applies the same rule to its callback: on
+2026-11-19 =elfeed-extras-update=, run from the probe's sentinel, failed because
+=jinx-mode= ran =otool= from a deleted project directory.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-feature timer
   :config

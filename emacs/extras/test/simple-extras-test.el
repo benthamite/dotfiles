@@ -1154,6 +1154,29 @@ Return the server process."
           (should (simple-extras-probe-url url 'key #'ignore)))
       (delete-process server))))
 
+(ert-deftest simple-extras-test-probe-url-callback-survives-deleted-directory ()
+  "Call the callback from an existing directory when the current one is gone."
+  (let* ((server (simple-extras-test--server
+                  "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n"))
+         (gone (make-temp-file "simple-extras-test-" t))
+         (result 'pending))
+    (unwind-protect
+        (progn
+          (simple-extras-probe-url
+           (simple-extras-test--server-url server) 'deleted-dir
+           (lambda (_)
+             (setq result (condition-case err
+                              (progn (call-process "true") default-directory)
+                            (file-missing err)))))
+          (delete-directory gone)
+          (with-temp-buffer
+            (setq default-directory (file-name-as-directory gone))
+            (with-timeout (10) (while (eq result 'pending)
+                                 (accept-process-output nil 0.05))))
+          (should (equal result (expand-file-name "~/"))))
+      (delete-process server)
+      (when (file-directory-p gone) (delete-directory gone)))))
+
 (ert-deftest simple-extras-test-call-when-reachable ()
   "Call the function with its arguments only when the host answers."
   (let* ((server (simple-extras-test--server

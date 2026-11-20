@@ -142,7 +142,8 @@ class CompleteTodoTests(unittest.TestCase):
         self.pages(([self.item(ts="1.000001")], ""))
         self.assertEqual(self.restore(), "restored")
         self.assertEqual(self.updates(), [mock.call("saved.update", item_type="message",
-                                                     item_id=self.CH, ts=self.TS, mark="uncompleted")])
+                                                     item_id=self.CH, ts=self.TS, mark="uncompleted",
+                                                     todo_state="to_do")])
 
     def test_a_listed_message_is_left_as_it_is(self):
         for items, status in (([self.item()], "listed"), ([self.item(todo_state="saved")], "not-todo")):

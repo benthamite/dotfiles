@@ -62,7 +62,7 @@ Usage:
       settled, nonzero means retry.
   slack.py uncomplete-todo <channel-id> <ts>
       Make that message's completed to-do a to-do again (internal
-      saved.update, mark=uncompleted), unless the message is listed among
+      saved.update, mark=uncompleted and todo_state=to_do), unless the message is listed among
       the open saved items already. Prints {"status": restored|listed|
       not-todo}; exit 0 means settled, nonzero means retry.
   slack.py send (--permalink <url> | --channel <id> [--thread-ts <ts>]) (--text <text> | --stdin) [--rich]
@@ -1050,7 +1050,10 @@ def cmd_uncomplete_todo(args):
     saved.list holds only open items, so a message listed there is left as
     it is: a to-do already (listed), or saved for later by the user
     (not-todo). Otherwise the write is the one Slack's web client makes to
-    undo a completion."""
+    undo a completion, with the item's kind stated: uncompleted alone
+    brought the item back as a to-do that Slack turned into a plain saved
+    item two minutes later (20 Nov 2026), while with `todo_state` it stayed
+    a to-do and kept its reminder."""
     if not re.fullmatch(r"[CGD][A-Z0-9]{8,}", args.channel):
         _fail("uncomplete-todo requires an exact channel ID")
     if not re.fullmatch(r"[0-9]+\.[0-9]{6}", args.ts):
@@ -1062,7 +1065,7 @@ def cmd_uncomplete_todo(args):
         status = "listed" if match[0].get("todo_state") == "to_do" else "not-todo"
     else:
         call("saved.update", item_type="message", item_id=args.channel,
-             ts=args.ts, mark="uncompleted")
+             ts=args.ts, mark="uncompleted", todo_state="to_do")
         status = "restored"
     print(json.dumps({"status": status, "channel": args.channel, "ts": args.ts}))
 

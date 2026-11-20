@@ -749,8 +749,7 @@ When experiencing issues, [[https://github.com/progfolio/elpaca/wiki/Troubleshoo
       (alist-get 'remote (alist-get 'nongnu elpaca-menu-elpas))
       "https://github.com/emacsmirror/nongnu_elpa")
 
-;; My own packages are pushed from their Elpaca checkouts (Protean, built in
-;; place from ~/repos/protean, from that checkout). In a treeless
+;; My own packages are pushed from their Elpaca checkouts. In a treeless
 ;; clone, Elpaca's default, a push fetches every tree it walks one request at
 ;; a time and can take half an hour, so my repositories are cloned blobless.
 ;; The owners match emacs/elpaca-cooldown/exempt-owners.txt.
@@ -1081,24 +1080,7 @@ exec "$(dirname "$0")/sync-elpaca-clone.sh"
 (use-personal-package elpaca-extras
   :after use-package-extras
   :custom
-  ;; Protean is built from the checkout its engine runs from, so git, not a
-  ;; lock file, sets its version; and `bin/elpaca-cooldown' cannot read a
-  ;; recipe whose `:repo' is a local path.
-  (elpaca-extras-write-lock-file-excluded '(tlon protean)))
-#+end_src
-
-** =elpaca-source-guard=
-:PROPERTIES:
-:ID:       0C28F087-3670-4EBA-BC20-090502D99378
-:END:
-
-/[[file:extras/elpaca-source-guard.el][elpaca-source-guard]] makes =elpaca-delete= refuse to delete a package whose source is outside Elpaca's sources directory: for a package built in place from a local =:repo=, such as Protean from =~/repos/protean=, that source is the checkout itself./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-personal-package elpaca-source-guard
-  :demand t
-  :config
-  (elpaca-source-guard-mode))
+  (elpaca-extras-write-lock-file-excluded '(tlon)))
 #+end_src
 
 * foundational
@@ -10007,20 +9989,11 @@ does not exist."
 
 /[[file:~/repos/protean/README.md][Protean]] turns incoming messages into work in my projects. Its engine (a launchd daemon) collects every channel, routes each message to a project and has the project's agent decide what the message needs. This package is its small Emacs part: it writes those verdicts as tasks under the project's heading (=PROTEAN_DIRECTORY= names the project's directory), in =~/repos/notes/protean-projects.org= or, for Forethought, =sprint.org=, where every task is tagged =:pablo:=. =M-x protean-inbox= lists every open task that came from a message, and every task an agent finished, was blocked on or got stuck on; the mode line shows their count. A =protean:N= link opens the conversation behind a task, and =protean-move-task= moves a message to another project. Sessions are agent.el's: =agent-act-on-thing-at-point= on a task starts one in the project's directory, or returns to the one the task records, and a task tagged =:agent:= starts by itself. The manual is [[file:~/repos/protean/README.org][README.org]]; my own configuration of the engine is =~/.config/protean/config.toml=./
 
-/=~/repos/protean= is the only Protean checkout I run: the engine runs from it, and Elpaca builds this package in place from it, so the two parts are always one version (Protean's plan of 19 Nov 2026, change 9). Nobody edits that checkout: work happens in worktrees under =~/repos/.worktrees/protean/=, and reaches both parts when it lands on the checkout's =main=, after which the package is rebuilt (=claude/bin/elpaca-rebuild-wait protean=) and the daemon restarted. An Elpaca update leaves the checkout alone; git moves it./
-
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package protean
-  ;; Built in place from the engine's checkout.  Without `:type git' Elpaca
-  ;; would take the source from `elpaca-sources-directory' instead.
-  ;; `:inherit nil' keeps a menu or the lock file from adding a ref, branch or
-  ;; remote, which Elpaca would check out in the engine's checkout, and the
-  ;; `:build' rule keeps Elpaca's updates from fetching or merging there.
-  :ensure (:type git
-                 :repo "~/repos/protean"
-                 :files ("emacs/*.el")
-                 :inherit nil
-                 :build (:not elpaca-git--fetch elpaca-git--merge))
+  :ensure (:host github
+                 :repo "benthamite/protean"
+                 :files ("emacs/*.el"))
   :after org
   :demand t
   :init

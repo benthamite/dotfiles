@@ -82,6 +82,13 @@ Usage:
       Exit 3: no response from Slack, so the edit may or may not have been
       applied; check `history` or `replies` before retrying.
 
+  slack.py delete-notices <channel-id> --user <user-id> [--subtype S ...] [--dry-run]
+      Delete that user's (usually a bot's) membership and settings notices
+      ("joined", "set the channel description", ...) from the channel's last
+      200 messages, using Pablo's admin rights. Only notice subtypes
+      (channel_join, channel_topic, channel_purpose and their group_ forms) can
+      be named, never ordinary messages. Prints one JSON line per notice.
+
 Output: raw JSON from Slack on stdout (channels and join print JSON lines;
 send prints one receipt line). Non-zero exit on API error.
 """
@@ -1150,6 +1157,21 @@ def cmd_edit(args):
                       "ts": out.get("ts", ts), "permalink": args.permalink, "text": text}))
 
 
+NOTICE_SUBTYPES = ("channel_join", "channel_topic", "channel_purpose", "group_join", "group_topic", "group_purpose")
+
+
+def cmd_delete_notices(args):
+    """Delete one user's membership and settings notices in a channel (never ordinary messages)."""
+    subtypes = set(args.subtype or NOTICE_SUBTYPES)
+    history = call("conversations.history", channel=args.channel, limit=200)
+    for msg in history.get("messages", []):
+        if msg.get("subtype") in subtypes and msg.get("user") == args.user:
+            if not args.dry_run:
+                call("chat.delete", channel=args.channel, ts=msg["ts"])
+            print(json.dumps({"status": "would delete" if args.dry_run else "deleted", "channel": args.channel,
+                              "ts": msg["ts"], "subtype": msg["subtype"], "text": msg.get("text", "")[:120]}))
+
+
 def _rich_params(text, rich):
     """Return the `blocks` parameter that renders TEXT as the composer would.
 
@@ -1363,6 +1385,13 @@ def main():
     ed.add_argument("--rich", action="store_true",
                     help="send as rich text, so bullet lines (•, ◦ or indented) become real Slack lists")
     ed.set_defaults(func=cmd_edit)
+
+    dn = sub.add_parser("delete-notices", help="delete one user's join/topic/description notices in a channel")
+    dn.add_argument("channel")
+    dn.add_argument("--user", required=True, help="whose notices (e.g. a bot's user ID)")
+    dn.add_argument("--subtype", action="append", choices=NOTICE_SUBTYPES)
+    dn.add_argument("--dry-run", action="store_true")
+    dn.set_defaults(func=cmd_delete_notices)
 
     u = sub.add_parser("unreads")
     u.set_defaults(func=cmd_unreads)

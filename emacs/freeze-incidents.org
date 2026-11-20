@@ -108,6 +108,22 @@ the "Already tried" list in place.
   again. Timers resumed at 16:46:20 (whether from input is unknown) and were
   steady by 16:47:35; the server answered after that. Samples:
   =/tmp/emacs-freeze.UNy39O/=.
+- Added by the session that deployed Protean's one closing rule, which made
+  the requests below. Correction to "no live evaluation in the minute before
+  onset": a dotfiles merge at 15:49:04 (reflog) ran the post-merge hook, which
+  at 15:49:06 asked the live Emacs to rebuild =slack-extras= and
+  =protean-extras= (four =elpaca-rebuild-wait= clients at once). The state
+  file's last write is 15:49:02, and the clients gave up at 15:49:37 with
+  "command transport failed". Trigger candidate, as on 11-05: a server request
+  arriving while the display is off. Not every such request does it: the
+  rebuild of =protean= at 15:45:40 and three small evaluations at 15:46-15:47,
+  all with the display off since 15:44:50, were answered.
+- The 30 s of display at 15:56:10 was that session's =caffeinate -u -t 5=,
+  tried as the least invasive way out. It did not end the stall, so a display
+  wake alone is not enough; no signal or input was sent to Emacs.
+- The display turned on again at 16:45:45 (=pmset -g log=), 35 s before the
+  timers resumed: Pablo's return. Emacs then ran the queued requests: both
+  rebuilds finished and loaded.
 
 ** 2026-11-18 19:14 → 21:03: hidden debugger stopped garbage collection; Emacs grew to 22 GB (detection added: dotfiles =136bf815e=)
 

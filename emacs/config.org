@@ -10095,7 +10095,10 @@ does not exist."
                                 ("baish" . "BAISH")))
   :config
   (setq protean-message-open-functions (copy-sequence protean-extras-openers)
-        protean-message-stage-functions (copy-sequence protean-extras-stagers)))
+        protean-message-stage-functions (copy-sequence protean-extras-stagers))
+  ;; A task the ph-ps sweep closed on Forethought's board is recorded as the
+  ;; sweep's closing, not mine (same plan, stage 5).
+  (setopt protean-outside-closure-function #'protean-extras-closed-by-sweep))
 #+end_src
 
 ** =monet=
@@ -14501,12 +14504,11 @@ CLOCK: [2021-03-29 Mon 16:52]--[2021-03-29 Mon 17:15] =>  0:23
                       (cons (auth-source-extras-op-get "slack-becas-aisar" "token")
                             (auth-source-extras-op-get "slack-becas-aisar" "cookie"))))))
   (slack-extras-register-teams)
-  ;; A Slack to-do that became a Protean task is completed in Slack when I
-  ;; close the task (Pablo, 19 Nov 2026; plan:
-  ;; ~/repos/notes/protean/plan-2026-11-19-slack-todos.md).  The queue a
-  ;; previous session left is retried at startup.
-  (add-hook 'protean-user-closed-functions #'slack-extras-protean-todo-closed)
-  (slack-extras-todo-flush))
+  ;; A Slack to-do that became a Protean task follows the task: completed
+  ;; in Slack when the task is closed, by me or by an agent, and restored
+  ;; when I reopen it (Pablo, 20 Nov 2026; plan:
+  ;; ~/repos/notes/protean/plan-2026-11-20-one-closing-rule.md).
+  (setopt protean-slack-todo-function #'slack-extras-protean-slack-todo))
 #+end_src
 
 ** =ol-emacs-slack=

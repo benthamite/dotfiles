@@ -5803,6 +5803,8 @@ I use it for the Autumn Sprint's board, where projects' milestones show as =MILE
   (org-linear-start-date-label "deferred")
   (org-linear-closed-retention-days 0)
   (org-linear-milestone-keywords '("MILESTONE"))
+  ;; Protean's conversation links open in Emacs when clicked in Linear.
+  (org-linear-emacs-link-types '("id" "protean"))
   (org-linear-api-key-command
    '("op-automations" "@forethought" "cache" "read"
      "op://Automation/linear-api-key-forethought/password"))

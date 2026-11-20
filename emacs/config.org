@@ -9987,7 +9987,9 @@ does not exist."
 :ID:       7E3F4B2A-5C1D-4E8F-9A6B-2D0C8E1F3A47
 :END:
 
-/[[file:~/repos/protean/README.md][Protean]] turns incoming messages into work in my projects. Its engine (a launchd daemon) collects every channel, routes each message to a project and has the project's agent decide what the message needs. This package is its small Emacs part: it writes those verdicts as tasks under the project's heading (=PROTEAN_DIRECTORY= names the project's directory), in =~/repos/notes/protean-projects.org= or, for Forethought, =sprint.org=, where every task is tagged =:pablo:=. =M-x protean-inbox= lists every open task that came from a message, and every task an agent finished, was blocked on or got stuck on; the mode line shows their count. A =protean:N= link opens the conversation behind a task, and =protean-move-task= moves a message to another project. Sessions are agent.el's: =agent-act-on-thing-at-point= on a task starts one in the project's directory, or returns to the one the task records, and a task tagged =:agent:= starts by itself. The manual is [[file:~/repos/protean/README.org][README.org]]; my own configuration of the engine is =~/.config/protean/config.toml=./
+/[[file:~/.local/share/protean/src/README.md][Protean]] turns incoming messages into work in my projects. Its engine (a launchd daemon) collects every channel, routes each message to a project and has the project's agent decide what the message needs. This package is its small Emacs part: it writes those verdicts as tasks under the project's heading (=PROTEAN_DIRECTORY= names the project's directory), in =~/repos/notes/protean-projects.org= or, for Forethought, =sprint.org=, where every task is tagged =:pablo:=. =M-x protean-inbox= lists every open task that came from a message, and every task an agent finished, was blocked on or got stuck on; the mode line shows their count. A =protean:N= link opens the conversation behind a task, and =protean-move-task= moves a message to another project. Sessions are agent.el's: =agent-act-on-thing-at-point= on a task starts one in the project's directory, or returns to the one the task records, and a task tagged =:agent:= starts by itself. The manual is [[file:~/.local/share/protean/src/README.org][README.org]]; my own configuration of the engine is =~/.config/protean/config.toml=./
+
+/Protean is built from GitHub like my other packages, and its Elpaca clone is the only copy of it: the engine (launchd job =com.stafforini.protean=) and the =protean= command run from it too, through =~/.local/share/protean/src=, which the =:init= below keeps pointing at it. Nobody edits the clone: work happens in worktrees under =~/repos/.worktrees/protean/= and reaches it through =main=. The engine restarts itself when its code changes, so an Elpaca update moves both parts./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package protean
@@ -9997,12 +9999,17 @@ does not exist."
   :after org
   :demand t
   :init
+  ;; The engine (launchd), the `protean' command and this package all run
+  ;; from Elpaca's clone, through this fixed path, so a new profile needs
+  ;; no other change.
+  (make-directory "~/.local/share/protean" t)
+  (make-symbolic-link (expand-file-name "protean" elpaca-sources-directory)
+                      "~/.local/share/protean/src" t)
   ;; bin/protean runs this interpreter, the one the engine's daemon runs.
   (setenv "PROTEAN_PYTHON"
           (expand-file-name "~/.pyenv/versions/3.11.9/bin/python3"))
   :custom
-  (protean-program
-   (file-name-concat paths-dir-personal-repos "protean/bin/protean"))
+  (protean-program "~/.local/share/protean/src/bin/protean")
   (protean-directories (list paths-dir-notes))
   (protean-projects-file (file-name-concat paths-dir-notes "protean-projects.org"))
   ;; Forethought's sessions are exported to Peter.

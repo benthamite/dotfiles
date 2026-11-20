@@ -1,5 +1,5 @@
 #!/bin/sh
-# protean: Protean's command line (~/repos/protean; its README.md), on PATH so
+# protean: Protean's command line (~/.local/share/protean/src, the Elpaca clone; its README.md), on PATH so
 # agents can run `protean read` and `protean wait` as its wake notices say.
 # Nothing it does can send a message.
-exec /Users/pablostafforini/repos/protean/bin/protean "$@"
+exec /Users/pablostafforini/.local/share/protean/src/bin/protean "$@"

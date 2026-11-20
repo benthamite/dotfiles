@@ -1,4 +1,4 @@
-#+title: protean-extras: Open Protean's messages in their own clients
+#+title: protean-extras: Open and answer Protean's messages in their own clients
 #+author: Pablo Stafforini
 #+email: pablo@stafforini.com
 #+language: en
@@ -8,7 +8,7 @@
 #+texinfo_filename: protean-extras.info
 #+texinfo_dir_category: Emacs misc features
 #+texinfo_dir_title: Protean Extras: (protean-extras)
-#+texinfo_dir_desc: Open Protean's messages in their own clients
+#+texinfo_dir_desc: Open and answer Protean's messages in their own clients
 
 This manual describes the features and customization options for the Emacs Lisp file =protean-extras.el=.
 
@@ -25,10 +25,11 @@ Protean's inbox shows, beside the line at point, the task above and the message 
 | Slack    | ~protean-extras-open-slack~      | emacs-slack, the room or the thread      |
 | Signal   | ~protean-extras-open-signal~     | sgn (~sgn-message-buffer~)               |
 | Telegram | ~protean-extras-open-telegram~   | telega                                   |
+| WhatsApp | ~protean-extras-open-whatsapp~   | wsp (~wsp-message-buffer~)               |
 
-WhatsApp has none yet: Protean shows its own view of those messages, saying so, until wsp can open a message.
+~protean-extras-openers~ lists the five, for ~protean-message-open-functions~.
 
-~protean-extras-openers~ lists the four, for ~protean-message-open-functions~.
+The same clients take a task's draft as a reply, for Protean's =R= (Protean's manual, "Replying in the client"); see [[#h:stagers][Replies]].
 
 * Email
 :PROPERTIES:
@@ -55,3 +56,34 @@ WhatsApp has none yet: Protean shows its own view of those messages, saying so, 
 #+findex: protean-extras-open-signal
 #+findex: protean-extras-open-telegram
 ~protean-extras-open-signal~ hands over sgn's chat buffer at the message (~sgn-message-buffer~). ~protean-extras-open-telegram~ hands over telega's chat buffer once telega has gone to the message; Telegram must be running.
+
+* WhatsApp
+:PROPERTIES:
+:CUSTOM_ID: h:whatsapp
+:END:
+
+#+findex: protean-extras-open-whatsapp
+~protean-extras-open-whatsapp~ hands over wsp's chat buffer at the message (~wsp-message-buffer~), and marks the message by its =wsp-id=. A message wa-archive's store does not hold is an error, with wsp's reason.
+
+* Replies
+:PROPERTIES:
+:CUSTOM_ID: h:stagers
+:END:
+
+#+findex: protean-extras-stage-email
+#+findex: protean-extras-stage-slack
+#+findex: protean-extras-stage-signal
+#+findex: protean-extras-stage-telegram
+#+findex: protean-extras-stage-whatsapp
+#+vindex: protean-extras-stagers
+Protean's =R= puts a task's draft in its message's client, as a reply that you send, through ~protean-message-stage-functions~. ~protean-extras-stagers~ lists one stager per channel:
+
+| Channel  | Function                          | Where the draft waits                                         |
+|----------+-----------------------------------+---------------------------------------------------------------|
+| email    | ~protean-extras-stage-email~      | a reply in mu4e (~mu4e-compose-reply~), above the quote        |
+| Slack    | ~protean-extras-stage-slack~      | emacs-slack's compose buffer of the thread, or of the room     |
+| Signal   | ~protean-extras-stage-signal~     | sgn's input, replying to the message                          |
+| Telegram | ~protean-extras-stage-telegram~   | telega's input, replying to the message                       |
+| WhatsApp | ~protean-extras-stage-whatsapp~   | wsp's input, replying to the message                          |
+
+Each opens the message as its opener does, then starts a reply to it. A Slack message in a thread is answered in the thread, any other in its room. Nothing is sent. When the reply box already holds text, the stager leaves it as it is and says so. sgn and wsp send no typing indicator for the draft; they do when you type.

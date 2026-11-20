@@ -1,19 +1,19 @@
 \input texinfo    @c -*- texinfo -*-
 @c %**start of header
 @setfilename protean-extras.info
-@settitle protean-extras: Open Protean's messages in their own clients
+@settitle protean-extras: Open and answer Protean's messages in their own clients
 @documentencoding UTF-8
 @documentlanguage en
 @c %**end of header
 
 @dircategory Emacs misc features
 @direntry
-* Protean Extras: (protean-extras). Open Protean's messages in their own clients.
+* Protean Extras: (protean-extras). Open and answer Protean's messages in their own clients.
 @end direntry
 
 @finalout
 @titlepage
-@title protean-extras: Open Protean's messages in their own clients
+@title protean-extras: Open and answer Protean's messages in their own clients
 @author Pablo Stafforini (@email{pablo@@stafforini.com})
 @end titlepage
 
@@ -21,7 +21,7 @@
 
 @ifnottex
 @node Top
-@top protean-extras: Open Protean's messages in their own clients
+@top protean-extras: Open and answer Protean's messages in their own clients
 
 This manual describes the features and customization options for the Emacs Lisp file @samp{protean-extras.el}.
 
@@ -32,6 +32,8 @@ This manual describes the features and customization options for the Emacs Lisp 
 * Email::
 * Slack::
 * Signal and Telegram::
+* WhatsApp::
+* Replies::
 @end menu
 
 @node Overview
@@ -55,11 +57,14 @@ Protean's inbox shows@comma{} beside the line at point@comma{} the task above an
 @item Telegram
 @tab @code{protean-extras-open-telegram}
 @tab telega
+@item WhatsApp
+@tab @code{protean-extras-open-whatsapp}
+@tab wsp (@code{wsp-message-buffer})
 @end multitable
 
-WhatsApp has none yet: Protean shows its own view of those messages@comma{} saying so@comma{} until wsp can open a message.
+@code{protean-extras-openers} lists the five@comma{} for @code{protean-message-open-functions}.
 
-@code{protean-extras-openers} lists the four@comma{} for @code{protean-message-open-functions}.
+The same clients take a task's draft as a reply@comma{} for Protean's @samp{R} (Protean's manual@comma{} ``Replying in the client''); see @ref{Replies, , Replies}.
 
 @node Email
 @chapter Email
@@ -80,5 +85,45 @@ WhatsApp has none yet: Protean shows its own view of those messages@comma{} sayi
 @findex protean-extras-open-signal
 @findex protean-extras-open-telegram
 @code{protean-extras-open-signal} hands over sgn's chat buffer at the message (@code{sgn-message-buffer}). @code{protean-extras-open-telegram} hands over telega's chat buffer once telega has gone to the message; Telegram must be running.
+
+@node WhatsApp
+@chapter WhatsApp
+
+@findex protean-extras-open-whatsapp
+@code{protean-extras-open-whatsapp} hands over wsp's chat buffer at the message (@code{wsp-message-buffer})@comma{} and marks the message by its @samp{wsp-id}. A message wa-archive's store does not hold is an error@comma{} with wsp's reason.
+
+@node Replies
+@chapter Replies
+
+@findex protean-extras-stage-email
+@findex protean-extras-stage-slack
+@findex protean-extras-stage-signal
+@findex protean-extras-stage-telegram
+@findex protean-extras-stage-whatsapp
+@vindex protean-extras-stagers
+Protean's @samp{R} puts a task's draft in its message's client@comma{} as a reply that you send@comma{} through @code{protean-message-stage-functions}. @code{protean-extras-stagers} lists one stager per channel:
+
+@multitable {aaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa} {aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa}
+@headitem Channel
+@tab Function
+@tab Where the draft waits
+@item email
+@tab @code{protean-extras-stage-email}
+@tab a reply in mu4e (@code{mu4e-compose-reply})@comma{} above the quote
+@item Slack
+@tab @code{protean-extras-stage-slack}
+@tab emacs-slack's compose buffer of the thread@comma{} or of the room
+@item Signal
+@tab @code{protean-extras-stage-signal}
+@tab sgn's input@comma{} replying to the message
+@item Telegram
+@tab @code{protean-extras-stage-telegram}
+@tab telega's input@comma{} replying to the message
+@item WhatsApp
+@tab @code{protean-extras-stage-whatsapp}
+@tab wsp's input@comma{} replying to the message
+@end multitable
+
+Each opens the message as its opener does@comma{} then starts a reply to it. A Slack message in a thread is answered in the thread@comma{} any other in its room. Nothing is sent. When the reply box already holds text@comma{} the stager leaves it as it is and says so. sgn and wsp send no typing indicator for the draft; they do when you type.
 
 @bye

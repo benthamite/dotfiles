@@ -1,4 +1,4 @@
-;;; protean-extras.el --- Open Protean's messages in their own clients -*- lexical-binding: t -*-
+;;; protean-extras.el --- Open and answer Protean's messages in their own clients -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2026
 
@@ -28,9 +28,15 @@
 ;; `protean-message-open-functions': each shows a message the way its
 ;; client shows it, in a buffer handed to Protean, without displaying
 ;; anything itself.  Email is rendered as mu4e renders it, in a buffer of
-;; its own, so that mu4e's own view is left alone; Slack, Signal and
-;; Telegram open in emacs-slack, sgn and telega.  WhatsApp has no client
-;; here yet, so Protean shows its own view of those messages.
+;; its own, so that mu4e's own view is left alone; Slack, Signal,
+;; Telegram and WhatsApp open in emacs-slack, sgn, telega and wsp.
+;;
+;; Stagers, one per channel, for `protean-message-stage-functions':
+;; each puts a task's draft in the client as a reply to its message,
+;; for the user to send: a reply in mu4e, a compose buffer of
+;; emacs-slack (the thread's, for a message in one), and the input of
+;; sgn, telega and wsp, replying to the message.  None sends anything,
+;; and none overwrites text already there.
 
 ;;; Code:
 
@@ -52,9 +58,25 @@
 (declare-function telega-chat-get "telega-chat")
 (declare-function telega-chatbuf--get-create "telega-chat")
 (declare-function telega-chatbuf--goto-msg "telega-chat")
+(declare-function telega-msg-at "telega-msg")
+(declare-function telega-msg-reply "telega-chat")
+(declare-function wsp-message-buffer "wsp")
+(declare-function wsp-chat-reply "wsp-actions")
+(declare-function wsp-chat--input-text "wsp-chat")
+(declare-function wsp-chat--set-input "wsp-chat")
+(declare-function sgn-reply "sgn-actions")
+(declare-function sgn-chat--input-text "sgn-chat")
+(declare-function sgn-chat--set-input "sgn-chat")
+(declare-function mu4e-compose-reply "mu4e-compose")
+(declare-function message-goto-body "message")
+(declare-function slack-create-thread-message-compose-buffer "slack-thread-message-compose-buffer")
+(declare-function slack-create-room-message-compose-buffer "slack-room-message-compose-buffer")
+(declare-function slack-buffer-buffer "slack-buffer")
 (declare-function protean-message-property-bounds "protean-preview")
 (defvar slack-teams-by-token)
 (defvar mu4e--view-message)
+(defvar telega-chatbuf--input-marker)
+(defvar wsp-send-typing)
 
 (defgroup protean-extras ()
   "Open Protean's messages in their own clients."
@@ -72,8 +94,15 @@ An alist of (ACCOUNT . NAME): ACCOUNT as Protean records it, such as
 
 (defconst protean-extras-openers
   '(protean-extras-open-email protean-extras-open-slack
-    protean-extras-open-signal protean-extras-open-telegram)
+    protean-extras-open-signal protean-extras-open-telegram
+    protean-extras-open-whatsapp)
   "The openers of this file, for `protean-message-open-functions'.")
+
+(defconst protean-extras-stagers
+  '(protean-extras-stage-email protean-extras-stage-slack
+    protean-extras-stage-signal protean-extras-stage-telegram
+    protean-extras-stage-whatsapp)
+  "The stagers of this file, for `protean-message-stage-functions'.")
 
 (defun protean-extras--channel-p (message channel)
   "Return non-nil when MESSAGE, a plist from Protean, is of CHANNEL."
@@ -120,28 +149,35 @@ For `protean-message-open-functions'.  The team is the one
 `protean-extras-slack-teams' names for the message's account; it must
 be connected.  A reply in a thread opens the thread."
   (when (protean-extras--channel-p message "slack")
-    (require 'slack)
-    (let* ((account (plist-get message :account))
-           (name (or (alist-get account protean-extras-slack-teams nil nil #'equal)
-                     (error "No Slack team is set for the account %s" account)))
-           (team (or (protean-extras--slack-team name)
-                     (error "Slack's team %s is not registered" name)))
-           (parts (split-string (or (plist-get message :ref) "") "/"))
-           (ts (or (nth 1 parts) (error "Not a Slack message: %s" (plist-get message :ref))))
-           (room (or (slack-room-find (car parts) team)
-                     (error "Slack has no room %s" (car parts))))
-           (thread (plist-get message :thread))
-           (found (lambda ()
-                    (slack-buffer-goto ts)
-                    (funcall done (current-buffer) nil
-                             (lambda () (protean-message-property-bounds 'ts ts)))))
-           (failed (lambda (&rest _) (funcall done nil "Slack could not load the message"))))
-      (unless (slack-team-connectedp team)
-        (error "Slack's team %s is not connected" name))
+    (pcase-let* ((`(,team ,room ,ts ,thread) (protean-extras--slack-place message))
+                 (found (lambda ()
+                          (slack-buffer-goto ts)
+                          (funcall done (current-buffer) nil
+                                   (lambda () (protean-message-property-bounds 'ts ts)))))
+                 (failed (lambda (&rest _) (funcall done nil "Slack could not load the message"))))
       (if (and thread (not (equal thread ts)))
           (slack-open-message--open-thread room thread team found failed)
         (slack-open-message--open-channel ts room team found failed)))
     t))
+
+(defun protean-extras--slack-place (message)
+  "Return where the Slack MESSAGE is, as (TEAM ROOM TS THREAD).
+TEAM is the connected emacs-slack team of its account, ROOM its room,
+TS its timestamp and THREAD its thread's, or nil.  Signal an error when
+any of them cannot be found."
+  (require 'slack)
+  (let* ((account (plist-get message :account))
+         (name (or (alist-get account protean-extras-slack-teams nil nil #'equal)
+                   (error "No Slack team is set for the account %s" account)))
+         (team (or (protean-extras--slack-team name)
+                   (error "Slack's team %s is not registered" name)))
+         (parts (split-string (or (plist-get message :ref) "") "/"))
+         (ts (or (nth 1 parts) (error "Not a Slack message: %s" (plist-get message :ref))))
+         (room (or (slack-room-find (car parts) team)
+                   (error "Slack has no room %s" (car parts)))))
+    (unless (slack-team-connectedp team)
+      (error "Slack's team %s is not connected" name))
+    (list team room ts (plist-get message :thread))))
 
 (defun protean-extras--slack-team (name)
   "Return the registered emacs-slack team named NAME, or nil.
@@ -193,6 +229,114 @@ For `protean-message-open-functions'.  Telegram must be running."
   "Return where telega's message at point is, as (BEG . END), or nil."
   (when-let* ((button (button-at (point))))
     (cons (button-start button) (button-end button))))
+
+;;;; WhatsApp
+
+(defun protean-extras-open-whatsapp (message done)
+  "Give DONE wsp's chat buffer at the WhatsApp MESSAGE.
+For `protean-message-open-functions'."
+  (when (protean-extras--channel-p message "whatsapp")
+    (require 'wsp)
+    (let* ((buffer (condition-case err
+                       (wsp-message-buffer (plist-get message :ref))
+                     (wsp-message-not-found (error "%s" (cadr err)))))
+           (id (with-current-buffer buffer (get-text-property (point) 'wsp-id))))
+      (funcall done buffer nil
+               (and id (lambda () (protean-message-property-bounds 'wsp-id id)))))
+    t))
+
+;;;; Stagers
+
+(defun protean-extras--stage-via (opener message done reply)
+  "Open MESSAGE with OPENER, then give DONE what REPLY returns.
+For a stager of `protean-message-stage-functions'.  REPLY is called in
+the client's buffer, point at the message, and returns the buffer in
+which the reply waits; an error it signals is DONE's reason.  Return
+what OPENER returns."
+  (funcall opener message
+           (lambda (buffer &optional reason _bounds)
+             (if (not (buffer-live-p buffer))
+                 (funcall done nil reason)
+               (let ((staged (condition-case err
+                                 (with-current-buffer buffer (funcall reply))
+                               (error (funcall done nil (error-message-string err))
+                                      nil))))
+                 (when staged
+                   (funcall done staged)))))))
+
+(defun protean-extras--refuse-unless-empty (input)
+  "Signal an error unless INPUT, the text of a reply box, is blank."
+  (unless (string-blank-p input)
+    (error "The reply box already has text; it was left as it is")))
+
+(defun protean-extras-stage-email (message text done)
+  "Give DONE a reply in mu4e to the email MESSAGE, TEXT above the quote.
+For `protean-message-stage-functions'."
+  (protean-extras--stage-via
+   #'protean-extras-open-email message done
+   (lambda ()
+     (let ((draft (mu4e-compose-reply)))
+       (unless (buffer-live-p draft)
+         (error "mu4e did not start a reply"))
+       (with-current-buffer draft
+         (message-goto-body)
+         (save-excursion (insert text "\n\n")))
+       draft))))
+
+(defun protean-extras-stage-slack (message text done)
+  "Give DONE an emacs-slack compose buffer holding TEXT, a reply to MESSAGE.
+For `protean-message-stage-functions'.  A message in a thread is
+answered in the thread, any other in its room."
+  (when (protean-extras--channel-p message "slack")
+    (pcase-let* ((`(,team ,room ,_ts ,thread) (protean-extras--slack-place message))
+                 (buffer (slack-buffer-buffer
+                          (if thread
+                              (slack-create-thread-message-compose-buffer room thread team)
+                            (slack-create-room-message-compose-buffer room team)))))
+      (with-current-buffer buffer
+        (protean-extras--refuse-unless-empty (buffer-string))
+        (insert text)
+        (goto-char (point-min)))
+      (funcall done buffer))
+    t))
+
+(defun protean-extras-stage-signal (message text done)
+  "Give DONE sgn's chat buffer with TEXT as a reply to the Signal MESSAGE.
+For `protean-message-stage-functions'.  No typing indicator is sent."
+  (protean-extras--stage-via
+   #'protean-extras-open-signal message done
+   (lambda ()
+     (protean-extras--refuse-unless-empty (sgn-chat--input-text))
+     (sgn-reply)
+     (sgn-chat--set-input text)
+     (goto-char (point-max))
+     (current-buffer))))
+
+(defun protean-extras-stage-telegram (message text done)
+  "Give DONE telega's chat buffer with TEXT as a reply to the Telegram MESSAGE.
+For `protean-message-stage-functions'."
+  (protean-extras--stage-via
+   #'protean-extras-open-telegram message done
+   (lambda ()
+     (protean-extras--refuse-unless-empty
+      (buffer-substring-no-properties telega-chatbuf--input-marker (point-max)))
+     (telega-msg-reply (or (telega-msg-at (point))
+                           (error "telega shows no message there")))
+     (goto-char (point-max))
+     (insert text)
+     (current-buffer))))
+
+(defun protean-extras-stage-whatsapp (message text done)
+  "Give DONE wsp's chat buffer with TEXT as a reply to the WhatsApp MESSAGE.
+For `protean-message-stage-functions'.  No typing indicator is sent."
+  (protean-extras--stage-via
+   #'protean-extras-open-whatsapp message done
+   (lambda ()
+     (protean-extras--refuse-unless-empty (wsp-chat--input-text))
+     (wsp-chat-reply)
+     (let ((wsp-send-typing nil))
+       (wsp-chat--set-input text))
+     (current-buffer))))
 
 (provide 'protean-extras)
 ;;; protean-extras.el ends here

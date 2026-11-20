@@ -39,7 +39,7 @@ The BOUNDS it gave, if any, are in `protean-extras-test--bounds'."
 (ert-deftest protean-extras-test-each-opener-leaves-other-channels ()
   "An opener returns nil, and answers nothing, for another channel's message."
   (dolist (opener protean-extras-openers)
-    (should-not (car (protean-extras-test--opened opener '(:channel "whatsapp" :ref "x/y"))))))
+    (should-not (car (protean-extras-test--opened opener '(:channel "carrier-pigeon" :ref "x/y"))))))
 
 (ert-deftest protean-extras-test-email-is-rendered-as-mu4e-renders-it ()
   "An email is rendered by mu4e's renderer in a buffer of its own.
@@ -172,6 +172,146 @@ the message is there."
       (should (string-search "not running"
                              (cadr (should-error (protean-extras-open-telegram
                                                   '(:channel "telegram" :ref "77/5") #'ignore))))))))
+
+;; Stagers.
+
+(defun protean-extras-test--staged (stager message text)
+  "Call STAGER on MESSAGE and TEXT; return (TAKEN BUFFER REASON) as it answered."
+  (let* ((answer nil)
+         (taken (funcall stager message text
+                         (lambda (buffer &optional reason)
+                           (setq answer (list buffer reason))))))
+    (cons taken answer)))
+
+(ert-deftest protean-extras-test-each-stager-leaves-other-channels ()
+  "A stager returns nil, and answers nothing, for another channel's message."
+  (dolist (stager protean-extras-stagers)
+    (should-not (funcall stager '(:channel "carrier-pigeon" :ref "x") "Hi"
+                         (lambda (&rest _) (error "Answered"))))))
+
+(ert-deftest protean-extras-test-whatsapp-opens-in-wsp ()
+  "A WhatsApp message goes to wsp by its reference, and is marked by its id."
+  (protean-extras-test--with-features '(wsp)
+    (let ((chat (get-buffer-create " *wsp chat*")))
+      (unwind-protect
+          (cl-letf (((symbol-function 'wsp-message-buffer)
+                     (lambda (ref)
+                       (should (equal ref "123@s.whatsapp.net/ABC"))
+                       (with-current-buffer chat
+                         (erase-buffer)
+                         (insert (propertize "other\n" 'wsp-id "XYZ")
+                                 (propertize "the message\n" 'wsp-id "ABC"))
+                         (goto-char 7))
+                       chat)))
+            (pcase-let ((`(,taken ,buffer ,_reason)
+                         (protean-extras-test--opened
+                          #'protean-extras-open-whatsapp
+                          '(:channel "whatsapp" :ref "123@s.whatsapp.net/ABC"))))
+              (should taken)
+              (should (eq buffer chat))
+              (require 'protean-preview)
+              (with-current-buffer chat
+                (should (equal (funcall protean-extras-test--bounds) '(7 . 19))))))
+        (kill-buffer chat)))))
+
+(ert-deftest protean-extras-test-whatsapp-takes-a-reply-and-keeps-what-is-typed ()
+  "The draft goes in wsp's input as a reply to the message, with no typing sent.
+Input already there is left alone, and the stager says why."
+  (protean-extras-test--with-features '(wsp)
+    (let ((chat (get-buffer-create " *wsp chat*"))
+          (input "")
+          (replied nil)
+          (typing 'unset))
+      (unwind-protect
+          (cl-letf (((symbol-function 'wsp-message-buffer) (lambda (_ref) chat))
+                    ((symbol-function 'wsp-chat--input-text) (lambda () input))
+                    ((symbol-function 'wsp-chat-reply) (lambda () (setq replied t)))
+                    ((symbol-function 'wsp-chat--set-input)
+                     (lambda (text) (setq input text typing wsp-send-typing))))
+            (let ((wsp-send-typing t))
+              (should (equal (cdr (protean-extras-test--staged
+                                   #'protean-extras-stage-whatsapp
+                                   '(:channel "whatsapp" :ref "c/1") "Sí, mañana."))
+                             (list chat nil)))
+              (should replied)
+              (should (equal input "Sí, mañana."))
+              (should-not typing)
+              (setq replied nil)
+              (pcase-let ((`(,taken ,buffer ,reason)
+                           (protean-extras-test--staged
+                            #'protean-extras-stage-whatsapp
+                            '(:channel "whatsapp" :ref "c/1") "Otra cosa.")))
+                (should taken)
+                (should-not buffer)
+                (should (string-search "already has text" reason))
+                (should-not replied)
+                (should (equal input "Sí, mañana.")))))
+        (kill-buffer chat)))))
+
+(ert-deftest protean-extras-test-signal-takes-a-reply ()
+  "The draft goes in sgn's input as a reply to the message."
+  (protean-extras-test--with-features '(sgn)
+    (let ((chat (get-buffer-create " *sgn chat*"))
+          (input "")
+          (replied nil))
+      (unwind-protect
+          (cl-letf (((symbol-function 'sgn-parse-message-id) (lambda (_id) (list "g" "s" 12)))
+                    ((symbol-function 'sgn-message-buffer) (lambda (&rest _) chat))
+                    ((symbol-function 'sgn-chat--input-text) (lambda () input))
+                    ((symbol-function 'sgn-reply) (lambda () (setq replied t)))
+                    ((symbol-function 'sgn-chat--set-input) (lambda (text) (setq input text))))
+            (should (equal (cdr (protean-extras-test--staged
+                                 #'protean-extras-stage-signal
+                                 '(:channel "signal" :ref "g/s/12") "Yes."))
+                           (list chat nil)))
+            (should replied)
+            (should (equal input "Yes.")))
+        (kill-buffer chat)))))
+
+(ert-deftest protean-extras-test-slack-replies-in-the-thread-or-the-room ()
+  "A message in a thread is answered in the thread's compose buffer, any other in
+the room's; a compose buffer with text in it is left alone."
+  (protean-extras-test--with-features '(slack)
+    (let ((protean-extras-slack-teams '(("forethought" . "Forethought")))
+          (compose (get-buffer-create " *slack compose*"))
+          (made nil))
+      (unwind-protect
+          (cl-letf (((symbol-function 'protean-extras--slack-team) (lambda (_name) 'team))
+                    ((symbol-function 'slack-team-connectedp) (lambda (_team) t))
+                    ((symbol-function 'slack-room-find) (lambda (_id _team) 'room))
+                    ((symbol-function 'slack-create-thread-message-compose-buffer)
+                     (lambda (_room ts _team) (push (list 'thread ts) made) 'object))
+                    ((symbol-function 'slack-create-room-message-compose-buffer)
+                     (lambda (_room _team) (push (list 'room) made) 'object))
+                    ((symbol-function 'slack-buffer-buffer) (lambda (_object) compose)))
+            (should (equal (cdr (protean-extras-test--staged
+                                 #'protean-extras-stage-slack
+                                 '(:channel "slack" :account "forethought" :ref "C1/100.1"
+                                            :thread "100.1")
+                                 "Done, Ben."))
+                           (list compose nil)))
+            (should (equal (car made) '(thread "100.1")))
+            (should (equal (with-current-buffer compose (buffer-string)) "Done, Ben."))
+            (with-current-buffer compose (erase-buffer))
+            (protean-extras-test--staged
+             #'protean-extras-stage-slack
+             '(:channel "slack" :account "forethought" :ref "C1/300.3") "Hi all.")
+            (should (equal (car made) '(room)))
+            (should-error (protean-extras-stage-slack
+                           '(:channel "slack" :account "forethought" :ref "C1/300.3")
+                           "Again." #'ignore))
+            (should (equal (with-current-buffer compose (buffer-string)) "Hi all.")))
+        (kill-buffer compose)))))
+
+(ert-deftest protean-extras-test-a-client-that-cannot-open-the-message-says-why ()
+  "When the message does not open, the stager gives its opener's reason."
+  (protean-extras-test--with-features '(telega)
+    (cl-letf (((symbol-function 'protean-extras-open-telegram)
+               (lambda (_message done) (funcall done nil "Telegram has no chat 77") t)))
+      (should (equal (cdr (protean-extras-test--staged
+                           #'protean-extras-stage-telegram
+                           '(:channel "telegram" :ref "77/5") "Hi."))
+                     (list nil "Telegram has no chat 77"))))))
 
 (provide 'protean-extras-test)
 ;;; protean-extras-test.el ends here

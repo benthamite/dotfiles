@@ -10080,7 +10080,7 @@ does not exist."
 :ID:       15499D3A-50ED-4FF1-9F74-06E995B6AECA
 :END:
 
-/[[file:extras/protean-extras.el][protean-extras]] opens a message of Protean's inbox preview in its own client: email rendered as mu4e renders it, Slack in emacs-slack, Signal in sgn, Telegram in telega. WhatsApp shows Protean's own view until wsp can open a message./
+/[[file:extras/protean-extras.el][protean-extras]] opens a message of Protean's inbox preview in its own client: email rendered as mu4e renders it, Slack in emacs-slack, Signal in sgn, Telegram in telega, WhatsApp in wsp. It also puts a task's draft in that client as a reply for me to send (=R= in the inbox)./
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-personal-package protean-extras
@@ -10092,7 +10092,8 @@ does not exist."
                                 ("forethought" . "Forethought")
                                 ("baish" . "BAISH")))
   :config
-  (setq protean-message-open-functions (copy-sequence protean-extras-openers)))
+  (setq protean-message-open-functions (copy-sequence protean-extras-openers)
+        protean-message-stage-functions (copy-sequence protean-extras-stagers)))
 #+end_src
 
 ** =monet=

@@ -92,7 +92,7 @@ the "Already tried" list in place.
 
 * Incidents
 
-** 2026-11-21 10:28 → (open): an agent's emacsclient poll waited forever in a synchronous telega call (self-inflicted; recovery pending)
+** 2026-11-21 10:28 → 12:58: an agent's emacsclient poll waited forever in a synchronous telega call (self-inflicted)
 
 - Symptom: the watchdog's probe timed out from 10:28 on (log: "runs timers
   … did not answer"); the state file stayed fresh.
@@ -109,8 +109,9 @@ the "Already tried" list in place.
   wait has no deadline, and a server request cannot be withdrawn from the
   client side.
 - Change: the agent's watch now reads Protean's database read-only and
-  sends Emacs nothing. Recovery: Pablo asked to press =C-g=; whether it
-  ended the wait is not yet observed.
+  sends Emacs nothing. Recovery: Pablo freed Emacs at 12:58 (watchdog
+  "recovered"); afterwards the server answered, with recursion depth 0
+  and =debug-on-quit= nil.
 - Lesson: agents must not poll Emacs with =emacsclient= calls that can
   wait without a deadline (synchronous telega, url, process waits); read
   the data from a store outside Emacs instead.

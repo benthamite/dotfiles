@@ -92,6 +92,29 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-21 10:28 → (open): an agent's emacsclient poll waited forever in a synchronous telega call (self-inflicted; recovery pending)
+
+- Symptom: the watchdog's probe timed out from 10:28 on (log: "runs timers
+  … did not answer"); the state file stayed fresh.
+- Evidence: every watchdog stack sample from 12:38 to 12:48
+  (=emacs-server-watchdog.stacks/20261121-12*-timeout.txt=) shows the
+  main thread, all 760 samples, in =server-execute= → a scratch function
+  of an agent session → =telega--getChatHistory= → =telega-server--call=
+  → =accept-process-output=. The agent (session 67c24386) polled a
+  Telegram chat each minute with =emacsclient -e= and a synchronous
+  telega history request; one request never got its reply from
+  telega-server, so it waited without limit while the 20 s client
+  timeout only killed the client.
+- Cause: a synchronous telega request evaluated through the server. Its
+  wait has no deadline, and a server request cannot be withdrawn from the
+  client side.
+- Change: the agent's watch now reads Protean's database read-only and
+  sends Emacs nothing. Recovery: Pablo asked to press =C-g=; whether it
+  ended the wait is not yet observed.
+- Lesson: agents must not poll Emacs with =emacsclient= calls that can
+  wait without a deadline (synchronous telega, url, process waits); read
+  the data from a store outside Emacs instead.
+
 ** 2026-11-20 21:26: Emacs killed by XProtect after an agent's full notes export (not a freeze; second case after 11-17)
 
 - Emacs (pid 90290) exited at 21:26:43.809 in the same millisecond as

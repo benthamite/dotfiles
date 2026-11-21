@@ -9989,7 +9989,7 @@ does not exist."
 :ID:       7E3F4B2A-5C1D-4E8F-9A6B-2D0C8E1F3A47
 :END:
 
-/[[file:~/.local/share/protean/src/README.md][Protean]] turns incoming messages into work in my projects. Its engine (a launchd daemon) collects every channel, routes each message to a project and has the project's agent decide what the message needs. This package is its small Emacs part: it writes those verdicts as tasks under the project's heading (=PROTEAN_DIRECTORY= names the project's directory), in =~/repos/notes/protean-projects.org= or, for Forethought, =sprint.org=, where every task is tagged =:pablo:=. =M-x protean-inbox= lists every open task that came from a message, and every task an agent finished, was blocked on or got stuck on; the mode line shows their count. A =protean:N= link opens the conversation behind a task, and =protean-move-task= moves a message to another project. Sessions are agent.el's: =agent-act-on-thing-at-point= on a task starts one in the project's directory, or returns to the one the task records, and a task tagged =:agent:= starts by itself. The manual is [[file:~/.local/share/protean/src/README.org][README.org]]; my own configuration of the engine is =~/.config/protean/config.toml=./
+/[[file:~/.local/share/protean/src/README.md][Protean]] turns incoming messages into work in my projects. Its engine (a launchd daemon) collects every channel, routes each message to a project and has the project's agent decide what the message needs. This package is its small Emacs part: it writes those verdicts as tasks under the project's heading (=PROTEAN_DIRECTORY= names the project's directory), in =~/repos/notes/protean-projects.org= or, for Forethought, =sprint.org=, where every task is tagged =:pablo:=. =M-x protean-inbox= lists every open task that came from a message and that I have not reviewed yet (accepted with =a=, scheduled from the inbox, or put in a waiting or later state), and every task an agent finished, was blocked on or got stuck on; the mode line shows their count. A =protean:N= link opens the conversation behind a task, and =protean-move-task= moves a message to another project. Sessions are agent.el's: =agent-act-on-thing-at-point= on a task starts one in the project's directory, or returns to the one the task records, and a task tagged =:agent:= starts by itself. The manual is [[file:~/.local/share/protean/src/README.org][README.org]]; my own configuration of the engine is =~/.config/protean/config.toml=./
 
 /Protean is built from GitHub like my other packages, and its Elpaca clone is the only copy of it: the engine (launchd job =com.stafforini.protean=) and the =protean= command run from it too, through =~/.local/share/protean/src=, which the =:init= below keeps pointing at it. Nobody edits the clone: work happens in worktrees under =~/repos/.worktrees/protean/= and reaches it through =main=. The engine restarts itself when its code changes, so an Elpaca update moves both parts./
 
@@ -10024,6 +10024,9 @@ does not exist."
   (protean-archives
    (list (file-name-concat paths-dir-personal-repos "forethought-notes/sprint-archive.org")))
   (protean-exported-task-tags '("pablo"))
+  ;; Putting a task from a message in one of these states takes it off the
+  ;; inbox, as accepting it with `a' does (Pablo, 20 Nov 2026).
+  (protean-deferred-states '("WAITING" "SOMEDAY" "MAYBE" "LATER"))
   ;; When Protean archives a mail it has dealt with, do what my own refile
   ;; does besides moving it: fix the Gmail labels and keep the read status.
   (protean-archive-before-refile-functions

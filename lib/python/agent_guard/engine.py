@@ -17,14 +17,14 @@ import sys
 import traceback
 
 from .core import CLAUDE, CODEX, CODEX_SHELL_TOOLS, Call, HookFailure, Result
-from .policies import (ahrefs, codex_wrap, destructive, dirty_tree, dispatcher, elisp_cookie, elisp_skill, elpaca_dotfiles_edit, elpaca_rebuild,
+from .policies import (ahrefs, codex_wrap, destructive, dirty_tree, dispatcher, elisp_cookie, emacs_tree_traversal, elisp_skill, elpaca_dotfiles_edit, elpaca_rebuild,
                        github_write, hookspath, launchagent, named_agent, retired_secrets, search_root, secret_leak,
                        security_controls, sensitive_read, stale_team, texi_edit, untrusted_execution, walk_list)
 
 CHAINS = {
     CLAUDE: [
         ("Bash", (dispatcher, dirty_tree, launchagent, security_controls, retired_secrets, search_root,
-                  elisp_cookie)),
+                  emacs_tree_traversal, elisp_cookie)),
         ("Read", (sensitive_read, walk_list)),
         ("Edit|Write|NotebookEdit", (secret_leak, retired_secrets, elpaca_dotfiles_edit, elisp_skill, texi_edit, walk_list,
                                      launchagent, elisp_cookie, security_controls)),
@@ -36,8 +36,8 @@ CHAINS = {
     CODEX: [
         ("|".join(re.escape(t) for t in CODEX_SHELL_TOOLS),
          (sensitive_read, secret_leak, ahrefs, github_write, destructive, walk_list, elpaca_rebuild, dirty_tree,
-          launchagent, security_controls, untrusted_execution, hookspath, retired_secrets, search_root, elisp_cookie,
-          codex_wrap)),
+          launchagent, security_controls, untrusted_execution, hookspath, retired_secrets, search_root, emacs_tree_traversal,
+          elisp_cookie, codex_wrap)),
         ("apply_patch|Edit|Write", (secret_leak, elpaca_dotfiles_edit, texi_edit, walk_list, launchagent, retired_secrets,
                                     elisp_cookie, security_controls)),
     ],

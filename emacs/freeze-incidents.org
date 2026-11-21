@@ -92,6 +92,27 @@ the "Already tried" list in place.
 
 * Incidents
 
+** 2026-11-20 21:26: Emacs killed by XProtect after an agent's full notes export (not a freeze; second case after 11-17)
+
+- Emacs (pid 90290) exited at 21:26:43.809 in the same millisecond as
+  =xprotectd= logged "Killing container due to rules engine deny". No crash
+  report; kill-emacs-hook did not run. Rule details are =<private>=.
+- 35 s earlier the preparedness session (fe5d4a04), inside Emacs, ran
+  =emacs --batch -l scripts/export-notes.el= in =~/repos/stafforini.com= with
+  no =EXPORT_FILE_LIST=, so it opened all 5,276 =.org= files under
+  =~/repos/notes=. Its 13:56 single-note export in the same Emacs was not
+  killed. Trigger inferred, not proven.
+- Same class as 2026-11-17 07:17 and 07:24 (=tr '\n' '\0' < files.txt |
+  xargs -0 rg= over ~12,000 org-id files; =logs/2026-11-17.md=) and
+  stafforini.com decision 025 (2026-09-13/14): a process under Emacs opening
+  thousands of files one by one; XProtect kills the responsible app, Emacs.
+- Changed: agent-guard policy =emacs_tree_traversal= denies, in Emacs-hosted
+  sessions, xargs pipelines and =for= loops over lists of more than 500 files
+  (=deb405585=, live-verified); a bare =export-notes.el= run refuses its full
+  scan (stafforini.com =b150482=).
+- Open: other bulk readers (a Python or Elisp loop opening many files) are
+  not guarded; a list given through a shell variable is not resolved.
+
 ** 2026-11-20 15:49 → 16:46: idle =ns_select= stopped servicing timers and the server while the display was off (investigation, no change)
 
 - Watchdog: outage logged 15:50:20; state file last written 15:49:02.

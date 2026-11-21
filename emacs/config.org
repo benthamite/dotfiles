@@ -4548,6 +4548,19 @@ probe failed this way because the current buffer belonged to a removed project
 directory. No timer depends on a directory that no longer exists, so every
 timer runs from the home directory in that case.
 
+A timer also runs inside whatever command is waiting for input, and nothing in
+=timer.el= saves the match data around it, so a timer that searches overwrites
+the match data of the code it interrupted. =org-priority= matches the current
+priority cookie, asks for the new one with =read-char-exclusive= (timers run
+while it waits) and only then replaces the match; on 2026-11-21 setting a
+priority failed with "replace-match subexpression does not exist", and 13
+timers (org-linear, agent, wsp, emacs-slack, doom-modeline, eat and
+=save-some-buffers= among them) were seen changing the match data within 90
+seconds. Every timer therefore runs with the match data saved and restored. This
+is a workaround, approved by Pablo on 2026-11-21: code that keeps match data
+across a wait for input (Org here) is fragile, and each timer should save it
+itself; one wrapper covers them all, third-party ones included.
+
 Process sentinels have the same problem, but Emacs calls them from C, so no
 Lisp advice can cover them all. The reachability probe that timers use
 (~simple-extras-call-when-reachable~) applies the same rule to its callback: on
@@ -4594,7 +4607,17 @@ directory makes `make-process' signal `file-missing'."
                                  default-directory
                                (expand-file-name "~/"))))
       (funcall fn timer)))
-  (advice-add 'timer-event-handler :around #'timer-extras-run-from-existing-directory))
+  (advice-add 'timer-event-handler :around #'timer-extras-run-from-existing-directory)
+
+  ;; Workaround (approved 2026-11-21): see the section's text.
+  (defun timer-extras-keep-match-data (fn timer)
+    "Apply FN to TIMER with the match data saved and restored.
+A timer runs inside whatever command is waiting for input; one that
+searches would overwrite that command's match data, which
+`org-priority', for one, still needs after asking for a key."
+    (save-match-data
+      (funcall fn timer)))
+  (advice-add 'timer-event-handler :around #'timer-extras-keep-match-data))
 #+end_src
 
 ** =dired=

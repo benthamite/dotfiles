@@ -118,8 +118,10 @@ leaked secret has since been replaced is tracked in Pablo's private ledger
 | 11-15 | Slack websocket reconnect parameter (`frt`) of an Emacs Slack connection (its `token` parameter was masked) | a | an `emacsclient` read of `process-list` names in Pablo's Emacs, during an org-linear diagnosis, printed the websocket URL; the output hook masked `token=` (by its `xoxc-` shape) but not `frt=`. Closed by masking credential-bearing URL parameters by name in `redact-secrets.sh`, both runtimes, 1d5d909c3 |
 | 09-26 | Brave Search API key | a | a process listing printed the arguments of the Emacs `brave-search` MCP server, which held the key; found on 2026-11-17 by checking a sample of old transcripts against the secret index |
 | 11-18 | Together AI API key (revoked within minutes, never used) | d | the browser `find` tool echoed the copy button's accessible name, which was the key itself, while locating the button to copy it |
+| 11-21 | Home Wi-Fi WPA2 passphrase | a | a `uiautomator dump` of an Android app screen, printed for navigation, included the text of the Tuya app's prefilled Wi-Fi password field; the agent's screen-reader helper now masks EditText contents |
+| 11-21 | Home Wi-Fi WPA2 passphrases (two superseded values) | a, d | the old passphrase appeared in a printed `uiautomator` dump of a prefilled field; an interim passphrase was encoded in a Wi-Fi provisioning QR code captured in a phone screenshot |
 
-Tally: page/screenshot 10, command output 12, file read 3, **typed literal 0**.
+Tally: page/screenshot 11, command output 14, file read 3, **typed literal 0**.
 
 ## Protection in place (2026-10-01)
 

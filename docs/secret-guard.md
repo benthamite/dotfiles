@@ -121,6 +121,7 @@ leaked secret has since been replaced is tracked in Pablo's private ledger
 | 11-21 | Home Wi-Fi WPA2 passphrase | a | a `uiautomator dump` of an Android app screen, printed for navigation, included the text of the Tuya app's prefilled Wi-Fi password field; the agent's screen-reader helper now masks EditText contents |
 | 11-21 | Home Wi-Fi WPA2 passphrases (two superseded values) | a, d | the old passphrase appeared in a printed `uiautomator` dump of a prefilled field; an interim passphrase was encoded in a Wi-Fi provisioning QR code captured in a phone screenshot |
 | 11-22 | Home Wi-Fi WPA2 passphrase | a | an agent screenshot of the Tuya app's Wi-Fi screen captured the unmasked password field; screenshots of Wi-Fi entry screens need the same care as dumps |
+| 11-22 | Home Wi-Fi WPA2 passphrase | a | an ad-hoc `uiautomator dump | grep text=` bypassed the masking helper and printed a prefilled password field; use the masking helper for every screen read |
 
 Tally: page/screenshot 11, command output 14, file read 3, **typed literal 0**.
 

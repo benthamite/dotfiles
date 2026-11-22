@@ -5803,7 +5803,7 @@ CLOCK: [2021-04-02 Fri 13:56]--[2021-04-02 Fri 15:24] =>  1:28
 :END:
 /[[https://github.com/benthamite/org-linear][org-linear]] syncs the issues of Linear teams with an Org file in both directions./
 
-I use it for the Autumn Sprint's board, where projects' milestones show as =MILESTONE= headings and sub-issues under their parents (since 15 Nov 2026), and, through the =personal= profile, for my personal TODOs, which sync in place with my own Linear workspace (=stafforini=, team =PAB=). That profile also leaves out machine-written conversation logs and the published =public/= notes. Its =PROJECT= headings sync as Linear projects, its =MILESTONE= headings as their milestones, and a TODO nested under another as a sub-issue (since 15 Nov 2026, for =steward=). Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
+I use it for the Autumn Sprint's board, where projects' milestones show as =MILESTONE= headings and sub-issues under their parents (since 15 Nov 2026), and, through the =personal= profile, for my personal TODOs, which sync in place with my own Linear workspace (=stafforini=, team =PAB=). That profile also leaves out machine-written conversation logs and the published =public/= notes. Its =PROJECT= headings sync as Linear projects, its =MILESTONE= headings as their milestones, and a TODO nested under another as a sub-issue (since 15 Nov 2026, for =steward=). A project's =OUTCOME= property is its Linear summary; =org-linear-project-create= puts top-level projects in =my-projects.org= and records a directory as =PROTEAN_DIRECTORY=, so Protean finds the project; =org-linear-roadmap= and =org-linear-project-context= show where projects stand and what a task serves (since 22 Nov 2026). Its background syncs read the Linear key through the =op-automations= cache from the personal =Automation= vault, so they never ask for Touch ID (=claude/context/secrets.md=, "Forethought secrets").
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package org-linear
@@ -5843,6 +5843,8 @@ I use it for the Autumn Sprint's board, where projects' milestones show as =MILE
                       "/notes/\\(?:gptel\\|chatgpt\\|chatgpt-sync\\|claude-sync\\|public\\)/")
       :project-keywords ("PROJECT")
       :milestone-keywords ("MILESTONE")
+      :project-file ,(file-name-concat paths-dir-notes "my-projects.org")
+      :project-directory-property "PROTEAN_DIRECTORY"
       :inbox-file ,paths-file-inbox-mobile
       :assign-new-issues t
       :conflict-winner org

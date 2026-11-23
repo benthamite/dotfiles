@@ -8558,8 +8558,11 @@ opens another debugger, which resizes them again, without end."
 
 /[[https://depp.brause.cc/nov.el/][nov]] is a major mode for reading EPUBs in Emacs./
 
+The recipe clones from the emacsmirror copy on GitHub because the certificate of the author's own server, depp.brause.cc, expired in November 2026 and the daily cooldown observer could no longer read it; the mirror carries upstream's commits unchanged, so the pinned ref is the same.
+
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package nov
+  :ensure (:url "https://github.com/emacsmirror/nov.git")
   :defer t)
 #+end_src
 

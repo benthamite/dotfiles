@@ -1891,7 +1891,7 @@
 			 t :type git :protocol https :inherit t :depth treeless
 			 :ref "9bb4669400a300e9d8243916593d2455d4d63c26"))
  (nov :source "elpaca-menu-lock-file" :recipe
-      (:package "nov" :fetcher git :url "https://depp.brause.cc/nov.el.git"
+      (:package "nov" :fetcher git :url "https://github.com/emacsmirror/nov.git"
 		:files
 		("*.el" "*.el.in" "dir" "*.info" "*.texi" "*.texinfo" "doc/dir"
 		 "doc/*.info" "doc/*.texi" "doc/*.texinfo" "lisp/*.el"

@@ -42,9 +42,19 @@ the "Already tried" list in place.
   briefly while the code that feeds it stays loaded.
 - =emacsk= repeatedly: stacks nested debuggers and leaves =debug-on-quit= on
   (2026-10-06). Press it once.
+- SIGUSR2 into a process sentinel stuck in Org's element parser
+  (2026-11-23): Emacs came back, but the quit landed inside the element
+  cache, which then gave org-linear wrong headings; the sync went on writing
+  to Linear. Before interrupting a sync, turn off =org-linear-auto-sync-mode=
+  and =org-linear-file-mode=, and clear =org-linear--pending=, so nothing
+  resumes or restarts it; after, run =org-element-cache-reset= in the Org
+  buffers before any sync.
 
 * Open
 
+- What damaged =sprint.org='s element cache before the 2026-11-23 07:45
+  sync, and whether org-linear should check or reset the cache before it
+  reads a file (2026-11-23 entry). Unknown; no change made.
 - Appearance-switch freezes (2026-11-11 incident): fix applied, pending the
   first unattended sunrise switch (~05:46, 2026-11-12). Upstream report to
   emacs-plus deferred by Pablo until the mechanism is traced.
@@ -91,6 +101,52 @@ the "Already tried" list in place.
   file has loaded. Pending Pablo's decision.
 
 * Incidents
+
+** 2026-11-22 21:37 → 11-23 08:27: idle stall overnight, then a 30-minute org-linear sync parse; the recovery corrupted Linear data (session 9742d43a)
+
+- 21:37 → 07:44: watchdog timeouts, later "refused"; state file stale. Display
+  off from 20:22. Stacks (=20261122-213757-timeout.txt=,
+  =20261123-073654-refused.txt=): main thread idle in =ns_select_1= →
+  =mach_msg=, no Lisp. Same class as the 11-20 entry; it ended 3 s after the
+  display turned on (07:43:57). Trigger not looked for.
+- 07:45 → 08:14: the first timer-run org-linear sync after the wake (default
+  Forethought profile, started 07:44:00) ran at 100% CPU in its curl
+  sentinel: =org-back-to-heading= → =org-element-at-point= →
+  =org-element--parse-to=, about half the samples in =org-element--cache-put=
+  → =avl-tree-enter=, in =sprint.org= (366 KB). Samples:
+  =/tmp/emacs-freeze.SdurJY/= and the watchdog's =20261123-07*-timeout.txt=.
+  The file itself parses fast: in a batch =emacs -Q= with the same Org
+  (9.8.10), =org-element-parse-buffer= takes 0.12 s, and
+  =org-back-to-heading= from all 1,726 property lines takes 0.05 s. The
+  cost came from the live buffer's element cache (413 entries at the time);
+  what damaged it before 07:45 is unknown.
+- Recovery (approved): one SIGUSR2 at 08:14:45. The sentinel's quit was
+  absorbed inside Org's parser instead of ending the sync, so the sync went
+  on with a corrupted cache. Pulled values were garbage, e.g. a =parent= that
+  was a fragment of the task's own title, and a cached =LINEAR_PROJECT= of
+  "2; action: sweep-decide:projects/sha" for a heading whose file value was
+  correct (Org warning "Added org-data parent to non-headline element").
+  Effects: Linear rejected ~150 updates ("Argument Validation Error"); 17
+  issues had their project removed and put back; AS-150, AS-154 and AS-261
+  stayed without a project. The sync also wrote stripped duplicate headings
+  for AS-514, AS-591 and AS-676 into =sprint.org= after logging them as "left
+  Linear". Ending the sync with =org-linear--fail= did not stop it: with
+  =org-linear--pending= set, the failure handler starts a new sync 5 s later.
+  It stopped only after =org-linear-auto-sync-mode= and =org-linear-file-mode=
+  were turned off and =org-linear--pending= cleared.
+- Repairs: element cache reset in =sprint.org=; the three stripped copies
+  deleted (originals with notes kept; pre-edit copy in this session's
+  scratchpad); the three projects set again through the Linear API. Sync left
+  off pending Pablo.
+- Second, self-inflicted freeze, 08:20 → 08:27: my timing probe looped
+  forever (=org-back-to-heading= moves point back to the line start, so
+  =re-search-forward= matched the same heading again), entered through the
+  server from inside a mu4e prompt. Stopped with a second approved SIGUSR2,
+  which opened the debugger on the server's "Quit emacsclient request"
+  message; =debug-on-quit= reset to nil afterwards.
+- Lessons: an interrupt can leave Org's element cache damaged, so stop
+  syncs from starting before sending one (see "Already tried"). Time
+  diagnostic loops in a batch Emacs on a copy, never in the live one.
 
 ** 2026-11-21 10:28 → 12:58: an agent's emacsclient poll waited forever in a synchronous telega call (self-inflicted)
 

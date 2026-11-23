@@ -6,13 +6,17 @@ named in the master lockfile.  `plan` writes a candidate lockfile for the next
 dev profile: my own packages at their remote tip, third-party packages at the
 newest tip first observed at least MIN_AGE_DAYS ago, and packages whose recipe
 in config.org pins a `:ref` or `:tag` at that pin, which Elpaca honours over
-the lockfile.  `verify-build` checks
+the lockfile.  `review-material` writes, for every third-party repository the
+plan moves, the commits and the diff that the release would bring in and the
+commits upstream has pushed since, so that they can be read before anything is
+built.  `verify-build` checks
 that a profile built from the candidate checked out exactly those refs.
 `unused` lists the third-party packages that the package usage log written by
 my Emacs configuration has not seen loaded for DAYS days.
 
 Nothing here executes package code: remotes are read with `git ls-remote` and
-commit-only bare clones, and lockfiles are read and printed as Lisp data.
+bare clones that are never checked out (commit-only, or without blobs until a
+diff asks for them), and lockfiles are read and printed as Lisp data.
 """
 
 import argparse
@@ -43,7 +47,10 @@ HOST_URLS = {
     "sourcehut": "https://git.sr.ht/~{}",
 }
 GIT_TIMEOUT_SECONDS = 120
+# A diff fetches the blobs it needs from a clone made without them.
+DIFF_TIMEOUT_SECONDS = 900
 WORKERS = 16
+REVIEW_WORKERS = 6
 # A remote that fails is read once more after this pause, so that a blip of
 # seconds (an empty reply from GitHub, say) does not fail the whole run.
 # Losing the network is launchd-network-retry's business, not this one's.
@@ -126,9 +133,13 @@ def classify(package, exempt_owners):
 # Git
 
 
-def git(*arguments, cwd=None):
+def git(*arguments, cwd=None, timeout=GIT_TIMEOUT_SECONDS):
+    # Automatic maintenance is off: after a fetch Git would otherwise start it
+    # in the background, where it still writes to a temporary clone that is
+    # being deleted.
     result = subprocess.run(
-        ["git", *arguments], cwd=cwd, capture_output=True, text=True, timeout=GIT_TIMEOUT_SECONDS
+        ["git", "-c", "gc.auto=0", "-c", "maintenance.auto=false", *arguments],
+        cwd=cwd, capture_output=True, text=True, errors="replace", timeout=timeout,
     )
     if result.returncode != 0:
         raise RuntimeError(f"git {' '.join(arguments)}: {result.stderr.strip()}")
@@ -171,11 +182,11 @@ def history(repo, commit):
     return set(git("rev-list", commit, cwd=repo).split())
 
 
-def clone_commits(url, branch, directory):
-    arguments = ["clone", "--quiet", "--bare", "--filter=tree:0", "--single-branch"]
+def clone_commits(url, branch, directory, blob_filter="tree:0"):
+    arguments = ["clone", "--quiet", "--bare", f"--filter={blob_filter}", "--single-branch"]
     if branch:
         arguments += ["--branch", branch]
-    git(*arguments, url, str(directory))
+    git(*arguments, url, str(directory), timeout=DIFF_TIMEOUT_SECONDS)
 
 
 # Observations
@@ -263,11 +274,13 @@ def command_observe(args):
 # Plan
 
 
-def decide(package, kind, url, tip, history, now, min_age_days, take_now):
+def decide(package, kind, url, tip, history, now, min_age_days, take_now, hold=frozenset()):
     """Return (ref, (category, detail), needs_ancestry_check) for one package."""
     previous = package["ref"]
     if kind == "tagged":
         return previous, ("pinned to a tag", package["tag"]), False
+    if package["id"] in hold:
+        return previous, ("held", "held by the pre-build review"), False
     if kind == "own":
         return tip, ("own" if tip != previous else "own, unchanged", ""), False
     if package["id"] in take_now:
@@ -295,13 +308,16 @@ def command_plan(args):
     packages = export_lockfile(args.lockfile)
     exempt_owners = load_exempt_owners(args.policy_dir)
     known = {package["id"] for package in packages}
-    unknown = (set(args.take_now) | set(args.drop)) - known
+    unknown = (set(args.take_now) | set(args.drop) | set(args.hold)) - known
     if unknown:
-        raise RuntimeError(f"--take-now or --drop names packages not in the lockfile: {sorted(unknown)}")
+        raise RuntimeError(f"--take-now, --drop or --hold names packages not in the lockfile: {sorted(unknown)}")
+    contradictory = sorted(set(args.hold) & (set(args.take_now) | set(args.drop)))
+    if contradictory:
+        raise RuntimeError(f"--hold names packages that --take-now or --drop also names: {contradictory}")
     pins = {name: pin for name, pin in config_pins(args.config).items() if name in known}
-    pinned_take_now = sorted(set(args.take_now) & set(pins))
+    pinned_take_now = sorted((set(args.take_now) | set(args.hold)) & set(pins))
     if pinned_take_now:
-        raise RuntimeError(f"--take-now names packages that config.org pins: {pinned_take_now}")
+        raise RuntimeError(f"--take-now or --hold names packages that config.org pins: {pinned_take_now}")
     classified = {package["id"]: classify(package, exempt_owners) for package in packages}
     remotes = {
         remote_key(url, package.get("branch")): (url, package.get("branch"))
@@ -326,7 +342,7 @@ def command_plan(args):
         key = remote_key(url, package.get("branch"))
         ref, status, check = decide(
             package, kind, url, tips.get(key), observations.get(key, []),
-            now, args.min_age_days, set(args.take_now),
+            now, args.min_age_days, set(args.take_now), set(args.hold),
         )
         decisions[package["id"]] = [ref, status]
         if check:
@@ -345,10 +361,36 @@ def command_plan(args):
         decisions[name] = [None, ("dropped, to be built at upstream HEAD", "")]
     refs = {name: ref for name, (ref, _) in decisions.items()}
     rewrite_lockfile(args.lockfile, refs, args.out)
+    if args.moves:
+        moves = third_party_moves(packages, classified, decisions, tips)
+        args.moves.write_text(json.dumps(moves, indent=1) + "\n")
     report = format_report(packages, decisions, args.min_age_days)
     if args.report:
         args.report.write_text(report)
     print(report, end="")
+
+
+def third_party_moves(packages, classified, decisions, tips):
+    """Return the third-party repositories that DECISIONS move to a new commit.
+
+    Each is {url, branch, previous, chosen, tip, packages}: packages built from
+    one repository at one pair of commits share an entry.  These are the moves
+    the cooldown made; `--take-now' and `--drop' packages bypass it and are
+    named in the plan report instead."""
+    moves = {}
+    for package in packages:
+        kind, url = classified[package["id"]]
+        ref, (category, _) = decisions[package["id"]]
+        if kind != "third-party" or category != "updated":
+            continue
+        branch = package.get("branch")
+        key = (url, branch or "", package["ref"], ref)
+        move = moves.setdefault(key, {
+            "url": url, "branch": branch, "previous": package["ref"], "chosen": ref,
+            "tip": tips.get(remote_key(url, branch)), "packages": [],
+        })
+        move["packages"].append(package["id"])
+    return [moves[key] for key in sorted(moves)]
 
 
 def format_report(packages, decisions, min_age_days):
@@ -368,6 +410,67 @@ def format_report(packages, decisions, min_age_days):
             change = f"{old[:10]} -> {new[:10]}" if new and old != new else old[:10]
             lines.append(f"{name}: {change}" + (f" ({detail})" if detail else ""))
     return "\n".join(lines) + "\n"
+
+
+# Review material
+
+
+def review_directory_name(index, move):
+    slug = re.sub(r"[^A-Za-z0-9._-]", "-", move["packages"][0])
+    return f"{index:03d}-{slug}"
+
+
+def write_review_material(move, directory):
+    """Write what a reviewer reads about MOVE into DIRECTORY and return a summary.
+
+    `incoming.log' and `incoming.diff' are what the release would bring in
+    (previous..chosen); `newer.log' is what upstream has pushed after the chosen
+    commit, where a revert or a security fix of it would show.  The repository
+    is cloned bare and never checked out, and the diff runs no external driver."""
+    previous, chosen = move["previous"], move["chosen"]
+    log_format = "--format=commit %H%nAuthor: %an <%ae>%nDate:   %aI%n%n%w(0,4,4)%B"
+    with tempfile.TemporaryDirectory(prefix="elpaca-cooldown-review-") as clone:
+        clone_commits(move["url"], move["branch"], clone, blob_filter="blob:none")
+        incoming = git("log", log_format, f"{previous}..{chosen}", cwd=clone)
+        newer = git("log", log_format, f"{chosen}..HEAD", cwd=clone)
+        stat = git("diff", "--no-ext-diff", "--no-textconv", "--stat", previous, chosen,
+                   cwd=clone, timeout=DIFF_TIMEOUT_SECONDS)
+        diff = git("diff", "--no-ext-diff", "--no-textconv", previous, chosen,
+                   cwd=clone, timeout=DIFF_TIMEOUT_SECONDS)
+    directory.mkdir(parents=True)
+    (directory / "incoming.log").write_text(incoming + "\n" + stat)
+    (directory / "incoming.diff").write_text(diff)
+    (directory / "newer.log").write_text(newer)
+    return {
+        "incoming_commits": incoming.count("\ncommit ") + incoming.startswith("commit "),
+        "newer_commits": newer.count("\ncommit ") + newer.startswith("commit "),
+        "diff_bytes": len(diff.encode()),
+    }
+
+
+def command_review_material(args):
+    moves = json.loads(args.moves.read_text())
+    if args.out.exists() and any(args.out.iterdir()):
+        raise RuntimeError(f"{args.out} is not empty; give a new directory")
+    args.out.mkdir(parents=True, exist_ok=True)
+
+    def prepare(item):
+        index, move = item
+        name = review_directory_name(index, move)
+        try:
+            return {**move, "directory": name, **write_review_material(move, args.out / name)}
+        except Exception as error:
+            return {**move, "directory": name, "error": str(error)}
+
+    with ThreadPoolExecutor(max_workers=REVIEW_WORKERS) as pool:
+        entries = list(pool.map(prepare, enumerate(moves, start=1)))
+    (args.out / "index.json").write_text(json.dumps(entries, indent=1) + "\n")
+    failed = [entry for entry in entries if "error" in entry]
+    print(f"review material for {len(entries) - len(failed)} of {len(entries)} moved repositories in {args.out}")
+    for entry in failed:
+        print(f"  {entry['directory']}: {entry['error']}", file=sys.stderr)
+    if failed:
+        raise RuntimeError(f"{len(failed)} moved repositories have no review material")
 
 
 # Verify
@@ -450,6 +553,14 @@ def build_parser():
     plan.add_argument("--min-age-days", type=int, default=DEFAULT_MIN_AGE_DAYS)
     plan.add_argument("--take-now", action="append", default=[], metavar="PACKAGE")
     plan.add_argument("--drop", action="append", default=[], metavar="PACKAGE")
+    plan.add_argument("--hold", action="append", default=[], metavar="PACKAGE",
+                      help="keep PACKAGE at its previous ref, as the pre-build review decided")
+    plan.add_argument("--moves", type=Path, help="write the third-party repositories that move, as JSON")
+    review = commands.add_parser(
+        "review-material", help="write the incoming commits and diff of every moved third-party repository"
+    )
+    review.add_argument("--moves", type=Path, required=True)
+    review.add_argument("--out", type=Path, required=True)
     unused = commands.add_parser("unused", help="list third-party packages the usage log has not seen lately")
     unused.add_argument("--lockfile", type=Path, default=DEFAULT_LOCKFILE)
     unused.add_argument("--usage-log", type=Path, default=DEFAULT_USAGE_LOG)
@@ -465,6 +576,7 @@ def main(argv=None):
     commands = {
         "observe": command_observe,
         "plan": command_plan,
+        "review-material": command_review_material,
         "verify-build": command_verify_build,
         "unused": command_unused,
     }

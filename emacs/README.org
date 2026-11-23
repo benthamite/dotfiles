@@ -67,14 +67,18 @@ compromised upstream commit from reaching a profile on the day it is pushed:
 | Command | Behavior |
 |---------+----------|
 | =observe= | Runs daily from a LaunchAgent owned by the separate launchd repository. Records the tip of every third-party remote named in =lockfile.el= and when that tip was first seen, in =~/.local/state/elpaca-cooldown/observations.json=. It runs =git ls-remote= only. |
-| =plan --out FILE= | Writes the candidate lockfile a dev profile is built from. Packages whose remote owner is listed in [[file:elpaca-cooldown/exempt-owners.txt][exempt-owners.txt]] move to their remote tip. Third-party packages move to the newest tip first seen at least seven days ago, provided it is still in the branch and descends from the pinned commit; otherwise they keep the previous release's ref and the report says why. A package whose recipe in =config.org= carries =:ref= or =:tag= is planned at that pin, which Elpaca honours over the lockfile. =--take-now PACKAGE= bypasses the wait for one package and is named in the report. |
+| =plan --out FILE= | Writes the candidate lockfile a dev profile is built from. Packages whose remote owner is listed in [[file:elpaca-cooldown/exempt-owners.txt][exempt-owners.txt]] move to their remote tip. Third-party packages move to the newest tip first seen at least seven days ago, provided it is still in the branch and descends from the pinned commit; otherwise they keep the previous release's ref and the report says why. A package whose recipe in =config.org= carries =:ref= or =:tag= is planned at that pin, which Elpaca honours over the lockfile. =--take-now PACKAGE= bypasses the wait for one package and is named in the report. =--hold PACKAGE= keeps one package at the previous release's ref, which is how the pre-build review holds back a package it could not clear. =--moves FILE= writes, as JSON, the third-party repositories the plan moves. |
+| =review-material --moves FILE --out DIR= | Writes what the release workflow reads before it builds anything: for every moved third-party repository, the commits and the diff between the previous pin and the chosen commit, and the commits upstream has pushed since, where a revert or a security fix of the chosen commit would show. The repositories are cloned bare and never checked out. A repository whose material cannot be written fails the command. |
 | =verify-build --candidate FILE --built FILE= | Fails when a profile built from the candidate checked out any other ref, and lists packages that are new in the release, which are built at upstream HEAD. |
 | =unused [--days N]= | Lists the third-party packages that the package usage log (=~/.config/emacs-profiles/var/package-usage.log=, written by the "package usage log" section of =config.org=) has not seen loaded in the last 60 days. It reports nothing until the log itself covers that many days. A package that the configuration loads eagerly at startup always counts as loaded. |
 
 First-seen time is recorded locally because commit dates can be forged. Until
 an observation is seven days old a package stays where the last release pinned
-it. The cooldown does not protect against a maintainer who waits it out, nor
-cover binaries that a package downloads or compiles.
+it. Waiting is not looking: the release workflow (the =release-dotfiles= skill)
+reads the material above and searches for reported incidents before it builds a
+profile, and holds back what it cannot clear. Neither the cooldown nor that
+review protects against a careful maintainer who waits it out, nor covers
+binaries that a package downloads or compiles.
 
 * Commit-time synchronization and reload
 

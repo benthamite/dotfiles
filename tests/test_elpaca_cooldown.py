@@ -1,12 +1,14 @@
 import importlib.machinery
 import importlib.util
 import io
+import json
 import pathlib
 import shutil
+import subprocess
 import tempfile
 import unittest
 from argparse import Namespace
-from contextlib import redirect_stdout
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
@@ -186,9 +188,9 @@ class DecideTest(unittest.TestCase):
         self.now = datetime(2026, 9, 18, 12, 0, tzinfo=timezone.utc)
         self.package = {"id": "pkg", "ref": "pinned", "tag": None}
 
-    def decide(self, kind, history=(), take_now=(), package=None):
+    def decide(self, kind, history=(), take_now=(), package=None, hold=()):
         return self.mod.decide(
-            package or self.package, kind, "url", "tip", list(history), self.now, 7, set(take_now)
+            package or self.package, kind, "url", "tip", list(history), self.now, 7, set(take_now), set(hold)
         )
 
     def aged(self, sha, days):
@@ -220,6 +222,11 @@ class DecideTest(unittest.TestCase):
     def test_take_now_does_not_apply_to_tagged_packages(self):
         package = {"id": "pkg", "ref": "pinned", "tag": "1.0"}
         self.assertEqual(self.decide("tagged", take_now=["pkg"], package=package)[0], "pinned")
+
+    def test_hold_keeps_the_pinned_ref_despite_an_aged_tip(self):
+        ref, (category, detail), check = self.decide("third-party", [self.aged("aged", 9)], hold=["pkg"])
+        self.assertEqual((ref, category, check), ("pinned", "held", False))
+        self.assertIn("review", detail)
 
 
 class ReportTest(unittest.TestCase):
@@ -313,15 +320,48 @@ class LockfileTest(unittest.TestCase):
             self.mod.rewrite_lockfile(self.lockfile, {"absent": "a" * 40}, out)
         self.assertFalse(out.exists())
 
-    def plan_args(self, config_text="", take_now=()):
+    def plan_args(self, config_text="", take_now=(), hold=(), moves=None):
         config = pathlib.Path(self.directory.name) / "config.org"
         config.write_text(config_text)
         return Namespace(
             lockfile=self.lockfile, config=config, policy_dir=ROOT / "emacs/elpaca-cooldown",
             state_file=pathlib.Path(self.directory.name) / "observations.json",
             out=pathlib.Path(self.directory.name) / "candidate.el", report=None, min_age_days=7,
-            take_now=list(take_now), drop=["mirrored"],
+            take_now=list(take_now), drop=["mirrored"], hold=list(hold), moves=moves,
         )
+
+    def plan_with_an_aged_tip_for_theirs(self, **kwargs):
+        """Run the plan with a nine-day-old observation of a new tip of `theirs'."""
+        moves = pathlib.Path(self.directory.name) / "moves.json"
+        args = self.plan_args(moves=moves, **kwargs)
+        seen = (datetime.now(timezone.utc) - timedelta(days=9)).isoformat()
+        args.state_file.write_text(json.dumps(
+            {"https://github.com/someone/theirs.git#main": [{"sha": "a" * 40, "first_seen": seen}]}
+        ))
+        tips = lambda remotes: ({key: "f" * 40 for key in remotes}, {})
+        with patch.object(self.mod, "fetch_tips", tips), \
+             patch.object(self.mod, "check_ancestry", return_value=None), redirect_stdout(io.StringIO()):
+            self.mod.command_plan(args)
+        refs = {package["id"]: package["ref"] for package in self.mod.export_lockfile(args.out)}
+        return refs, json.loads(moves.read_text())
+
+    def test_plan_lists_the_third_party_repositories_it_moves(self):
+        refs, moves = self.plan_with_an_aged_tip_for_theirs()
+        self.assertEqual(refs["theirs"], "a" * 40)
+        self.assertEqual(moves, [{
+            "url": "https://github.com/someone/theirs.git", "branch": "main",
+            "previous": "2" * 40, "chosen": "a" * 40, "tip": "f" * 40, "packages": ["theirs"],
+        }])
+
+    def test_plan_hold_keeps_a_package_the_cooldown_would_move(self):
+        refs, moves = self.plan_with_an_aged_tip_for_theirs(hold=["theirs"])
+        self.assertEqual(refs["theirs"], "2" * 40)
+        self.assertEqual(moves, [])
+
+    def test_plan_refuses_hold_together_with_take_now(self):
+        args = self.plan_args(take_now=["theirs"], hold=["theirs"])
+        with self.assertRaises(RuntimeError):
+            self.mod.command_plan(args)
 
     def test_config_pins_reads_use_package_and_elpaca_recipes(self):
         config = pathlib.Path(self.directory.name) / "config.org"
@@ -389,6 +429,73 @@ class LockfileTest(unittest.TestCase):
         with redirect_stdout(io.StringIO()) as output, self.assertRaises(RuntimeError):
             self.mod.command_verify_build(args)
         self.assertIn("DRIFT: theirs", output.getvalue())
+
+
+class ReviewMaterialTest(unittest.TestCase):
+    """Run `review-material' against a local repository with three commits."""
+
+    def setUp(self):
+        self.mod = load_module()
+        self.directory = tempfile.TemporaryDirectory()
+        self.root = pathlib.Path(self.directory.name)
+        self.repo = self.root / "upstream"
+        self.repo.mkdir()
+        self.git("init", "--quiet", "--initial-branch=main")
+        self.commits = [self.commit(text, subject) for text, subject in (
+            ("one\n", "Pinned state"),
+            ("one\ntwo incoming\n", "Add the incoming line"),
+            ("one\n", "Revert the incoming line"),
+        )]
+
+    def tearDown(self):
+        self.directory.cleanup()
+
+    def git(self, *arguments):
+        identity = ["-c", "user.name=Test", "-c", "user.email=test@example.org", "-c", "commit.gpgsign=false"]
+        return subprocess.run(
+            ["git", *identity, *arguments], cwd=self.repo, check=True, capture_output=True, text=True
+        ).stdout.strip()
+
+    def commit(self, text, subject):
+        (self.repo / "pkg.el").write_text(text)
+        self.git("add", "pkg.el")
+        self.git("commit", "--quiet", "-m", subject)
+        return self.git("rev-parse", "HEAD")
+
+    def run_review(self, moves):
+        moves_file = self.root / "moves.json"
+        moves_file.write_text(json.dumps(moves))
+        args = Namespace(moves=moves_file, out=self.root / "review")
+        with redirect_stdout(io.StringIO()):
+            self.mod.command_review_material(args)
+        return json.loads((args.out / "index.json").read_text())
+
+    def move(self, **changes):
+        return {"url": self.repo.as_uri(), "branch": None, "previous": self.commits[0],
+                "chosen": self.commits[1], "tip": self.commits[2], "packages": ["pkg"], **changes}
+
+    def test_writes_the_incoming_diff_and_the_newer_commits(self):
+        [entry] = self.run_review([self.move()])
+        directory = self.root / "review" / entry["directory"]
+        self.assertEqual(entry["directory"], "001-pkg")
+        self.assertEqual((entry["incoming_commits"], entry["newer_commits"]), (1, 1))
+        self.assertIn("+two incoming", (directory / "incoming.diff").read_text())
+        incoming = (directory / "incoming.log").read_text()
+        self.assertIn("Add the incoming line", incoming)
+        self.assertNotIn("Revert the incoming line", incoming)
+        self.assertIn("Revert the incoming line", (directory / "newer.log").read_text())
+
+    def test_a_repository_that_cannot_be_read_fails_the_run(self):
+        moves = [self.move(), self.move(url=(self.root / "absent").as_uri(), packages=["gone"])]
+        with redirect_stderr(io.StringIO()), self.assertRaises(RuntimeError):
+            self.run_review(moves)
+        index = json.loads((self.root / "review" / "index.json").read_text())
+        self.assertEqual([("error" in entry) for entry in index], [False, True])
+
+    def test_refuses_a_directory_that_already_holds_material(self):
+        self.run_review([self.move()])
+        with self.assertRaises(RuntimeError):
+            self.run_review([self.move()])
 
 
 if __name__ == "__main__":

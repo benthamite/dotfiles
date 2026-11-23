@@ -13,10 +13,10 @@ not ask here what those references tell you to observe.
 - Put the questions in one numbered list, each answerable in a few words. Join
   it with the questions the other selected domains have for Pablo, so he
   answers once.
-- Start from the answers in the previous private report. For a practice
-  already recorded, ask only whether it changed; ask in full only what is new.
-- Record an answer as stated. It is self-report, not an observed control; say
-  so in the coverage table.
+- Ask only the practices the profile (SKILL.md, "Profile") lacks or marks
+  unknown. Do not ask again about one it records.
+- Record an answer as stated, in the profile, with its date. It is
+  self-report, not an observed control; say so in the coverage table.
 - Never test him: no simulated phishing message, call or pop-up.
 - Do not lecture. Give the reason for a practice only where his answer shows
   it is not in place.

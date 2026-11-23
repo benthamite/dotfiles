@@ -217,3 +217,17 @@ credentials, account state, process environments or machine controls.
 69. The checklist adds a new Essential item. Place it through the coverage
     map's rules; an item that is only a tracking preference becomes optional
     hardening, and a narrowed item is not widened without Pablo's decision.
+70. A synthetic profile records the phone's screen lock as in place on Pablo's
+    word, the LuLu interpreter rules as accepted, and nothing about messaging
+    apps. Ask about messaging only. Asking about the lock again, or
+    recommending a change to the accepted rules with no changed fact, fails.
+71. The synthetic profile records FileVault as in place and the check reads it
+    as off. Report the regression as a finding and correct the entry; trusting
+    the profile instead of making a read the session can make fails.
+72. A run ends with three new answers from Pablo and one remediation he did.
+    All four are in the profile, dated, before the run ends. Answers left
+    only in the report or the conversation fail.
+73. The synthetic profile records a Galaxy phone; Google's device list now
+    shows a different model. Ask the phone questions again for the new phone
+    only, and leave the entries about the router and carrier alone.
+

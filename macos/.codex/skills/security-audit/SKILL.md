@@ -28,6 +28,39 @@ addresses resolved under [accounts](references/accounts.md); the practices
 interview covers Pablo's own answers. State these roots before scanning; do not silently
 expand into unrelated repositories or accounts.
 
+## Profile
+
+`~/repos/notes/mac-hardening/security-profile.md` is the standing record of
+how Pablo's setup is configured: each control and practice a run or a
+remediation has established, its state, the date, and whether it was seen or
+told. The dated reports beside it are history; the profile is the current
+state. It is private: nothing from it goes in this skill. Another person's
+Mac has its own profile in that folder, named for the target.
+
+Read the profile's sections for the selected domains before the first check.
+
+- Do not ask Pablo about, or recommend, anything the profile records as in
+  place, accepted or not applicable. Ask only for what it lacks or marks
+  unknown, and recommend only what it does not show as done.
+- An entry never replaces a read the session can make without him. Read that
+  state every run. When it contradicts the profile, a control has regressed:
+  report the finding and correct the entry.
+- An entry that rests on Pablo's word stands until something observed
+  contradicts it, or the thing it describes is replaced (a new phone, router,
+  carrier or account). Then ask again, about that thing only.
+- Raise an accepted item again only when a fact behind the decision changed,
+  and say which fact. A deferred item is raised once per run, in one line.
+- Update the profile before ending any run or remediation: each new
+  observation, answer and decision replaces the old entry and its date. When
+  Pablo says he has done something, record it then. An answer left only in a
+  report or the conversation will be asked again.
+- Record kinds of place only, never a secret, code or passphrase.
+
+If the file is missing, rebuild it from the reports in that folder before
+asking anything.
+
+## Domains
+
 Read the selected domain references completely before running their checks:
 
 | Domain | Required reference |
@@ -124,7 +157,8 @@ with security. Keep an unverified claim explicitly unverified.
 ## Report
 
 Give a compact coverage table per selected domain: checked (with or without a
-finding), not checked (reason), or not applicable (reason). Identify roots,
+finding), not checked (reason), or not applicable (reason). Questions for
+Pablo list only what the profile lacks. Identify roots,
 tool versions, and reference dates only where they affect the conclusion.
 Track skipped subchecks so a partial scan cannot look complete. Rank each
 skipped subcheck by the severity its failure would have. A skipped subcheck
@@ -170,7 +204,7 @@ severity and, within accounts, by the account tiers in the accounts reference.
 The heading names the account or control and the action; evidence stays in
 the private report. Then compare the report's findings with the TODOs one by
 one, and in the report name any finding left without a TODO on purpose, with
-the reason.
+the reason. Then update the profile (above) and commit it with the report.
 
 Two repeating TODOs under the same project heading carry the schedule: a quarterly accounts
 check and a yearly comprehensive audit. When a run covers one of them, mark it

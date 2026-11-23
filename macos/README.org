@@ -114,6 +114,11 @@ it and lists the items carried by a narrower check than the checklist words.
 The habits domain is an interview; its answers are optional hardening, not
 findings.
 
+The skill keeps a private standing profile of the owner's setup outside this
+repository. Each run reads it first, asks only for what it lacks, still reads
+every state it can observe, and updates it before ending, so a control or
+practice already recorded is not asked about or recommended again.
+
 The design record for the read-only LuLu alert reviewer is retained at
 [[file:docs/specs/2026-08-01-review-lulu-alert-design.md][its local specification]]. Design records explain decisions; they are not
 loaded as executable configuration.

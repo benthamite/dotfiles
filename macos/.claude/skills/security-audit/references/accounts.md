@@ -47,6 +47,12 @@ higher of its billing and data exposure.
   the vault is lost or taken. Codes in a file in a synced folder make that
   cloud account a path to every account whose codes it holds: add the edge to
   the graph. Paper kept apart from the phone is the independent copy.
+- Record which address signs in to each root and money account. An address
+  published on his site, profiles or commits is the one phishing and reset
+  attempts target, and the one breaches list. A published address that also
+  signs in to and recovers root accounts is optional hardening, not a finding;
+  the remedy is an unpublished address or alias used only for those sign-ins.
+  Do not recommend withdrawing an address he publishes on purpose.
 - A domain whose registrar account is taken over means the attacker controls
   mail for that domain and can reset every account that uses it. Check registrar
   2FA and transfer lock where Pablo's own account pages show them. Find the
@@ -115,6 +121,12 @@ root account found this way to the reset graph.
 - Prioritize reused and compromised passwords on root accounts. A reused password
   on a low-value site is low severity unless that password also protects a root
   account.
+- Ask which accounts Pablo shares with another person, and how the password
+  reached them. For shared vaults, ask for vault names and member names only.
+  A shared account is as safe as the other person's devices, and a password
+  sent by message or email stays in both histories. A root or money account
+  shared outside a vault is Medium; a vault member who no longer needs access
+  is cleanup.
 
 ## Root-account controls
 
@@ -178,11 +190,91 @@ pages or his answers:
 - **Communication:** second factor and recovery for each social account.
   WhatsApp two-step verification (now a password; older accounts may still
   have a 6-digit PIN) and its recovery email, and Signal's Registration Lock.
+  Telegram's Two-Step Verification (Settings > Privacy & Security) matters
+  more: its ordinary chats are kept on Telegram's servers, so a new sign-in
+  also gets the history.
   Without them, whoever receives the SMS registration code, for instance after
   a SIM swap, takes over the account and its contacts. As optional hardening,
   ask whether Pablo and his family have agreed how to verify an urgent request
   for money or codes by phone or message, such as calling back on a known
   number or a code word: a cloned voice makes a familiar voice no proof.
+
+## Messaging apps
+
+Registration takeover is covered above. This section covers who else can read
+the messages. List the messengers Pablo uses and what each carries, then ask
+him for each view below. Never unlink a device or change a setting.
+
+- **Encryption.** Record whether a messenger's ordinary chats are end-to-end
+  encrypted. WhatsApp's and Signal's are. On Telegram only Secret Chats are;
+  its private and group chats are readable by Telegram's servers. Sensitive
+  conversations in a messenger without end-to-end encryption are Low; the
+  remedy is to move those conversations. The checklist also asks for
+  open-source messengers only. Record which are, and do not report a
+  closed-source end-to-end encrypted messenger he relies on as a gap.
+- **Linked devices.** WhatsApp: Linked devices, up to four; each receives a
+  copy of recent history, works while the phone is offline, and is logged out
+  after 30 days unused. Signal: Settings > Linked devices, up to five,
+  unlinked after 45 days unused. Telegram: Settings > Devices; its FAQ
+  documents no automatic expiry. A linked device Pablo does not recognize is
+  Critical, like an unknown signed-in device on a root account. One he no
+  longer uses is cleanup. The checklist advises against desktop and web
+  companions; do not recommend unlinking one a workflow depends on. Record
+  each linked session on the Mac, and any local archive of messages, as an
+  asset that code running as Pablo can read.
+- **Backups.** WhatsApp: Settings > Chats > Chat backup > End-to-end encrypted
+  backup. A backup in Google or iCloud storage is end-to-end encrypted only
+  when he has turned that on. Without it, the cloud account can restore the
+  whole history: Medium, and an edge in the reset graph. Signal's Secure
+  Backups are opt-in and end-to-end encrypted under a recovery key; ask where
+  the key is kept, by kind of place only.
+- **Security notifications.** WhatsApp: Settings > Account > Security
+  notifications, set per device. A notice that a contact's code changed is
+  the visible sign that their account moved to another phone, as after a
+  takeover. Signal always shows safety-number changes. Off is optional
+  hardening.
+- **Group adds.** WhatsApp: Settings > Privacy > Groups. The default,
+  Everyone, lets a stranger add him to a group, a common opening for scams.
+  Optional hardening.
+- **Presence.** Read receipts, last seen and typing indicators are
+  preferences. Do not report them.
+
+## Social accounts and public exposure
+
+The second factor and recovery of each social account are covered above.
+This section covers what else can act through an account, and what the
+accounts tell an attacker.
+
+- **Connected apps.** Read the page listing third-party apps with access.
+  Google: `myaccount.google.com/linkedapps`. X: Apps and sessions > Connected
+  apps. Facebook: Settings > Apps and websites. LinkedIn: Settings & Privacy >
+  Data privacy > Other applications > Permitted Services. Instagram: Apps and
+  websites, in its settings. An app Pablo no longer uses that can post or
+  read messages is Medium: a breach of its vendor acts as him. One that can
+  only read his profile is cleanup. An app he does not recognize on a root
+  account is Critical (severity guidance).
+- **Sign in with another account.** An account opened through "Sign in with
+  Google" or another provider is recovered by that provider's account: add
+  the edge to the reset graph. Google's linked-apps page has a filter that
+  lists them. The checklist advises against such sign-ins. Do not report one
+  that hangs off an account with a strong second factor; report Medium when
+  the provider account has no second factor or only SMS.
+- **Audience settings.** For each social account, record who can see posts,
+  the contact list, and his phone and email, and whether the profile can be
+  found by phone number or email address. Lookup by phone number confirms to
+  a stranger which number is his: Low.
+- **Public data.** Read his public profiles and site as a signed-out visitor
+  and search his name. List which of these are public: date of birth, phone
+  number, home address, identity or tax numbers, family members, employer,
+  travel plans. Then compare the list with what his carrier, banks and
+  account-recovery flows accept as proof of identity. A public datum that a
+  provider on a root path accepts as proof is Medium, linked to the
+  phone-number checks below. Anything else public is optional hardening. A
+  search sends its terms to the search engine: get Pablo's agreement to
+  search his name before the first query, and never search a phone number,
+  address or identity number.
+- **People-search listings.** Record any listing site the search finds.
+  Asking for removal is remediation.
 
 ## The second-factor phone
 
@@ -212,6 +304,44 @@ the summary as an unverified high-risk item.
   unless each account has backup codes. Record which applies.
 - **SIM PIN:** optional hardening against use of a stolen SIM (see below for
   what it does not cover).
+- **Encryption:** every Pixel, and every phone that shipped with Android 10
+  or later, encrypts its storage by default. The data is protected only by
+  the screen lock, so a weak lock is the finding, not encryption. Ask about
+  encryption only for an older phone.
+- **Finding and erasing:** Android: Settings > Security > Find Hub (formerly
+  Find My Device), "Allow device to be located". It locates, locks ("Mark as
+  lost") and factory-resets a phone that is on, online and signed in to a
+  Google Account. iPhone: Settings > [name] > Find My. Off is Medium: a lost
+  phone that holds the second factors cannot be locked or wiped. Erasing it
+  means signing in to that account from another device, so check that a
+  second factor for the account exists off the phone.
+- **App sources:** Google Play Protect (Play Store > profile > Play Protect >
+  Settings, "Scan apps with Play Protect") is on by default; off is Medium.
+  Settings > Apps > Special app access > Install unknown apps lists which
+  apps may install others. An alternative store Pablo chose is recorded with
+  what he installs from it. A browser, messenger or file manager allowed
+  there is Medium: one tap on a downloaded file installs it.
+- **Special access:** ask for the apps listed under Accessibility,
+  "Notification read, reply & control", Device admin apps and Display over
+  other apps, and those holding SMS in the Permission manager. Google's own
+  warning for Accessibility is that the app "can read content on your screen
+  and interact with apps on your behalf"; notification and SMS access read
+  every code that arrives. An app there that Pablo does not recognize or need
+  is High on this phone. Location, camera, microphone and contacts held by
+  apps with no use for them are Low.
+- **App count:** unused apps are removed, and "Pause app activity if unused"
+  is on for the rest. Cleanup.
+- **Stalkerware:** required when the habits interview says someone else knows
+  the PIN or has had the unlocked phone, optional otherwise. Ask about apps
+  he did not install, the special-access lists above, an unknown fingerprint
+  or face, cloud backup turned on by someone else, and battery or data use
+  with no explanation; some stalkerware shows none of these. On an iPhone,
+  also Safety Check (Settings > Privacy & Security) and Settings > General >
+  VPN & Device Management for profiles. A suspected case is High. Do not
+  remove anything: removal can alert whoever installed it and destroys
+  evidence. Pablo decides the next step, from another device.
+- **Other phones and tablets** signed in to a root account get the same
+  questions.
 
 ## Phone-number exposure
 
@@ -243,24 +373,37 @@ path open.
 ## Severity guidance
 
 - Critical: a forwarding address or filter Pablo does not recognize, an unknown
-  signed-in device or app grant on a root account, or a stealer-log hit newer
+  signed-in device or app grant on a root account, a linked device on a
+  messenger that Pablo does not recognize, or a stealer-log hit newer
   than the last password change for that account.
 - High: a root account whose only second factor or recovery path is SMS, a
   compromised-website item for a root account that has not changed since the
   breach, an account Pablo did not open, the 1Password account password used
   elsewhere, a second-factor phone with no screen lock or past its last
-  security update, or a connection that can move money without needing to.
+  security update, a connection that can move money without needing to, an
+  unrecognized or unneeded app with Accessibility, notification or SMS access
+  on the second-factor phone, or suspected stalkerware.
 - Medium: a reused password shared with a root account, a breached non-root
   account with an unchanged password and no second factor, a money account
   without a second factor or with its alerts off or filtered away, root-account
   backup codes in a synced file, a free credit freeze left off, lock-screen
   notifications that show SMS codes, a pattern lock or theft protection off on
-  the second-factor phone, or WhatsApp or Signal without two-step verification
-  or Registration Lock.
+  the second-factor phone, or WhatsApp, Signal or Telegram without two-step
+  verification or Registration Lock. Also: a root or money account shared
+  outside a vault, a WhatsApp cloud backup without end-to-end encryption,
+  Find Hub or Find My off on the second-factor phone, Play Protect off, a
+  browser or messenger allowed to install apps, an unused connected app that
+  can post or read messages, a sign-in provider with no second factor or only
+  SMS, or a public datum that a root-path provider accepts as proof of
+  identity.
 - Low or optional hardening: breach data classes without credentials, weak
   passwords on throwaway accounts, a dormant low-value account left open, no
   SIM PIN, transfer limits or payment-app balances above need, no agreed way
-  to verify money requests, Advanced Protection not enrolled.
+  to verify money requests, Advanced Protection not enrolled, sensitive
+  conversations in a messenger without end-to-end encryption, a profile
+  findable by phone number, WhatsApp security notifications off or group adds
+  open to everyone, a published address that also signs in to root accounts,
+  other public personal data.
 
 ## Reference maintenance
 
@@ -268,7 +411,12 @@ Checked 2026-10-17; tiers, discovery, the second-factor phone, other account
 tiers and carrier questions checked 2026-11-15. Money-account alerts, limits
 and connections, backup-code storage, credit files and money-request
 verification added 2026-11-15, informed by
-[The Hackening](https://thehackening.vercel.app/#advice).
+[The Hackening](https://thehackening.vercel.app/#advice). Shared accounts,
+sign-in addresses, messaging apps, social accounts and public exposure, and
+the phone's encryption, finding, app-source, special-access and stalkerware
+checks added 2026-11-23 from the Essential items of the
+[Personal Security Checklist](https://digital-defense.io/); vendor pages
+checked the same day. See [checklist coverage](checklist-coverage.md).
 
 - [Have I Been Pwned API v3](https://haveibeenpwned.com/API/v3)
 - [1Password Watchtower](https://support.1password.com/watchtower/)
@@ -288,6 +436,27 @@ verification added 2026-11-15, informed by
 - [WhatsApp two-step verification](https://faq.whatsapp.com/general/26000021/)
 - [Signal Registration Lock](https://support.signal.org/hc/en-us/articles/4850133017242)
 - [FCC on SIM swapping](https://docs.fcc.gov/public/attachments/DOC-398483A1.txt)
+- [WhatsApp linked devices](https://faq.whatsapp.com/378279804439436/?locale=en_US)
+- [WhatsApp end-to-end encrypted backup](https://faq.whatsapp.com/490592613091019/?locale=en_US)
+- [WhatsApp security notifications](https://faq.whatsapp.com/1524220618005378/?locale=en_US)
+- [WhatsApp group privacy](https://faq.whatsapp.com/general/security-and-privacy/how-to-change-group-privacy-settings/?locale=en_US)
+- [Signal linked devices](https://support.signal.org/hc/en-us/articles/360007320551-Linked-Devices)
+- [Signal safety numbers](https://support.signal.org/hc/en-us/articles/360007060632-What-is-a-safety-number-and-why-do-I-see-that-it-changed)
+- [Signal Secure Backups](https://support.signal.org/hc/en-us/articles/9708267671322-Signal-Secure-Backups)
+- [Telegram FAQ](https://telegram.org/faq)
+- [Google linked apps](https://support.google.com/accounts/answer/13533235)
+- [X connected apps](https://help.x.com/en/managing-your-account/connect-or-revoke-access-to-third-party-apps)
+- [Facebook apps and websites](https://www.facebook.com/help/170585223002660)
+- [LinkedIn permitted services](https://www.linkedin.com/help/linkedin/answer/a519947)
+- [Android encryption](https://source.android.com/docs/security/features/encryption)
+- [Find Hub](https://support.google.com/android/answer/6160491)
+- [Google Play Protect](https://support.google.com/googleplay/answer/2812853)
+- [Android unknown apps](https://support.google.com/pixelphone/answer/7391672)
+- [Android restricted settings](https://support.google.com/android/answer/12623953)
+- [Android notification access](https://support.google.com/android/answer/15235441)
+- [Android unused apps](https://support.google.com/android/answer/9431959)
+- [Coalition Against Stalkerware](https://stopstalkerware.org/stalkerware-detection-removal-and-prevention/)
+- [Apple Personal Safety User Guide](https://support.apple.com/guide/personal-safety/welcome/web)
 - [BCRA Central de Deudores](https://www.bcra.gob.ar/situacion-crediticia/)
 - [Nosis access right](https://www.nosis.com/es/legales/derecho-acceso)
 - [Equifax Argentina (Veraz) privacy and access](https://www.soluciones.equifax.com.ar/legal/politica-privacidad/)

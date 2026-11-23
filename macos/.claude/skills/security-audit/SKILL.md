@@ -1,20 +1,20 @@
 ---
 name: security-audit
-description: "Audit development-environment secrets, supply chains, macOS security controls, Claude/Codex agent permissions, and online-account takeover exposure (breaches, Watchtower, recovery paths). Use for environment security reviews, secrets checks, dependency audits, or periodic security posture assessments; use specialist skills for app-binary assessments or application-code reviews."
+description: "Audit development-environment secrets, supply chains, macOS security controls, Claude/Codex agent permissions, online-account takeover exposure (breaches, Watchtower, recovery paths), and personal security practices (browsers, messaging, phone, home network, habits). Use for environment security reviews, secrets checks, dependency audits, or periodic security posture assessments; use specialist skills for app-binary assessments or application-code reviews."
 ---
 
 # Security audit
 
 Audit the development environment and explain the exposure each finding
 establishes. Honor the user's natural-language scope: a dependency-only request
-selects that domain without requiring a literal flag. Run all five domains only
+selects that domain without requiring a literal flag. Run all six domains only
 for a comprehensive environment audit. Explicit selectors are `--secrets`,
-`--deps`, `--machine`, `--agents`, or `--accounts`. Keep `--claude` as a compatibility selector for
+`--deps`, `--machine`, `--agents`, `--accounts`, or `--habits`. Keep `--claude` as a compatibility selector for
 the Claude-only portion of `--agents`. These are skill-request selectors, not
 flags for a bundled all-domain scanner.
 
 When reviewing or testing this skill itself, inspect its artifacts and use only
-synthetic fixtures. Do not run the five domains against the real machine,
+synthetic fixtures. Do not run the domains against the real machine,
 credentials, histories, account state or live agent configuration. Inspect test
 entry points before running them; related repository suites include live checks.
 
@@ -24,7 +24,8 @@ only to the selected domains. Machine checks concern the current Mac (or a remot
 Pablo's answers, the other always-on devices on his network; agent checks
 cover installed agents, their active account/profile configurations, and the
 current project's overrides; account checks cover the online accounts and email
-addresses resolved under [accounts](references/accounts.md). State these roots before scanning; do not silently
+addresses resolved under [accounts](references/accounts.md); the practices
+interview covers Pablo's own answers. State these roots before scanning; do not silently
 expand into unrelated repositories or accounts.
 
 ### Remote target
@@ -63,14 +64,20 @@ Read the selected domain references completely before running their checks:
 |---|---|
 | Secrets and credential incidents | [secrets](references/secrets.md) |
 | Dependencies and other executable supply chains | [supply chain](references/supply-chain.md) |
-| macOS controls, isolation, recovery, and other devices on the network | [machine](references/machine.md) |
+| macOS controls, browsers and mail clients, isolation, recovery, Wi-Fi and other devices on the network | [machine](references/machine.md) |
 | Claude, Codex, MCP, plugins, and browser automation | [agents](references/agents.md) |
-| Online accounts, the second-factor phone, breach exposure, and recovery paths | [accounts](references/accounts.md) |
+| Online accounts, messaging and social accounts, the second-factor phone, breach and public exposure, and recovery paths | [accounts](references/accounts.md) |
+| Practices and physical security, by interview | [habits](references/habits.md) |
 
 Before authorized remediation of an online account, also read
 [remediation](references/remediation.md). It lists vendor steps with
 easy-to-miss side effects: revoked connectors, a second factor left in place,
 keys a password change does not rotate.
+
+The machine, accounts and habits references carry every Essential item of the
+[Personal Security Checklist](https://digital-defense.io/). When that checklist
+changes, or before moving or removing a check it supplied, read
+[checklist coverage](references/checklist-coverage.md).
 
 Independent domains may use subagents. Give each the resolved scope, relevant
 reference, and all safety boundaries below. Deduplicate findings that cross

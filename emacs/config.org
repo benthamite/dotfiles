@@ -64,16 +64,12 @@ The extras come with their own manuals and user options: everything is documente
   - [[#iso-transl][iso-transl]]
   - [[#el-patch][el-patch]]
   - [[#websocket][websocket]]
-  - [[#casual][casual]]
   - [[#warnings][warnings]]
   - [[#comp][comp]]
   - [[#bytecomp][bytecomp]]
   - [[#startup][startup]]
   - [[#server][server]]
   - [[#async][async]]
-  - [[#prot-common][prot-common]]
-  - [[#prot-simple][prot-simple]]
-  - [[#bug-hunter][bug-hunter]]
   - [[#inheritenv][inheritenv]]
   - [[#misc][misc]]
 - [[#performance][performance]]
@@ -96,7 +92,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ediff][ediff]]
   - [[#ediff-extras][ediff-extras]]
   - [[#smerge][smerge]]
-  - [[#gh][gh]]
   - [[#closql][closql]]
   - [[#magit][magit]]
   - [[#magit-extra][magit-extra]]
@@ -174,7 +169,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#abbrev-extras][abbrev-extras]]
   - [[#yasnippet][yasnippet]]
   - [[#yasnippet-snippets][yasnippet-snippets]]
-  - [[#expand-region][expand-region]]
   - [[#newcomment][newcomment]]
   - [[#skeleton][skeleton]]
   - [[#crux][crux]]
@@ -197,23 +191,18 @@ The extras come with their own manuals and user options: everything is documente
   - [[#dired-extras][dired-extras]]
   - [[#dired-aux][dired-aux]]
   - [[#dired-git-info][dired-git-info]]
-  - [[#dired-du][dired-du]]
   - [[#image-dired][image-dired]]
   - [[#nerd-icons-dired][nerd-icons-dired]]
   - [[#wdired][wdired]]
   - [[#gnus-dired][gnus-dired]]
   - [[#dired-hacks][dired-hacks]]
-  - [[#dired-quick-sort][dired-quick-sort]]
-  - [[#peep-dired][peep-dired]]
   - [[#minibuffer][minibuffer]]
   - [[#ibuffer][ibuffer]]
-  - [[#prot-scratch][prot-scratch]]
   - [[#persistent-scratch][persistent-scratch]]
   - [[#executable][executable]]
   - [[#uniquify][uniquify]]
   - [[#reveal-in-osx-finder][reveal-in-osx-finder]]
   - [[#tramp][tramp]]
-  - [[#pandoc-mode][pandoc-mode]]
   - [[#track-changes][track-changes]]
 - [[#windows--frames][windows & frames]]
   - [[#window][window]]
@@ -234,7 +223,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#calendar][calendar]]
   - [[#calendar-extras][calendar-extras]]
   - [[#holidays][holidays]]
-  - [[#institution-calendar][institution-calendar]]
   - [[#org-gcal][org-gcal]]
   - [[#org-gcal-extras][org-gcal-extras]]
   - [[#org-linear][org-linear]]
@@ -244,7 +232,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#calfw-blocks][calfw-blocks]]
   - [[#time][time]]
   - [[#timer-list][timer-list]]
-  - [[#tmr][tmr]]
   - [[#display-wttr][display-wttr]]
 - [[#history][history]]
   - [[#savehist][savehist]]
@@ -257,7 +244,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#isearch][isearch]]
   - [[#isearch-extras][isearch-extras]]
   - [[#replace][replace]]
-  - [[#substitute][substitute]]
   - [[#imenu][imenu]]
   - [[#pcre2el][pcre2el]]
   - [[#wgrep][wgrep]]
@@ -267,15 +253,11 @@ The extras come with their own manuals and user options: everything is documente
   - [[#embark][embark]]
   - [[#consult][consult]]
   - [[#consult-extras][consult-extras]]
-  - [[#consult-dir][consult-dir]]
-  - [[#consult-git-log-grep][consult-git-log-grep]]
   - [[#consult-yasnippet][consult-yasnippet]]
   - [[#embark-consult][embark-consult]]
   - [[#marginalia][marginalia]]
   - [[#orderless][orderless]]
   - [[#orderless-extras][orderless-extras]]
-  - [[#affe][affe]]
-  - [[#nerd-icons-completion][nerd-icons-completion]]
   - [[#ido][ido]]
   - [[#which-key][which-key]]
 - [[#completion-at-point][completion at point]]
@@ -304,7 +286,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#eshell][eshell]]
   - [[#em-hist][em-hist]]
   - [[#eshell-syntax-highlighting][eshell-syntax-highlighting]]
-  - [[#dwim-shell-command][dwim-shell-command]]
   - [[#eat][eat]]
   - [[#eat-extras][eat-extras]]
   - [[#vterm][vterm]]
@@ -323,7 +304,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#markdown-mode][markdown-mode]]
   - [[#markdown-mode-extras][markdown-mode-extras]]
   - [[#redline][redline]]
-  - [[#grip-mode][grip-mode]]
   - [[#xwidget][xwidget]]
   - [[#edit-indirect][edit-indirect]]
   - [[#mediawiki][mediawiki]]
@@ -336,7 +316,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#tlon][tlon]]
   - [[#johnson][johnson]]
   - [[#go-translate][go-translate]]
-  - [[#powerthesaurus][powerthesaurus]]
   - [[#reverso][reverso]]
   - [[#dictionary][dictionary]]
   - [[#quotidian][quotidian]]
@@ -355,21 +334,16 @@ The extras come with their own manuals and user options: everything is documente
   - [[#treesit][treesit]]
   - [[#elisp-mode][elisp-mode]]
   - [[#lisp-mode][lisp-mode]]
-  - [[#curl-to-elisp][curl-to-elisp]]
   - [[#f][f]]
   - [[#s][s]]
   - [[#backtrace][backtrace]]
   - [[#debug][debug]]
   - [[#edebug][edebug]]
-  - [[#macrostep][macrostep]]
   - [[#js][js]]
-  - [[#js2-mode][js2-mode]]
   - [[#clojure][clojure]]
   - [[#haskell-mode][haskell-mode]]
   - [[#python][python]]
   - [[#pyenv-mode][pyenv-mode]]
-  - [[#pet][pet]]
-  - [[#emacs-ipython-notebook][emacs-ipython-notebook]]
   - [[#go][go]]
   - [[#applescript-mode][applescript-mode]]
   - [[#json-mode][json-mode]]
@@ -379,7 +353,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#shut-up][shut-up]]
   - [[#puni][puni]]
   - [[#hl-todo][hl-todo]]
-  - [[#consult-todo][consult-todo]]
   - [[#project][project]]
   - [[#hideshow][hideshow]]
   - [[#aggressive-indent][aggressive-indent]]
@@ -391,13 +364,10 @@ The extras come with their own manuals and user options: everything is documente
   - [[#gptel][gptel]]
   - [[#gptel-extras][gptel-extras]]
   - [[#gptel-plus][gptel-plus]]
-  - [[#gptel-quick][gptel-quick]]
-  - [[#ragmacs][ragmacs]]
   - [[#llm-tool-collection][llm-tool-collection]]
   - [[#aidermacs][aidermacs]]
   - [[#aidermacs-extras][aidermacs-extras]]
   - [[#ob-aider][ob-aider]]
-  - [[#agent-shell][agent-shell]]
   - [[#claude-code][claude-code]]
   - [[#agent][agent]]
   - [[#agent-extras][agent-extras]]
@@ -416,7 +386,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-capture][org-capture]]
   - [[#org-clock][org-clock]]
   - [[#org-clock-convenience][org-clock-convenience]]
-  - [[#org-clock-split][org-clock-split]]
   - [[#org-cycle][org-cycle]]
   - [[#org-archive][org-archive]]
   - [[#org-archive-hierarchically][org-archive-hierarchically]]
@@ -436,15 +405,12 @@ The extras come with their own manuals and user options: everything is documente
   - [[#ox-hugo-extras][ox-hugo-extras]]
   - [[#stafforini][stafforini]]
   - [[#ox-pandoc][ox-pandoc]]
-  - [[#ox-gfm][ox-gfm]]
   - [[#ob][ob]]
   - [[#ob-typescript][ob-typescript]]
   - [[#org-tempo][org-tempo]]
   - [[#org-src][org-src]]
   - [[#org-table][org-table]]
   - [[#org-table-wrap][org-table-wrap]]
-  - [[#orgtbl-edit][orgtbl-edit]]
-  - [[#orgtbl-join][orgtbl-join]]
   - [[#org-crypt][org-crypt]]
   - [[#org-element][org-element]]
   - [[#org-lint][org-lint]]
@@ -454,17 +420,14 @@ The extras come with their own manuals and user options: everything is documente
   - [[#org-make-toc][org-make-toc]]
   - [[#org-journal][org-journal]]
   - [[#org-contacts][org-contacts]]
-  - [[#org-vcard][org-vcard]]
   - [[#org-autosort][org-autosort]]
   - [[#ox-clip][ox-clip]]
-  - [[#elgantt][elgantt]]
   - [[#org-pomodoro][org-pomodoro]]
   - [[#org-pomodoro-extras][org-pomodoro-extras]]
   - [[#org-percentile][org-percentile]]
 - [[#note-taking][note-taking]]
   - [[#org-roam][org-roam]]
   - [[#org-roam-extras][org-roam-extras]]
-  - [[#org-roam-ui][org-roam-ui]]
   - [[#org-transclusion][org-transclusion]]
   - [[#vulpea][vulpea]]
   - [[#vulpea-extras][vulpea-extras]]
@@ -473,7 +436,6 @@ The extras come with their own manuals and user options: everything is documente
 - [[#spaced-repetition][spaced-repetition]]
   - [[#anki-editor][anki-editor]]
   - [[#anki-editor-extras][anki-editor-extras]]
-  - [[#ankiorg][ankiorg]]
   - [[#anki-noter][anki-noter]]
 - [[#reference--citation][reference & citation]]
   - [[#oc][oc]]
@@ -535,7 +497,6 @@ The extras come with their own manuals and user options: everything is documente
   - [[#shr-heading][shr-heading]]
   - [[#eww][eww]]
   - [[#eww-extras][eww-extras]]
-  - [[#prot-eww][prot-eww]]
   - [[#w3m][w3m]]
   - [[#elfeed][elfeed]]
   - [[#elfeed-extras][elfeed-extras]]
@@ -544,21 +505,17 @@ The extras come with their own manuals and user options: everything is documente
   - [[#elfeed-tube-mpv][elfeed-tube-mpv]]
   - [[#elfeed-ai][elfeed-ai]]
   - [[#engine-mode][engine-mode]]
-  - [[#org-download][org-download]]
   - [[#org-web-tools][org-web-tools]]
   - [[#org-web-tools-extras][org-web-tools-extras]]
   - [[#request][request]]
   - [[#request-deferred][request-deferred]]
   - [[#deferred][deferred]]
-  - [[#graphql-mode][graphql-mode]]
   - [[#mullvad][mullvad]]
 - [[#multimedia][multimedia]]
   - [[#emms][EMMS]]
   - [[#empv][empv]]
   - [[#tangodb][tangodb]]
   - [[#trx][trx]]
-  - [[#ytdl][ytdl]]
-  - [[#esi-dictate][esi-dictate]]
   - [[#read-aloud][read-aloud]]
   - [[#read-aloud-extras][read-aloud-extras]]
   - [[#subed][subed]]
@@ -574,13 +531,11 @@ The extras come with their own manuals and user options: everything is documente
   - [[#bbdb-extras][bbdb-extras]]
   - [[#bbdb-vcard][bbdb-vcard]]
   - [[#macos][macos]]
-  - [[#keycast][keycast]]
   - [[#activity-watch-mode][activity-watch-mode]]
   - [[#custom][custom]]
   - [[#mercado-libre][mercado-libre]]
   - [[#polymarket][polymarket]]
   - [[#kelly][kelly]]
-  - [[#fatebook][fatebook]]
   - [[#keyboard-maestro][keyboard-maestro]]
   - [[#tetris][tetris]]
 - [[#appendices][appendices]]
@@ -1387,24 +1342,6 @@ has connection termination."
             (t (lambda ()))))))
 #+end_src
 
-** =casual=
-:PROPERTIES:
-:ID:       53C5FB12-8D49-44D6-84B2-9D43F9201761
-:END:
-
-/[[https://github.com/kickingvegas/casual][casual]] is a collection of Transient menus for various Emacs modes./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package casual
-  :defer t
-  :init
-  (with-eval-after-load 'calc-mode
-    (bind-keys :map calc-mode-map
-               ("C-o" . casual-calc-tmenu)
-               :map calc-alg-map
-               ("C-o" . casual-calc-tmenu))))
-#+end_src
-
 ** =warnings=
 :PROPERTIES:
 :ID:       C8FB5BC6-6895-4D63-86A8-E49D6BB3001C
@@ -1500,73 +1437,6 @@ has connection termination."
 
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package async
-  :defer t)
-#+end_src
-
-** =prot-common=
-:PROPERTIES:
-:ID:       300DFB2C-878E-4F21-833C-327C9DFDC01B
-:END:
-
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-common.el][prot-common]] is a set of functions used by Protesilaos Stavrou's unreleased "packages"./
-
-Note Prot's clarification:
-
-#+begin_quote
-Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
-#+end_quote
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package prot-common
-  :ensure (:host github
-           :repo "protesilaos/dotfiles"
-           :local-repo "prot-common"
-           :main "emacs/.emacs.d/prot-lisp/prot-common.el"
-           :build (:not elpaca-check-version)
-           :files ("emacs/.emacs.d/prot-lisp/prot-common.el")))
-#+end_src
-
-** =prot-simple=
-:PROPERTIES:
-:ID:       6C67743E-7250-4BC5-B496-2D969EF2D015
-:END:
-
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-simple.el][prot-simple]] is a set of common commands used by Protesilaos Stavrou's unreleased "packages"./
-
-Note Prot's clarification:
-
-#+begin_quote
-Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
-#+end_quote
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package prot-simple
-  :ensure (:host github
-           :repo "protesilaos/dotfiles"
-           :local-repo "prot-simple"
-           :main "emacs/.emacs.d/prot-lisp/prot-simple.el"
-           :build (:not elpaca-check-version)
-           :files ("emacs/.emacs.d/prot-lisp/prot-simple.el"))
-  :after prot-common
-  :custom
-  (prot-simple-date-specifier "%F")
-  (prot-simple-time-specifier "%R %z")
-
-  :bind
-  (("M-s-=" . prot-simple-insert-date)
-   ("A-C-H-j" . prot-simple-mark-sexp)))
-#+end_src
-
-** =bug-hunter=
-:PROPERTIES:
-:ID:       99AEB81C-6099-4E25-AF5B-F60A02E62607
-:END:
-
-
-/[[https://elpa.gnu.org/packages/bug-hunter.html][bug-hunter]] interactively bisects and debugs your init file./
-
-#+begin_src emacs-lisp
-(use-package bug-hunter
   :defer t)
 #+end_src
 
@@ -1796,10 +1666,9 @@ CLOCK: [2021-05-29 Sat 12:33]--[2021-05-29 Sat 13:02] =>  0:29
                "brave.com/pablo@stafforini.com" "slack.com/ae-racionalidad"
                "github.com/benthamite" "home-assistant.io/stafforini" "omdbapi.com"
                "themoviedb.org/stafforini" "signal" "erc/libera"
-               "deepgram.com/pablo@stafforini.com"
                "accounts.spotify.com" "mercadolibre.com/benthamite"
-               "fatebook.io/pablo.stafforini@gmail.com" "tlon-ai-github-token")
-     (tlon "api.github.com/grip-mode" "deepl.com"
+               "tlon-ai-github-token")
+     (tlon "deepl.com"
            "openai.com" "anthropic.com"
            "aistudio.google.com" "deepseek.com"
            "perplexity.ai" "x.ai"
@@ -1986,19 +1855,6 @@ CLOCK: [2021-07-22 Thu 18:13]--[2021-07-22 Thu 18:34] =>  0:21
         ("s-a" . smerge-keep-all)
         ("s-b" . smerge-keep-base)
         ("s-c" . smerge-keep-current)))
-#+end_src
-
-** =gh=
-:PROPERTIES:
-:ID:       8FCB87B4-2396-4A9A-8638-AEA8A5818252
-:END:
-
-/[[https://github.com/sigma/gh.el][gh]] is a GitHub API library for Emacs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package gh
-  :ensure (:version (lambda (_) "2.29"))
-  :defer t) ; github.com/progfolio/elpaca/issues/229
 #+end_src
 
 ** =closql=
@@ -3967,24 +3823,6 @@ CLOCK: [2021-02-04 Thu 21:02]--[2021-02-04 Thu 21:19] =>  0:17
   :after yasnippet)
 #+end_src
 
-** =expand-region=
-:PROPERTIES:
-:ID:       8C9AE82C-9B5D-44D7-8FEE-1738032AD3C0
-:END:
-:LOGBOOK:
-CLOCK: [2022-10-03 Mon 19:53]--[2022-10-03 Mon 22:42] =>  2:49
-CLOCK: [2021-06-03 Thu 15:47]--[2021-06-03 Thu 16:04] =>  0:17
-:END:
-
-/[[https://github.com/magnars/expand-region.el][expand-region]] incrementally selects regions by semantic units./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package expand-region
-  :bind
-  (("C-H-s-n" . er/expand-region)
-   ("C-H-s-h" . er/contract-region)))
-#+end_src
-
 ** =newcomment=
 :PROPERTIES:
 :ID:       C079E18F-8A96-4A3E-8024-C0F9E29CD182
@@ -4792,26 +4630,6 @@ CLOCK: [2021-10-03 Sun 22:53]--[2021-10-03 Sun 23:36] =>  0:43
         ("b" . dired-git-info-mode)))
 #+end_src
 
-** =dired-du=
-:PROPERTIES:
-:ID:       22FCD9F4-A3EE-4605-BDB0-E90FC8471B21
-:END:
-:LOGBOOK:
-CLOCK: [2022-01-04 Tue 08:50]--[2022-01-04 Tue 09:24] =>  0:34
-:END:
-/[[https://github.com/calancha/dired-du][dired-du]] displays the recursive size of directories in Dired./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package dired-du
-  :after dired
-  :custom
-  (dired-du-size-format 'comma)
-
-  :bind
-  (:map dired-mode-map
-        ("'" . dired-du-mode)))
-#+end_src
-
 ** =image-dired=
 :PROPERTIES:
 :ID:       E07C1115-1881-4D5F-8B88-613DA4FD38A8
@@ -4923,39 +4741,6 @@ CLOCK: [2021-04-06 Tue 22:25]--[2021-04-06 Tue 22:35] =>  0:10
    ("<backtab>" . dired-subtree-cycle)))
 #+end_src
 
-** =dired-quick-sort=
-:PROPERTIES:
-:ID:       9BF30679-50B1-4F78-BD6A-0DEF565D22A4
-:END:
-:LOGBOOK:
-CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
-:END:
-
-/[[https://gitlab.com/xuhdev/dired-quick-sort][dired-quick-sort]] provides persistent quick sorting of Dired buffers in various ways./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package dired-quick-sort
-  :after dired
-  :bind
-  (:map dired-mode-map
-        ("T" . dired-quick-sort-transient)))
-#+end_src
-
-** =peep-dired=
-:PROPERTIES:
-:ID:       B0502885-D248-47E7-BE4F-54F597EBD390
-:END:
-
-/[[https://github.com/asok/peep-dired][peep-dired]] supports browsing file contents in other window while browsing directory in dired./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package peep-dired
-  :after dired
-  :bind
-  (:map dired-mode-map
-        ("F" . peep-dired)))
-#+end_src
-
 ** =minibuffer=
 :PROPERTIES:
 :ID:       40F49ECD-7225-4AD2-9E07-16C5A5857FFF
@@ -4997,36 +4782,12 @@ CLOCK: [2022-01-07 Fri 10:39]--[2022-01-07 Fri 10:45] =>  0:06
    ("k" . ibuffer-do-delete)))
 #+end_src
 
-** =prot-scratch=
-:PROPERTIES:
-:ID:       FF8B73D7-0A56-44FE-8F66-DDD18C9D5CE1
-:END:
-
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-scratch.el][prot-scratch]] supports scratch buffers for an editable major mode of choice./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package prot-scratch
-  :ensure (:host github
-                 :repo "protesilaos/dotfiles"
-                 :local-repo "prot-scratch"
-                 :main "emacs/.emacs.d/prot-lisp/prot-scratch.el"
-                 :build (:not elpaca-check-version)
-                 :files ("emacs/.emacs.d/prot-lisp/prot-scratch.el"))
-  :custom
-  (prot-scratch-default-mode 'org-mode)
-
-  :bind
-  ("C-n" . prot-scratch-buffer))
-#+end_src
-
 ** =persistent-scratch=
 :PROPERTIES:
 :ID:       ACB8DF75-3FC0-4780-A587-B173E4366F62
 :END:
 
 /[[https://github.com/Fanael/persistent-scratch][persistent-scratch]] preserves the scratch buffer across Emacs sessions./
-
-I use this package in combination with =prot-scratch= (see above) to persist scratch buffers in different modes. This way, I am able to open a scratch buffer in /any/ mode for temporary notes, without running the risk of losing them.
 
 ~persistent-scratch-backup-directory~ is deliberately ~nil~. Setting it makes the package write a *new, dated file on every save*, so a scratch buffer edited over months leaves hundreds of historical copies that nothing ever reclaims — 2,646 of them had accumulated, holding old drafts and pasted API keys in plain text. With it unset, the scratch state is still persisted across sessions, but to a single file that is overwritten in place, which is all the persistence I want.
 
@@ -5142,18 +4903,6 @@ CLOCK: [2022-08-20 Sat 18:11]--[2022-08-20 Sat 18:32] =>  0:21
 #+end_src
 
 Per-host connection properties (which name the accounts and hosts I connect to) live in my private user config, not here.
-
-** =pandoc-mode=
-:PROPERTIES:
-:ID:       8EBA8303-EA43-4FB2-BB9D-1734F40DDB77
-:END:
-
-/[[https://github.com/joostkremers/pandoc-mode][pandoc-mode]] is a minor mode for interacting with Pandoc./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package pandoc-mode
-  :defer t)
-#+end_src
 
 ** =track-changes=
 :PROPERTIES:
@@ -5700,22 +5449,6 @@ CLOCK: [2021-02-27 Sat 16:19]--[2021-02-27 Sat 17:17] =>  0:58
     (delete holiday holiday-general-holidays)))
 #+end_src
 
-** =institution-calendar=
-:PROPERTIES:
-:ID:       DC127655-02C2-4079-94C4-6E240791CB67
-:END:
-
-/[[https://github.com/protesilaos/institution-calendar][institution-calendar]] augments the =calendar= buffer to include Oxford/Calendar term indicators./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package institution-calendar
-  :ensure (:host github
-                 :repo "protesilaos/institution-calendar")
-  :defer t
-  :config
-  (institution-calendar-mode))
-#+end_src
-
 ** =org-gcal=
 :PROPERTIES:
 :ID:       9E8AEF97-2E1A-489E-929A-CE5789EABFB9
@@ -6002,21 +5735,6 @@ the triggered flag while rescheduling so the callback cannot reenter itself.
   (put 'list-timers 'disabled nil))
 #+end_src
 
-** =tmr=
-:PROPERTIES:
-:ID:       87D2EB00-727C-4CA3-85F1-B8D82D37B48D
-:END:
-
-/[[https://protesilaos.com/emacs/tmr][tmr]] set timers using a convenient notation./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package tmr
-  :defer t
-  :config
-  (when (eq system-type 'darwin)
-    (setopt tmr-sound-file "/System/Library/Sounds/Blow.aiff")))
-#+end_src
-
 ** =display-wttr=
 :PROPERTIES:
 :ID:       E1DB2097-7273-4FAC-BA84-67D46815FC45
@@ -6271,26 +5989,6 @@ To check: [[https://karthinks.com/software/bridging-islands-in-emacs-1/][Bridgin
    ("C-H-s" . query-replace-regexp)))
 #+end_src
 
-** =substitute=
-:PROPERTIES:
-:ID:       CDB7BD03-86D2-4780-871E-205F20EFA367
-:END:
-
-/[[https://git.sr.ht/~protesilaos/substitute][substitute]] efficiently replaces targets in the buffer or context./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package substitute
-  :ensure (:host github
-                 :repo "protesilaos/substitute")
-  :hook
-  (substitute-post-replace-functions . substitute-report-operation)
-
-  :bind
-  (("A-H-b" . substitute-target-in-buffer)
-   :map prog-mode-map
-   ("A-H-d" . substitute-target-in-defun)))
-#+end_src
-
 ** =imenu=
 :PROPERTIES:
 :ID:       CC1F3F93-2446-4399-A14D-9DCB6753D26B
@@ -6444,7 +6142,6 @@ CLOCK: [2022-07-21 Thu 21:18]--[2022-07-21 Thu 21:24] =>  0:06
     "d" #'consult-yasnippet-visit-snippet-file)
   (add-to-list 'embark-keymap-alist '(yasnippet . embark-yasnippet-completion-actions))
 
-  (keymap-set embark-general-map "?" #'gptel-quick)
   (keymap-set embark-defun-map "R" #'gptel-extras-rewrite-defun)
 
   :bind
@@ -6534,37 +6231,6 @@ CLOCK: [2022-06-21 Tue 17:53]--[2022-06-21 Tue 18:40] =>  0:47
   (("H-F" . consult-extras-locate-file-current)
    ("H-k" . consult-extras-locate-current)
    ("H-p" . consult-extras-ripgrep-current)))
-#+end_src
-
-** =consult-dir=
-:PROPERTIES:
-:ID:       3250EBD7-513E-439F-972F-B43C8214AC46
-:END:
-
-/[[https://github.com/karthink/consult-dir][consult-dir]] enables insertion of paths into the minibuffer prompt./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package consult-dir
-  :after consult
-  :custom
-  (consult-dir-default-command 'consult-dir-dired)
-
-  :bind
-  (:map minibuffer-mode-map
-        ("H-d" . consult-dir)))
-#+end_src
-
-** =consult-git-log-grep=
-:PROPERTIES:
-:ID:       BA613BB1-A3CF-4C47-973A-6B54091B3C0E
-:END:
-
-/[[https://github.com/ghosty141/consult-git-log-grep][consult-git-log-grep]] provides an interactive way to search the git log using =consult=./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package consult-git-log-grep
-  :after consult
-  :defer t)
 #+end_src
 
 ** =consult-yasnippet=
@@ -6658,47 +6324,6 @@ I define the following style dispatchers to extend =orderless= functionality:
                                  orderless-extras-initialism-dispatcher
                                  orderless-extras-prefixes-dispatcher
                                  orderless-extras-exclusion-dispatcher)))
-#+end_src
-
-** =affe=
-:PROPERTIES:
-:ID:       E66ADC13-2388-445D-B767-A972304485B5
-:END:
-
-/[[https://github.com/minad/affe][affe]] is an Asynchronous Fuzzy Finder for Emacs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package affe
-  :custom
-  ;; https://github.com/minad/affe?tab=readme-ov-file#installation-and-configuration
-  (affe-regexp-compiler #'affe-orderless-regexp-compiler)
-  (affe-count 100)
-
-  :config
-  (defun affe-orderless-regexp-compiler (input _type _ignorecase)
-    (setq input (cdr (orderless-compile input)))
-    (cons input (apply-partially #'orderless--highlight input t)))
-
-  :bind
-  (("H-P" . affe-grep)
-   ("H-K" . affe-find)))
-#+end_src
-
-** =nerd-icons-completion=
-:PROPERTIES:
-:ID:       1a127c06-43b5-435b-a4e5-becc61997794
-:END:
-
-/[[https://github.com/rainstormstudio/nerd-icons-completion][nerd-icons-completion]] displays nerd icons in completion candidates./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package nerd-icons-completion
-  :after marginalia
-  :config
-  (nerd-icons-completion-mode)
-
-  :hook
-  (marginalia-mode-hook . nerd-icons-completion-marginalia-setup))
 #+end_src
 
 ** =ido=
@@ -7228,20 +6853,6 @@ CLOCK: [2021-04-07 Wed 12:42]--[2021-04-07 Wed 13:09] =>  0:27
   (eshell-mode-hook . eshell-syntax-highlighting-global-mode))
 #+end_src
 
-** =dwim-shell-command=
-:PROPERTIES:
-:ID:       89FC07FE-AB08-4C9C-B999-73D176458C64
-:END:
-
-/[[https://github.com/xenodium/dwim-shell-command][dwim-shell-command]] supports Emacs shell commands with dwim behaviour./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package dwim-shell-command
-  :ensure (:host github
-           :repo "xenodium/dwim-shell-command")
-  :defer t)
-#+end_src
-
 ** =eat=
 :PROPERTIES:
 :ID:       80E53FAD-1669-408C-A45D-9232C2D51924
@@ -7694,29 +7305,6 @@ Prefer sessions whose directory contains FILE, asking when several do."
   :bind
   (:map redline-mode-map
         ("C-c r" . redline-command-map)))
-#+end_src
-
-** =grip-mode=
-:PROPERTIES:
-:ID:       5F437CCD-14C3-4120-B77E-3E1C7C891819
-:END:
-
-/[[https://github.com/seagle0128/grip-mode][grip-mode]] provides org-mode and Github-flavored Markdown preview using grip./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package grip-mode
-  :defer t
-  :init
-  (with-eval-after-load 'markdown-mode
-    (bind-keys :map markdown-mode-map
-               ("s-w" . grip-mode)))
-
-  :custom
-  (grip-github-user (auth-source-extras-op-get "api.github.com/grip-mode" "username" 'tlon))
-  (grip-github-password (auth-source-extras-op-get "api.github.com/grip-mode" "password" 'tlon))
-
-  :config
-  (require 'xwidget))
 #+end_src
 
 ** =xwidget=
@@ -8238,19 +7826,6 @@ the debugger's `recursive-edit' freezes Emacs inside the timer."
     (gts-paragraph-splitter))))
 #+end_src
 
-** =powerthesaurus=
-:PROPERTIES:
-:ID:       81CC0280-A8A5-4C8F-BF05-D324EB917DCD
-:END:
-
-/[[https://github.com/SavchenkoValeriy/emacs-powerthesaurus][powerthesaurus]] is an Emacs client for [[https://www.powerthesaurus.org/][power thesaurus]]./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package powerthesaurus
-  :bind
-  ("H-y" . powerthesaurus-transient))
-#+end_src
-
 ** =reverso=
 :PROPERTIES:
 :ID:       F3063A73-ED50-42BD-8ABD-8D7FC68758FD
@@ -8678,17 +8253,6 @@ The recipe clones from the emacsmirror copy on GitHub because the certificate of
   (emacs-lisp-docstring-fill-column nil))
 #+end_src
 
-** =curl-to-elisp=
-:PROPERTIES:
-:ID:       7B9D14E2-752E-4705-A438-78DA6663083A
-:END:
-/[[https://github.com/xuchunyang/curl-to-elisp][curl-to-elisp]] converts cURL command to Emacs Lisp code./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package curl-to-elisp
-  :defer t)
-#+end_src
-
 ** =f=
 :PROPERTIES:
 :ID:       4FD6758A-4021-4B05-BD36-BB09C2063C93
@@ -8812,20 +8376,6 @@ restored when the debugger returns, so continued code still runs with it."
         ("M-s-d" . edebug-defun)))
 #+end_src
 
-** =macrostep=
-:PROPERTIES:
-:ID:       8AE42CAA-5B62-4B1C-9C7C-DFD72AC5B3CD
-:END:
-
-/[[https://github.com/joddie/macrostep][macrostep]] is an interactive macro-expander./
-
-See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:30) for an introduction to this package.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package macrostep
-  :defer t)
-#+end_src
-
 ** =js=
 :PROPERTIES:
 :ID:       E41E357F-B912-4CC2-9279-1DE400A1BDB4
@@ -8843,18 +8393,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
         ("s-w" . eww-extras-browse-file)
         ("M-," . window-extras-buffer-move-left)
         ("M-." . window-extras-buffer-move-right)))
-#+end_src
-
-** =js2-mode=
-:PROPERTIES:
-:ID:       14639C64-720D-4105-B31B-3A84A447D19F
-:END:
-
-/[[https://github.com/mooz/js2-mode][js2-mode]] is a Javascript editing mode for Emacs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package js2-mode
-  :defer t)
 #+end_src
 
 ** =clojure=
@@ -8932,39 +8470,6 @@ See [[https://www.youtube.com/watch?v=odkYXXYOxpo][this video]] (starting at 7:3
   :after python
   :init
   (add-to-list 'exec-path "~/.pyenv/bin"))
-#+end_src
-
-** =pet=
-:PROPERTIES:
-:ID:       43F4649C-E469-4E9B-ACC4-3DC912EFFE54
-:END:
-
-/[[https://github.com/wyuenho/emacs-pet][pet]] tracks down the correct Python tooling executables from Python virtual environments./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package pet
-  :after python
-  :defer t
-  ;; Disabled by default because it causes slowdown when opening Python files
-  ;; Uncomment the line below to enable pet-mode automatically
-  ;; :config
-  ;; (add-hook 'python-base-mode-hook 'pet-mode -10)
-  )
-#+end_src
-
-** =emacs-ipython-notebook=
-:PROPERTIES:
-:ID:       3F0CEFB0-2983-4659-AB1F-6936AD8BF0FC
-:END:
-
-/[[https://github.com/millejoh/emacs-ipython-notebook][emacs-ipython-notebook]] is a Jupyter notebook client in Emacs./
-
-This needs to be configured.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ein
-  :after python
-  :defer t)
 #+end_src
 
 ** =go=
@@ -9102,21 +8607,6 @@ CLOCK: [2023-08-12 Sat 19:13]--[2023-08-12 Sat 19:43] =>  0:30
                     ("DELEGATED" . "gray"))))
 
   (global-hl-todo-mode))
-#+end_src
-
-** =consult-todo=
-:PROPERTIES:
-:ID:       096737D3-C07A-4484-9B32-FACE5C7CCE7A
-:END:
-
-/[[https://github.com/eki3z/consult-todo][consult-todo]] uses =consult= to navigate =hl-todo= keywords./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package consult-todo
-  :after hl-todo
-  :bind
-  (:map prog-mode-map
-        ("s-t" . consult-todo)))
 #+end_src
 
 ** =project=
@@ -9562,35 +9052,6 @@ This package evolved out of =gptel-extras=.
         ("s-l" . gptel-plus-list-context-files)))
 #+end_src
 
-** =gptel-quick=
-:PROPERTIES:
-:ID:       A3F028E6-A888-4F50-88DE-64897689B6D3
-:END:
-
-/[[https://github.com/karthink/gptel-quick][gptel-quick]] supports fast AI lookups./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package gptel-quick
-  :ensure (:host github :repo "karthink/gptel-quick")
-  :bind
-  ("H-s-u" . gptel-quick))
-#+end_src
-
-** =ragmacs=
-:PROPERTIES:
-:ID:       73A214D0-E75C-438A-B9BC-5D69EE04B7E8
-:END:
-
-/[[https://github.com/positron-solutions/ragmacs][ragmacs]] is a collection of gptel tools for querying Emacs./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ragmacs
-  :ensure (:host github
-                 :repo "positron-solutions/ragmacs"
-                 :build (:not elpaca-check-version))
-  :defer t)
-#+end_src
-
 ** =llm-tool-collection=
 :PROPERTIES:
 :ID:       382BA84D-0C8C-43FD-9419-9A892653EF2B
@@ -9671,30 +9132,6 @@ This package evolved out of =gptel-extras=.
    'org-babel-load-languages
    (append org-babel-load-languages
            '((aider . t)))))
-#+end_src
-
-** =agent-shell=
-:PROPERTIES:
-:ID:       3C5E8B30-4FAF-480E-84F9-DE4A48BFEA88
-:END:
-
-/[[https://github.com/xenodium/agent-shell][agent-shell]] provides a native Emacs buffer to interact with LLM agents powered by ACP./
-
-The author provides a good overview of the package in [[https://www.youtube.com/watch?v=R2Ucr3amgGg][this video]].
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package agent-shell
-  :defer t
-  :ensure-system-package
-  ((claude . "brew install claude-code")
-   (claude-code-acp . "npm install -g @zed-industries/claude-code-acp"))
-
-  :custom
-  (agent-shell-anthropic-authentication
-   (agent-shell-anthropic-make-authentication :login t))
-
-  (agent-shell-anthropic-claude-environment
-   '("MAX_THINKING_TOKENS=20000")))
 #+end_src
 
 ** =claude-code=
@@ -10755,7 +10192,6 @@ fixed stale element-cache state after edits inside lists
         ("s-s" . org-schedule)
         ("s-t" . org-todo)
         ("s-A-t" . org-sort)
-        ("s-u" . org-clock-split)
         ("s-y" . org-evaluate-time-range)
         ("s-z" . org-edit-special)
         ("s-," . org-priority)
@@ -11232,23 +10668,6 @@ CLOCK: [2023-03-18 Sat 13:14]--[2023-03-18 Sat 13:27] =>  0:13
   :defer t)
 #+end_src
 
-** =org-clock-split=
-:PROPERTIES:
-:ID:       594F8AE4-9AE7-4D7D-A504-E75C5139BB5D
-:END:
-
-/[[https://github.com/0robustus1/org-clock-split][org-clock-split]] allows splitting of one clock entry into two contiguous entries./
-
-I’m using a fork that fixes some functionality that broke when org changed =org-time-stamp-formats=.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package org-clock-split
-  :ensure (:host github
-                 :repo "0robustus1/org-clock-split"
-                 :branch "support-emacs-29.1")
-  :defer t)
-#+end_src
-
 ** =org-cycle=
 :PROPERTIES:
 :ID:       AAB14053-B232-4627-8C1D-635FAE417A98
@@ -11718,19 +11137,6 @@ Hugo should be able to export ~org-cite~ citations.
   :defer t)
 #+end_src
 
-** =ox-gfm=
-:PROPERTIES:
-:ID:       E0D2A0D0-4442-482C-B076-36CD8BB3F062
-:END:
-
-/[[https://github.com/larstvei/ox-gfm][ox-gfm]] is a Github Flavored Markdown org-mode exporter./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ox-gfm
-  :after org ox
-  :defer t)
-#+end_src
-
 ** =ob=
 :PROPERTIES:
 :ID:       A19E8C93-0435-4D02-AF4F-8213212D2386
@@ -11869,34 +11275,6 @@ Note to self: Typescript syntax highlighting works fine, but calling ~org-edit-s
 
   :hook
   (org-mode-hook . org-table-wrap-mode))
-#+end_src
-
-** =orgtbl-edit=
-:PROPERTIES:
-:ID:       7C3382D2-F7B4-4F1B-854E-BB60D568E299
-:END:
-
-/[[https://github.com/shankar2k/orgtbl-edit][orgtbl-edit]] allows editing a spreadsheet or text-delimited file as an org table./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package orgtbl-edit
-  :ensure (:host github
-                 :repo "shankar2k/orgtbl-edit")
-  :after org-table
-  :defer t)
-#+end_src
-
-** =orgtbl-join=
-:PROPERTIES:
-:ID:       91A9FFF0-BEB8-4C0D-9D78-B2F190C5AA8F
-:END:
-
-/[[https://github.com/tbanel/orgtbljoin][orgtbl-join]] joins two org tables on a common column./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package orgtbl-join
-  :after org-table
-  :defer t)
 #+end_src
 
 ** =org-crypt=
@@ -12096,103 +11474,6 @@ Upstream commit bc21e33 (5 September 2026) put an autoload cookie on a top-level
   (advice-add 'org-contacts-complete-contact :around #'cape-wrap-noninterruptible))
 #+end_src
 
-** =org-vcard=
-:PROPERTIES:
-:ID:       6747452D-3E69-48C9-A179-062D76C0406D
-:END:
-
-/[[https://github.com/pinoaffe/org-vcard][org-vcard]] imports and exports vCards from within org-mode./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package org-vcard
-  :defer t
-  :custom
-  ;; optimized for macOS Contacts.app
-  (org-vcard-styles-languages-mappings
-   '(("flat"
-      (("en"
-        (("3.0"
-          (("ADDRESS_HOME" . "ADR;TYPE=\"home\";PREF=1")
-           ("ADDRESS_HOME" . "ADR;TYPE=\"home\"")
-           ("BIRTHDAY" . "BDAY")
-           ("EMAIL" . "EMAIL;PREF=1")
-           ("FN" . "FN")
-           ("PHOTO" . "PHOTO;TYPE=JPEG")
-           ("URL" . "item1.URL;type=pref")))
-         ("4.0"
-          (("ADDRESS_HOME" . "ADR;TYPE=\"home\";PREF=1")
-           ("ADDRESS_HOME" . "ADR;TYPE=\"home\"")
-           ("BIRTHDAY" . "BDAY")
-           ("EMAIL" . "EMAIL;PREF=1")
-           ("FN" . "FN")
-           ("PHOTO" . "PHOTO;TYPE=JPEG")
-           ("URL" . "URL;PREF=1")))
-         ("2.1"
-          (("ADDRESS_HOME" . "ADR;HOME;PREF")
-           ("ADDRESS_HOME" . "ADR;HOME")
-           ("BIRTHDAY" . "BDAY")
-           ("EMAIL" . "EMAIL;PREF")
-           ("FN" . "FN")
-           ("PHOTO" . "PHOTO;TYPE=JPEG")
-           ("URL" . "URL;PREF")))))))))
-
-  :config
-  (defun org-vcard--save-photo-and-make-link (base64-data contact-name)
-    "Save base64 photo data to file and return org link."
-    (let* ((photo-dir (expand-file-name "contact-photos" user-emacs-directory))
-           (safe-name (replace-regexp-in-string "[^a-zA-Z0-9]" "_" contact-name))
-           (filename (expand-file-name (concat safe-name ".jpg") photo-dir)))
-      (unless (file-directory-p photo-dir)
-        (make-directory photo-dir t))
-      (with-temp-file filename
-        (set-buffer-multibyte nil)  ; Use unibyte mode for binary data
-        (let ((coding-system-for-write 'binary))
-          ;; Remove potential MIME type header if present
-          (when (string-match "^data:image/[^;]+;base64," base64-data)
-            (setq base64-data (substring base64-data (match-end 0))))
-          ;; Process base64 data in chunks
-          (let ((chunk-size 4096)
-                (start 0)
-                (total-length (length base64-data)))
-            (while (< start total-length)
-              (let* ((end (min (+ start chunk-size) total-length))
-                     (chunk (substring base64-data start end)))
-                (insert (base64-decode-string chunk))
-                (setq start end))))))
-      (format "\n#+ATTR_ORG: :width 300\n[[file:%s]]\n" filename)))
-
-  (advice-add 'org-vcard--transfer-write :around
-              (lambda (orig-fun direction content destination)
-                "Convert PHOTO properties to image links before writing."
-                (if (eq direction 'import)
-                    (let ((modified-content
-                           (with-temp-buffer
-                             (insert content)
-                             (goto-char (point-min))
-                             (while (re-search-forward "^:PHOTO: \\(.+\\)$" nil t)
-                               (let* ((base64-data (match-string 1))
-                                      (heading (save-excursion
-                                                 (re-search-backward "^\\* \\(.+\\)$" nil t)
-                                                 (match-string 1)))
-                                      (photo-link (condition-case err
-                                                      (org-vcard--save-photo-and-make-link
-                                                       base64-data heading)
-                                                    (error
-                                                     (message "Error processing photo for %s: %s"
-                                                              heading (error-message-string err))
-                                                     ":PHOTO: [Error processing photo]\n"))))
-                                 (delete-region (line-beginning-position) (line-end-position))
-                                 ;; Delete any following empty line
-                                 (when (looking-at "\n")
-                                   (delete-char 1))
-                                 (save-excursion
-                                   (re-search-forward ":END:\n" nil t)
-                                   (insert photo-link))))
-                             (buffer-string))))
-                      (funcall orig-fun direction modified-content destination))
-                  (funcall orig-fun direction content destination)))))
-#+end_src
-
 ** =org-autosort=
 :PROPERTIES:
 :ID:       1BC53647-A492-4EA3-A9A5-352C71119629
@@ -12224,21 +11505,6 @@ Upstream commit bc21e33 (5 September 2026) put an autoload cookie on a top-level
   (ox-clip-osx-cmd
    '(("HTML" . "hexdump -ve '1/1 \"%.2x\"' | xargs printf \"set the clipboard to {text:\\\" \\\", «class HTML»:«data HTML%s»}\" | osascript -")
      ("Markdown" . "pandoc --wrap=none -f html -t \"markdown-smart+hard_line_breaks\" - | grep -v \"^:::\" | sed 's/{#.*}//g' | sed 's/\\\\`/`/g' | pbcopy"))))
-#+end_src
-
-** =elgantt=
-:PROPERTIES:
-:ID:       22FCE4B1-4A51-4DF5-8BAF-2AC6E837DEE3
-:END:
-
-/[[https://github.com/legalnonsense/elgantt/][elgantt]] is a gantt chart for org mode./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package elgantt
-  :ensure (:host github
-           :repo "legalnonsense/elgantt")
-  :after org
-  :defer t)
 #+end_src
 
 ** =org-pomodoro=
@@ -12459,31 +11725,6 @@ Using my fork while awaiting merge of [[https://github.com/org-roam/org-roam/pul
    ("H-J" . org-roam-extras-node-find-special)))
 #+end_src
 
-** =org-roam-ui=
-:PROPERTIES:
-:ID:       BAEADCA3-68C6-4B59-A45A-7A1C11C6F6BB
-:END:
-:LOGBOOK:
-CLOCK: [2021-08-02 Mon 22:29]--[2021-08-02 Mon 22:29] =>  0:00
-:END:
-
-/[[https://github.com/org-roam/org-roam-ui][org-roam-ui]] is a graphical frontend for exploring org-roam./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package org-roam-ui
-  :ensure (:host github
-                 :repo "org-roam/org-roam-ui"
-                 :branch "main"
-                 :files ("*.el" "out"))
-  :after org-roam
-  :defer t
-  :custom
-  (org-roam-ui-sync-theme t)
-  (org-roam-ui-follow t)
-  (org-roam-ui-update-on-save nil)
-  (org-roam-ui-open-on-start nil))
-#+end_src
-
 ** =org-transclusion=
 :PROPERTIES:
 :ID:       8D8E5E44-248E-485F-9C74-E1D7A8A19D15
@@ -12662,26 +11903,6 @@ The [[https://github.com/louietan/anki-editor][original package]] is abandoned, 
 (use-personal-package anki-editor-extras
   :after anki-editor
   :demand t)
-#+end_src
-
-** =ankiorg=
-:PROPERTIES:
-:ID:       B43CB28A-9B8C-4304-AC76-4174ED2D479C
-:END:
-
-/[[https://github.com/orgtre/ankiorg][ankiorg]] is an anki-editor add-on which pulls Anki notes to Org./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ankiorg
-  :ensure (:host github :repo "orgtre/ankiorg")
-  :demand t
-  :after anki-editor
-  :custom
-  (ankiorg-sql-database
-   (file-name-concat no-littering-var-directory "ankiorg/collection.anki2"))
-  (ankiorg-media-directory
-   no-littering-var-directory "ankiorg/img")
-   (ankiorg-pick-deck-all-directly t))
 #+end_src
 
 ** =anki-noter=
@@ -14869,34 +14090,6 @@ CLOCK: [2021-03-25 Thu 13:48]--[2021-03-25 Thu 14:14] =>  0:26
         ("x" . eww-extras-open-with-eww)))
 #+end_src
 
-** =prot-eww=
-:PROPERTIES:
-:ID:       C83AED09-FA8C-46CE-91E0-13A7D49D7B8A
-:END:
-
-/[[https://github.com/protesilaos/dotfiles/blob/master/emacs/.emacs.d/prot-lisp/prot-eww.el][prot-eww]] is a set of ~eww~ extensions from Protesilaos Stavrou's personal configuration./
-
-Note Prot's clarification:
-
-#+begin_quote
-Remember that every piece of Elisp that I write is for my own educational and recreational purposes. I am not a programmer and I do not recommend that you copy any of this if you are not certain of what it does.
-#+end_quote
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package prot-eww
-  :ensure (:host github
-                 :repo "protesilaos/dotfiles"
-                 :local-repo "prot-eww"
-                 :main "emacs/.emacs.d/prot-lisp/prot-eww.el"
-                 :build (:not elpaca-check-version)
-                 :files ("emacs/.emacs.d/prot-lisp/prot-eww.el"))
-  :after eww prot-common
-  :bind
-  (:map eww-mode-map
-        ("M-f" . prot-eww-visit-url-on-page)
-        ("A-M-f" . prot-eww-jump-to-url-on-page)))
-#+end_src
-
 ** =w3m=
 :PROPERTIES:
 :ID:       986E4522-7EE1-477A-89EB-08855BCBECEE
@@ -15497,23 +14690,6 @@ CLOCK: [2021-04-21 Wed 20:39]--[2021-04-21 Wed 20:41] =>  0:02
   :hook minibuffer-setup-hook)
 #+end_src
 
-** =org-download=
-:PROPERTIES:
-:ID:       A9F101D1-4130-4297-A2B3-203B15AA408B
-:END:
-:LOGBOOK:
-CLOCK: [2021-06-23 Wed 11:43]--[2021-06-23 Wed 11:51] =>  0:08
-:END:
-
-/[[https://github.com/abo-abo/org-download][org-download]] supports drag and drop images to org-mode./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package org-download
-  :after org
-  :bind
-  ("H-s-v" . org-download-clipboard))
-#+end_src
-
 ** =org-web-tools=
 :PROPERTIES:
 :ID:       F139F57B-7CBB-49C9-A061-B827B25DB3DA
@@ -15587,18 +14763,6 @@ CLOCK: [2021-10-01 Fri 21:10]--[2021-10-01 Fri 21:51] =>  0:41
 #+begin_src emacs-lisp :tangle (init-tangle-conditionally)
 (use-package deferred
   :ensure nil ; Queued as a dependency before this configuration block.
-  :defer t)
-#+end_src
-
-** =graphql-mode=
-:PROPERTIES:
-:ID:       4B9A26D9-EA9B-420B-A8B2-060AAF19D4E4
-:END:
-
-/[[https://github.com/davazp/graphql-mode][graphql-mode]] is a major mode for GraphQL./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package graphql-mode
   :defer t)
 #+end_src
 
@@ -15751,67 +14915,6 @@ EMMS is not powerful enough for my use case (tango DJ with a collection of over 
      ("short"  . "~/Movies-Short/")
      ("audiobook" . "~/My Drive/audiobooks/")
      (t        . "~/downloads/"))))
-#+end_src
-
-** =ytdl=
-:PROPERTIES:
-:ID:       26EEEF20-5CDC-4855-A03D-AFEBB784D637
-:END:
-:LOGBOOK:
-CLOCK: [2023-05-07 Sun 10:53]--[2023-05-07 Sun 11:27] =>  0:34
-:END:
-
-/[[https://gitlab.com/tuedachu/ytdl][ytdl]] is an Emacs interface for [[https://youtube-dl.org/][youtube-dl]]./
-
-Note that this package also works with [[https://github.com/yt-dlp/yt-dlp][yt-dlp]], a ~youtube-dl~ fork.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package ytdl
-  :custom
-  (ytdl-command "yt-dlp")
-  (ytdl-video-folder paths-dir-downloads
-                     ytdl-music-folder paths-dir-downloads
-                     ytdl-download-folder paths-dir-downloads)
-  (ytdl-video-extra-args . ("--write-sub" "--write-auto-sub" "--sub-lang" "en,es,it,fr,pt"))
-
-  :bind
-  (("A-M-y" . ytdl-download)
-   :map ytdl--dl-list-mode-map
-   ("RET" . ytdl--open-item-at-point)
-   ("D" . ytdl--delete-item-at-point)))
-#+end_src
-
-** =esi-dictate=
-:PROPERTIES:
-:ID:       F4DA377D-3A7D-4DC8-A35E-A8BB684EE32D
-:END:
-
-/[[https://git.sr.ht/~lepisma/emacs-speech-input][esi-dictate]] is a set of packages for speech and voice inputs in Emacs./
-
-*Setup*:
-1. Install Python dependencies: ~pip install 'deepgram-sdk>=3.0,<4.0' pyaudio~. Note: the ~dg.py~ script requires SDK v3.x; v5.x has a completely different API and will not work.
-2. Download ~dg.py~ from the repo and place it in your PATH (e.g., =~/.local/bin/dg.py=), then make it executable: ~chmod +x ~/.local/bin/dg.py~
-
-*Usage*: ~M-x esi-dictate-start~ to begin dictation, ~C-g~ to stop.
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package esi-dictate
-  :ensure (:host sourcehut
-                 :repo "lepisma/emacs-speech-input")
-  :after llm
-  :defer t
-  :custom
-  (esi-dictate-llm-provider (make-llm-openai
-                             :key (auth-source-extras-op-get "openai.com" "gptel" 'tlon)
-                             :chat-model "gpt-4o-mini"))
-
-  (esi-dictate-dg-api-key (auth-source-extras-op-get (concat "deepgram.com/" (getenv "PERSONAL_EMAIL")) "key"))
-
-  :bind (("A-h" . esi-dictate-start)
-         :map esi-dictate-mode-map
-         ("C-g" . esi-dictate-stop))
-  :hook
-  (esi-dictate-speech-final-hook . esi-dictate-fix-context))
 #+end_src
 
 ** =read-aloud=
@@ -16190,28 +15293,6 @@ CLOCK: [2024-08-27 Tue 12:15]--[2024-08-27 Tue 12:58] =>  0:43
    ("C-M-s-g" . macos-set-dication-language)))
 #+end_src
 
-** =keycast=
-:PROPERTIES:
-:ID:       8D51F4B0-7443-420B-919F-7AA9B0EC0CE9
-:END:
-
-/[[https://github.com/tarsius/keycast][keycast]] shows the current command and its key in the mode line./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package keycast
-  :defer t
-  :config
-  ;; support for doom modeline (github.com/tarsius/keycast/issues/7)
-  (with-eval-after-load 'keycast
-    (define-minor-mode keycast-mode
-      "Show current command and its key binding in the mode line."
-      :global t
-      (if keycast-mode
-          (add-hook 'pre-command-hook 'keycast--update t)
-        (remove-hook 'pre-command-hook 'keycast--update)))
-    (add-to-list 'global-mode-string '("" keycast-mode-line))))
-#+end_src
-
 ** =activity-watch-mode=
 :PROPERTIES:
 :ID:       809139BE-A8AF-40A7-BF1A-899839313729
@@ -16307,23 +15388,6 @@ upstream publication. The retained patch and draft are in
 
   :custom
   (kelly-b-parameter-type 'probability))
-#+end_src
-
-** =fatebook=
-:PROPERTIES:
-:ID:       6668B610-6BAD-40AD-823B-7E96EFBB23CB
-:END:
-
-/[[https://github.com/sonofhypnos/fatebook.el][fatebook]] is an Emacs package to create predictions on Fatebook./
-
-#+begin_src emacs-lisp :tangle (init-tangle-conditionally)
-(use-package fatebook
-  :ensure (:repo "sonofhypnos/fatebook.el"
-                 :host github
-                 :files ("fatebook.el"))
-  :commands fatebook-create-question
-  :custom
-  (fatebook-api-key-function (lambda () (auth-source-extras-op-get "fatebook.io/pablo.stafforini@gmail.com" "api"))))
 #+end_src
 
 ** =keyboard-maestro=

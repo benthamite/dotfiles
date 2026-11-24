@@ -14,13 +14,14 @@
 | =secrets.md= | Before reading, storing, sharing, moving, or otherwise handling credentials and secret-bearing configuration. |
 | =service-access.md= | A task needs an external service (Gmail, Google Sheets/Calendar/Docs/Drive, Slack, GitHub, Anna's Archive) or the Forethought Chrome profile; it maps each service to its local tool. Browser rules live in the =chrome-use= skill. |
 | =time-machine.md= | Time Machine backups to the NAS fail or stall, the Mac freezes with unkillable processes, or anything touches the backup volume or =/etc/nsmb.conf=. |
+| =xprotect-kills.md= | Emacs or an agent session vanishes with no crash report, macOS shows "Malicious Script Blocked", or a command would put many file names (or a name that is also a host name) on a command line. |
 | =skill-audits.md= | A task adds or changes an exit-time skill (a before-exit chain step) or its audit; the principle is a monthly =exit-skill-audit= target per skill, proposing changes for Pablo's approval. |
 
 These documents are operational context, not general background to load
 into every task. [[file:service-access.md][service-access.md]] is a plain routing table and safe to read
 in full. [[file:google-services.md][google-services.md]] includes account and authentication procedures; do
 not reproduce or run credential-bearing recipes merely to document them.
-[[file:alerting.md][alerting.md]], [[file:hosting.md][hosting.md]], [[file:scheduling.md][scheduling.md]] and [[file:skill-audits.md][skill-audits.md]] hold no secrets and are safe to read in full.
+[[file:alerting.md][alerting.md]], [[file:hosting.md][hosting.md]], [[file:scheduling.md][scheduling.md]], [[file:xprotect-kills.md][xprotect-kills.md]] and [[file:skill-audits.md][skill-audits.md]] hold no secrets and are safe to read in full.
 [[file:mcp-servers.md][mcp-servers.md]] is safe to read for server topology and placement, but resolved
 per-account environment values remain secrets. [[file:secrets.md][secrets.md]] is handling policy rather
 than a credential file, and its rule remains the same: never print or quote a

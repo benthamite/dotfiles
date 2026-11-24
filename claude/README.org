@@ -118,6 +118,8 @@ Two operating rules in =CLAUDE.md= (mirrored in =codex/AGENTS.md=) were added on
 
 The reference note =context/time-machine.md= was added on 2026-11-13 for diagnosing Time Machine backup failures; its detail is kept in a private note. It is indexed in =context/README.org=, which the =diagnose= skill reads first.
 
+The reference note =context/xprotect-kills.md= was added on 2026-11-23: macOS XProtect reads file names on a command line as host names and kills the whole process tree, Emacs included, when one is on Apple's reputation list. It records how to confirm a kill, how to find the name from XProtect's block history, the names found so far, and what is not established. Origin: Emacs was killed twice that evening by a Protean replay that passed every =.org= name of the notes repository to one =git archive=. The agent-guard policy =emacs_tree_traversal= had explained these kills as "opening thousands of files"; its text now gives the real cause and points to the note.
+
 Unfamiliar code execution uses the shared =bin/untrusted-run= VM boundary;
 reviewed local workflows retain host execution. =CLAUDE.md= states only the
 routing rule; staging and trust details live in the runner contract. The guard engine's

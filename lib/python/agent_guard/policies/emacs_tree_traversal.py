@@ -1,13 +1,17 @@
 """Bulk file traversals from an agent running inside Emacs.
 
-macOS's XProtect watches the process tree of scripted commands. When a
-shell command under Emacs opens thousands of files one by one, XProtect
-kills the whole "container", which is Emacs itself: no crash report, no
-kill-emacs-hook. Seen 2026-09-13/14 (stafforini.com decision 025), twice on
-2026-11-17 (`tr '\\n' '\\0' < files.txt | xargs -0 rg` over ~12,000 org-id
-files) and 2026-11-20 (a full `export-notes.el` scan of 5,276 notes). The
-rule XProtect matched is `<private>` in the log, so the shapes below are
-the ones observed, not a proof of what triggers it.
+macOS's XProtect watches scripted commands. It reads host-like words on a
+command line as hosts and checks them against Apple's reputation list; on a
+bad verdict it kills the whole "container", which for a session inside Emacs
+is Emacs itself: no crash report, no kill-emacs-hook. A file name can be a
+host name (any NAME.org note), so a command line carrying thousands of file
+names has thousands of chances to hold a listed one. Established on
+2026-11-23 from XProtect's block history (claude/context/xprotect-kills.md);
+until then the kills of 2026-09-13/14, 2026-11-17 (`tr '\\n' '\\0' < files.txt
+| xargs -0 rg` over ~12,000 org-id files) and 2026-11-20 (a full
+`export-notes.el` scan of 5,276 notes) were put down to opening thousands of
+files. This policy keeps long name lists off command lines; it does not know
+which names are listed.
 
 Only sessions inside Emacs are checked (CLAUDE_BUFFER_NAME,
 CODEX_BUFFER_NAME or INSIDE_EMACS in the environment). Denied when the file
@@ -38,9 +42,10 @@ EMACS_ENV = ("CLAUDE_BUFFER_NAME", "CODEX_BUFFER_NAME", "INSIDE_EMACS")
 _HARMLESS = frozenset({"echo", "printf", "kill", "basename", "dirname"})
 _WALKERS = frozenset({"find", "gfind", "bfs", "fd", "fdfind"})
 
-REASON = ("BLOCKED: this command opens {count} files one by one from a shell inside Emacs ({what}). "
-          "XProtect kills Emacs itself when a process under it does this (2026-09-14, 2026-11-17, "
-          "2026-11-20). Instead: work on the few files you need; use the project's own entry point "
+REASON = ("BLOCKED: this command puts {count} file names on command lines from a shell inside Emacs "
+          "({what}). XProtect reads file names as host names and kills Emacs itself when one is on "
+          "Apple's reputation list (2026-11-23; claude/context/xprotect-kills.md in dotfiles). "
+          "Instead: work on the few files you need; use the project's own entry point "
           "(e.g. stafforini.com's scripts/export-notes.sh, or EXPORT_FILE_LIST for one note); or use "
           "one search process over a directory (`rg PATTERN DIR`, `git grep`) rather than a file list. "
           f"Limit: {MAX_FILES} files ({__name__}).")

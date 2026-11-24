@@ -192,6 +192,11 @@ the "Already tried" list in place.
   scan (stafforini.com =b150482=).
 - Open: other bulk readers (a Python or Elisp loop opening many files) are
   not guarded; a list given through a shell variable is not resolved.
+- Corrected 2026-11-23: the cause is not the number of files opened.
+  XProtect reads file names on a command line as host names and kills the
+  tree when one is on Apple's reputation list; see
+  =claude/context/xprotect-kills.md=. This incident was not rechecked
+  against XProtect's block history.
 
 ** 2026-11-20 15:49 → 16:46: idle =ns_select= stopped servicing timers and the server while the display was off (investigation, no change)
 

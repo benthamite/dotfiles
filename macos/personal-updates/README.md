@@ -46,8 +46,11 @@ while any pending item whose upgrade would include it, or anything upgraded with
 it, is itself waiting: upgrading a library alone can remove the version an
 installed dependent links to (2026-11-09: simdjson went ahead while node's
 rebuild waited on other dependencies, and node no longer started). The two
-then go ahead together. Each `delayed` run also runs `brew linkage --test` and
-alerts on any installed formula with missing libraries, however it broke.
+then go ahead together. Each `delayed` run also runs `brew linkage` and
+alerts on any installed formula with missing libraries ("Broken dependencies"
+or "Missing libraries"), however it broke. It reads the plain report, not
+`--test`, whose exit status also covers packaging findings that break nothing
+(2026-11-24: Homebrew began failing `--test` on undeclared dependencies).
 If an approved cask upgrade fails, Homebrew may restore that exact recorded
 predecessor. This exception exists only during its rollback; it cannot authorize
 an unrelated older cask or a fresh installation of the predecessor.

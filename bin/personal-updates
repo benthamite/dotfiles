@@ -420,26 +420,33 @@ def upgrade_closure(kind, name, observations):
 
 
 def broken_linkage(run_command=None):
-    """Installed formulae whose linked libraries are missing, per `brew linkage --test'."""
-    result = (run_command or run)(["brew", "linkage", "--test"], check=False,
+    """Installed formulae with missing libraries, per `brew linkage'.
+
+    Reads the plain report, not `--test': `--test' is Homebrew's CI gate and
+    also fails on packaging findings that break nothing at run time, a set
+    Homebrew changes between versions.  The plain report exits non-zero only
+    when brew itself fails.  "Broken dependencies" and "Missing libraries" are
+    the two sections Homebrew itself counts as broken linkage.
+    """
+    result = (run_command or run)(["brew", "linkage"], check=False,
                                   env_overrides={"HOMEBREW_NO_AUTO_UPDATE": "1"})
+    if result.returncode:
+        raise RuntimeError(f"brew linkage failed (exit {result.returncode}): "
+                           f"{(result.stderr or result.stdout).strip()[-300:]}")
     broken, current = [], None
-    for line in (result.stdout + "\n" + result.stderr).splitlines():
+    for line in result.stdout.splitlines():
         match = re.match(r"==> Checking (\S+) linkage", line)
         if match:
             current = match.group(1)
-        elif line.strip() == "Broken dependencies:" and current and current not in broken:
+        elif line in ("Broken dependencies:", "Missing libraries:") and current and current not in broken:
             broken.append(current)
-    if result.returncode and not broken:
-        raise RuntimeError(f"brew linkage --test failed (exit {result.returncode}): "
-                           f"{(result.stderr or result.stdout).strip()[-300:]}")
     return broken
 
 
 def linkage_alert_text(formulae):
     return ("Homebrew formulae with broken library links (a dependency's upgrade removed a library "
             "they use): " + ", ".join(formulae) + ". Upgrade or reinstall each, then check with: "
-            "brew linkage --test")
+            "brew linkage FORMULA")
 
 
 def upgrade_brew(eligible, allowed):

@@ -572,18 +572,27 @@ class PersonalUpdatesStateTest(unittest.TestCase):
         self.assertEqual(eligible, {"brew_formula": []})
 
     def test_broken_linkage_names_formulae_with_missing_libraries(self):
+        # Undeclared dependencies break nothing; `brew linkage --test' fails on them
+        # since Homebrew eb096172cc (22 Nov 2026), which is why the plain report is read.
         output = ("==> Checking node linkage\nSystem libraries:\n  /usr/lib/libc++.1.dylib\n"
+                  "==> Checking webp linkage\nUndeclared dependencies with linkage:\n  libtiff\n"
                   "==> Checking r linkage\nBroken dependencies:\n"
-                  "  /opt/homebrew/opt/tcl-tk/lib/libtcl9.0.dylib (tcl-tk)\n==> Checking zstd linkage\n")
+                  "  /opt/homebrew/opt/tcl-tk/lib/libtcl9.0.dylib (tcl-tk)\n"
+                  "==> Checking foo linkage\nMissing libraries:\n  /opt/homebrew/lib/libfoo.dylib\n"
+                  "==> Checking zstd linkage\n")
         def fake_run(command, **kwargs):
-            self.assertEqual(command, ["brew", "linkage", "--test"])
-            return subprocess.CompletedProcess(command, 1, output, "")
-        self.assertEqual(self.mod.broken_linkage(fake_run), ["r"])
+            self.assertEqual(command, ["brew", "linkage"])
+            return subprocess.CompletedProcess(command, 0, output, "")
+        self.assertEqual(self.mod.broken_linkage(fake_run), ["r", "foo"])
         clean = lambda command, **kwargs: subprocess.CompletedProcess(command, 0, "==> Checking zstd linkage\n", "")
         self.assertEqual(self.mod.broken_linkage(clean), [])
-        failed = lambda command, **kwargs: subprocess.CompletedProcess(command, 1, "", "Error: boom")
-        with self.assertRaisesRegex(RuntimeError, "brew linkage --test failed"):
-            self.mod.broken_linkage(failed)
+
+    def test_broken_linkage_raises_when_brew_fails(self):
+        partial = "==> Checking r linkage\nBroken dependencies:\n  /opt/x/libtcl9.0.dylib (tcl-tk)\n"
+        for code in (1, -9):
+            failed = lambda command, **kwargs: subprocess.CompletedProcess(command, code, partial, "Error: boom")
+            with self.assertRaisesRegex(RuntimeError, "brew linkage failed"):
+                self.mod.broken_linkage(failed)
 
     def test_helper_disables_auto_update_and_cleans_private_request(self):
         recorded = []
@@ -965,7 +974,7 @@ class PersonalUpdatesLuluTest(unittest.TestCase):
         status, _delayed, _fast, alert, heartbeat = self.run_main("delayed", set(), ["node"])
         self.assertEqual(status, 0)
         self.assertIn("node", alert.call_args.args[0])
-        self.assertIn("brew linkage --test", alert.call_args.args[0])
+        self.assertIn("brew linkage FORMULA", alert.call_args.args[0])
         heartbeat.assert_called_once_with()
 
     def test_covered_run_sends_no_alert(self):

@@ -66,6 +66,12 @@
 
 ;;;; follow-appearance-emacs-plus
 
+;; Only Emacs Plus defines these variables.  Elsewhere a `let' of a variable
+;; unknown to this file would bind it lexically, out of reach of the code
+;; under test.
+(defvar ns-system-appearance)
+(defvar ns-system-appearance-change-functions)
+
 (ert-deftest modus-themes-extras-test-apply-appearance-change-loads-once ()
   "Load the matching theme on a change and nothing while it stays the same."
   (let ((modus-themes-extras-light-theme 'modus-operandi)
@@ -102,7 +108,8 @@
             (should (memq modus-themes-extras--appearance-timer timer-list))
             (should (equal loaded (list modus-themes-extras-dark-theme
                                         modus-themes-extras-dark-theme))))
-        (cancel-timer modus-themes-extras--appearance-timer)))))
+        (when (timerp modus-themes-extras--appearance-timer)
+          (cancel-timer modus-themes-extras--appearance-timer))))))
 
 (provide 'modus-themes-extras-test)
 ;;; modus-themes-extras-test.el ends here

@@ -699,7 +699,9 @@ Newly opened Org buffers are marked for deferred initialization.  On their
 first display outside the scan@comma{} normal mode setup@comma{} local variables and
 file-opening hooks run without rereading the file.  This restores fonts@comma{}
 wrapping and indentation while preserving unsaved text@comma{} point and narrowing.
-Already open buffers and subsequent displays are left alone.
+Already open buffers and subsequent displays are left alone.  An
+indirect clone of a buffer still awaiting this setup is left as it is: the
+setup runs when the buffer itself is displayed.
 
 @node Going to an agenda item and clocking in
 @subsection Going to an agenda item and clocking in

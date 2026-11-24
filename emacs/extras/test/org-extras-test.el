@@ -484,6 +484,15 @@
             (should-not buffer-face-mode)
             (should-not visual-line-mode)
             (should-not org-indent-mode)
+            (let ((clone (make-indirect-buffer buffer " *org-extras clone*" t)))
+              (unwind-protect
+                  (with-current-buffer clone
+                    (set-window-buffer (selected-window) clone)
+                    (org-extras--agenda-finish-buffer-setup (selected-window))
+                    (should (derived-mode-p 'org-mode))
+                    (should-not org-extras--agenda-setup-pending))
+                (kill-buffer clone)))
+            (should org-extras--agenda-setup-pending)
             (goto-char (point-max))
             (insert "Unsaved text\n")
             (goto-char 14)

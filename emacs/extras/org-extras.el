@@ -739,11 +739,15 @@ local variables and file hooks without rereading their contents."
         (setq org-extras--agenda-setup-pending nil)
         (remove-hook 'window-buffer-change-functions
                      #'org-extras--agenda-finish-buffer-setup t)
-        (save-excursion
-          (save-restriction
-            (widen)
-            (normal-mode t)
-            (run-hooks 'find-file-hook)))))))
+        ;; A clone made by `make-indirect-buffer' inherits the pending
+        ;; setup but visits no file: `normal-mode' would put it in
+        ;; Fundamental mode.  The setup stays owed to its base buffer.
+        (unless (buffer-base-buffer)
+          (save-excursion
+            (save-restriction
+              (widen)
+              (normal-mode t)
+              (run-hooks 'find-file-hook))))))))
 
 (defun org-extras--agenda-filter-file-opening-hook (hook)
   "Return HOOK without agenda file-opening setup functions."

@@ -292,13 +292,20 @@ corrections, no drafts files and no pre-authorized-action policies.
   "waiting on X": `protean wait add --project P --note "..." --who "Name"
   --channel whatsapp|email|slack|signal --sender STABLE_ID` (WhatsApp JID from
   `wa-read resolve`, an email address, or a Slack user ID from `slack.py
-  users-search`), optionally `--probe-dns-txt NAME=VALUE`, `--deadline
+  users-search`), optionally `--conversation ID`, `--thread ID` (a Slack
+  thread's ts, an email thread's id), `--probe-dns-txt NAME=VALUE`, `--deadline
   'YYYY-MM-DD HH:MM'`, `--on resume|alert`. The wait captures the current
   session, matches only messages arriving after registration, and resumes the
   session (reopening it if closed), or notifies Pablo, when satisfied.
-  `protean wait list`, `protean wait cancel ID`. A satisfied wait means the
-  person wrote, not that the matter is settled: if the message does not resolve
-  it, register the wait again.
+  `protean wait list`, `protean wait cancel ID`. A message wait ends on the
+  person's next message where it looks, whatever the message says: narrow it
+  with `--conversation` or `--thread`. A satisfied wait means the person wrote,
+  not that the matter is settled: register it again only when a reply is still
+  what you await. For something the person is to do, or a day to look again,
+  register a wait for that date alone, which no message ends: `protean wait add
+  --project P --note "..." --deadline 'YYYY-MM-DD HH:MM'` with no `--channel`
+  (Pablo, 24 Nov 2026, after a wait for an action ended five times in a day on
+  unrelated messages).
 - Draft replies, decisions and tasks only Pablo can do live in the Org task
   Protean creates for the message, under the project's heading in
   `~/repos/notes/protean-projects.org` or, for Forethought,

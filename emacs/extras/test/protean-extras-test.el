@@ -5,6 +5,8 @@
 ;; The openers with their clients stubbed, on invented messages.  Only
 ;; the email test uses the real client, mu4e, and is skipped without it;
 ;; it renders a message file written here and never asks mu for one.
+;; Where a message is marked is computed by Protean itself, so the tests
+;; that check it end there, skipped, when Protean is not installed.
 
 ;;; Code:
 
@@ -35,6 +37,14 @@ The BOUNDS it gave, if any, are in `protean-extras-test--bounds'."
                                           (setq protean-extras-test--bounds bounds)
                                           (setq answer (list buffer reason))))))
     (cons taken answer)))
+
+(defun protean-extras-test--marked (bounds)
+  "Return what BOUNDS, an opener's function, marks in the current buffer.
+Protean computes it; skip the running test when Protean is not installed."
+  (unless (locate-library "protean-preview")
+    (ert-skip "Protean is not installed"))
+  (require 'protean-preview)
+  (funcall bounds))
 
 (ert-deftest protean-extras-test-each-opener-leaves-other-channels ()
   "An opener returns nil, and answers nothing, for another channel's message."
@@ -88,7 +98,8 @@ the message is there."
   (protean-extras-test--with-features '(slack)
     (let ((protean-extras-slack-teams '(("forethought" . "Forethought")))
           (opened nil)
-          (went nil))
+          (went nil)
+          (bounds nil))
       (cl-letf (((symbol-function 'protean-extras--slack-team)
                  (lambda (name) (and (equal name "Forethought") 'team)))
                 ((symbol-function 'slack-team-connectedp) (lambda (team) (eq team 'team)))
@@ -110,21 +121,22 @@ the message is there."
           (should (bufferp buffer))
           (should (equal (car opened) '(channel "100.1")))
           (should (equal went "100.1"))
-          ;; The message is the stretch whose `ts' is its timestamp.
-          (require 'protean-preview)
-          (with-temp-buffer
-            (insert (propertize "other\n" 'ts "99.9")
-                    (propertize "the message\n" 'ts (copy-sequence "100.1"))
-                    (propertize "later\n" 'ts "200.2"))
-            (goto-char (point-min))
-            (should (equal (funcall protean-extras-test--bounds) '(7 . 19)))))
+          (setq bounds protean-extras-test--bounds))
         (protean-extras-test--opened
          #'protean-extras-open-slack
          '(:channel "slack" :account "forethought" :ref "C1/200.2" :thread "100.1"))
         (should (equal (car opened) '(thread "100.1")))
         (should (equal went "200.2"))
         (should-error (protean-extras-open-slack
-                       '(:channel "slack" :account "becas" :ref "C1/1.1") #'ignore))))))
+                       '(:channel "slack" :account "becas" :ref "C1/1.1") #'ignore))
+        ;; The message is the stretch whose `ts' is its timestamp.
+        (should (functionp bounds))
+        (with-temp-buffer
+          (insert (propertize "other\n" 'ts "99.9")
+                  (propertize "the message\n" 'ts (copy-sequence "100.1"))
+                  (propertize "later\n" 'ts "200.2"))
+          (goto-char (point-min))
+          (should (equal (protean-extras-test--marked bounds) '(7 . 19))))))))
 
 (ert-deftest protean-extras-test-slack-team-is-found-where-emacs-slack-keeps-it ()
   "A team registered with emacs-slack is found by its name."
@@ -209,9 +221,10 @@ the message is there."
                           '(:channel "whatsapp" :ref "123@s.whatsapp.net/ABC"))))
               (should taken)
               (should (eq buffer chat))
-              (require 'protean-preview)
+              (should (functionp protean-extras-test--bounds))
               (with-current-buffer chat
-                (should (equal (funcall protean-extras-test--bounds) '(7 . 19))))))
+                (should (equal (protean-extras-test--marked protean-extras-test--bounds)
+                               '(7 . 19))))))
         (kill-buffer chat)))))
 
 (ert-deftest protean-extras-test-whatsapp-takes-a-reply-and-keeps-what-is-typed ()

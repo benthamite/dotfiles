@@ -502,5 +502,76 @@ which `file-name-as-directory' converts to \"./\"."
                             "english")
       (should (equal command "ocrmypdf --redo-ocr custom-in.pdf custom-out.pdf")))))
 
+;;;; recover-all-files
+
+(defmacro files-extras-test--with-auto-save-fixture (&rest body)
+  "Run BODY with a stale file, its newer auto-save file and a session list.
+BODY sees `file', `auto-save' and `directory'."
+  (declare (indent 0))
+  `(let* ((directory (file-name-as-directory (make-temp-file "files-extras-" t)))
+	  (file (expand-file-name "note.org" directory))
+	  (auto-save (expand-file-name "#0123abcd#" directory))
+	  (sessions (file-name-as-directory (expand-file-name "sessions" directory)))
+	  (auto-save-list-file-prefix sessions)
+	  (find-file-hook nil))
+     (unwind-protect
+	 (progn
+	   (make-directory sessions)
+	   (write-region "saved\n" nil file nil 'silent)
+	   (set-file-times file (time-subtract nil 60))
+	   (write-region "recovered\n" nil auto-save nil 'silent)
+	   (write-region (format "\n/tmp/no-file-buffer\n%s\n%s\n" file auto-save)
+			 nil (expand-file-name "1-host~" sessions) nil 'silent)
+	   ,@body)
+       (when-let* ((buffer (get-file-buffer file)))
+	 (with-current-buffer buffer (set-buffer-modified-p nil))
+	 (kill-buffer buffer))
+       (delete-directory directory t))))
+
+(ert-deftest files-extras-test-recover-all-files-finds-hashed-auto-save ()
+  "A file is found through the session list although its auto-save name is a hash."
+  (files-extras-test--with-auto-save-fixture
+    (should (equal (cl-remove-if-not
+		    (lambda (pair) (string-prefix-p (file-truename directory) (car pair)))
+		    (files-extras--files-with-auto-save-data))
+		   (list (cons (file-truename file) auto-save))))))
+
+(ert-deftest files-extras-test-recover-all-files-skips-current-file ()
+  "A file newer than its auto-save data is not offered for recovery."
+  (files-extras-test--with-auto-save-fixture
+    (set-file-times auto-save (time-subtract nil 120))
+    (should-not (cl-find (file-truename file) (files-extras--files-with-auto-save-data)
+			 :key #'car :test #'equal))))
+
+(ert-deftest files-extras-test-recover-all-files-skips-unsaved-buffer ()
+  "A file is not offered when a buffer visiting it has unsaved changes."
+  (files-extras-test--with-auto-save-fixture
+    (with-current-buffer (find-file-noselect file t)
+      (insert "edit"))
+    (should-not (cl-remove-if-not
+		 (lambda (pair) (string-prefix-p (file-truename directory) (car pair)))
+		 (files-extras--files-with-auto-save-data)))))
+
+(ert-deftest files-extras-test-recover-all-files-skips-empty-auto-save ()
+  "An empty auto-save file is not offered for recovery."
+  (files-extras-test--with-auto-save-fixture
+    (write-region "" nil auto-save nil 'silent)
+    (should-not (cl-remove-if-not
+		 (lambda (pair) (string-prefix-p (file-truename directory) (car pair)))
+		 (files-extras--files-with-auto-save-data)))))
+
+(ert-deftest files-extras-test-recover-all-files-recovers-buffer-text ()
+  "The command puts the auto-save text in the buffer and leaves it unsaved."
+  (files-extras-test--with-auto-save-fixture
+    (cl-letf (((symbol-function 'files-extras--files-with-auto-save-data)
+	       (lambda () (list (cons file auto-save))))
+	      ((symbol-function 'y-or-n-p) (lambda (&rest _) t)))
+      (files-extras-recover-all-files))
+    (with-current-buffer (get-file-buffer file)
+      (should (equal (buffer-string) "recovered\n"))
+      (should (buffer-modified-p)))
+    (should (equal (with-temp-buffer (insert-file-contents file) (buffer-string))
+		   "saved\n"))))
+
 (provide 'files-extras-test)
 ;;; files-extras-test.el ends here

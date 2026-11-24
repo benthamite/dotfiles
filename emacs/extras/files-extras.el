@@ -407,23 +407,108 @@ This function gets STRING when PROCESS produces output."
 	   (point))))
     (>= (point) beginning-of-last-line)))
 
+(defvar files-extras--recovering nil
+  "Non-nil while `files-extras-recover-all-files' is recovering files.")
+
 (defun files-extras-recover-all-files ()
-  "Recover all files with auto-save data in the `auto-save' directory.
-One normally uses `recover-session' for this, but when Emacs crashes a session
-may fail to be created and then each file has to be recovered separately.  This
-command automates the recovery process in these cases."
+  "Recover every file whose auto-save data is newer than the file itself.
+The candidates are the files visited by open buffers and the files recorded in
+the session lists under `auto-save-list-file-prefix'.  They cannot be found
+from the names in the auto-save directory, because those names are hashes of
+the visited file names (see `files-extras-make-hashed-auto-save-file-name-a').
+
+Each recovered buffer is left modified, so that the recovered text can be
+reviewed before it is saved."
   (interactive)
-  (dolist (file (directory-files (file-name-concat paths-dir-emacs-profiles "var/auto-save")))
-    (when-let* ((file-to-recover (string-replace "#" "" file)))
-      (ignore-errors (recover-file (string-replace "!" "/" file-to-recover)))
-      (files-extras-diff-buffer-with-file))))
+  (let* ((pairs (files-extras--files-with-auto-save-data))
+	 (names (mapconcat (lambda (pair) (file-name-nondirectory (car pair)))
+			   pairs ", ")))
+    (cond ((null pairs)
+	   (message "No file has auto-save data newer than itself"))
+	  ((y-or-n-p (format "Recover %d file(s) from auto-save data (%s)? "
+			     (length pairs) names))
+	   (let ((files-extras--recovering t))
+	     (dolist (pair pairs)
+	       (files-extras--recover-file (car pair) (cdr pair))))
+	   (message "Recovered %d file(s), left unsaved for review: %s"
+		    (length pairs) names)))))
+
+(defun files-extras--files-with-auto-save-data ()
+  "Return an alist of (FILE . AUTO-SAVE) for the files that can be recovered.
+A file can be recovered when it exists, is local, its newest auto-save file is
+newer than it and not empty, and no buffer visiting it has unsaved changes.
+FILE is a true name, so that a file recorded under two names is listed once."
+  (let ((newest (make-hash-table :test #'equal)))
+    (dolist (pair (append (files-extras--buffer-auto-save-pairs)
+			  (files-extras--session-auto-save-pairs)))
+      (let ((auto-save (cdr pair)))
+	(when (and (not (file-remote-p (car pair)))
+		   (file-exists-p (car pair))
+		   (file-newer-than-file-p auto-save (car pair))
+		   (files-extras--file-non-empty-p auto-save))
+	  (let ((file (file-truename (car pair))))
+	    (when (file-newer-than-file-p auto-save (gethash file newest file))
+	      (puthash file auto-save newest))))))
+    (let (pairs)
+      (maphash (lambda (file auto-save)
+		 (let ((buffer (find-buffer-visiting file)))
+		   (unless (and buffer (buffer-modified-p buffer))
+		     (push (cons file auto-save) pairs))))
+	       newest)
+      (sort pairs (lambda (a b) (string< (car a) (car b)))))))
+
+(defun files-extras--file-non-empty-p (file)
+  "Return non-nil if FILE has contents."
+  (> (or (file-attribute-size (file-attributes file)) 0) 0))
+
+(defun files-extras--buffer-auto-save-pairs ()
+  "Return an alist of (FILE . AUTO-SAVE) for the open file-visiting buffers."
+  (let (pairs)
+    (dolist (buffer (buffer-list) pairs)
+      (with-current-buffer buffer
+	(when (and buffer-file-name buffer-auto-save-file-name)
+	  (push (cons buffer-file-name buffer-auto-save-file-name) pairs))))))
+
+(defun files-extras--session-auto-save-pairs ()
+  "Return an alist of (FILE . AUTO-SAVE) read from the auto-save session lists.
+A session list holds two lines per buffer: the visited file, which is empty for
+a buffer that visits none, and its auto-save file."
+  (let ((directory (and auto-save-list-file-prefix
+			(file-name-directory auto-save-list-file-prefix)))
+	pairs)
+    (when (and directory (file-directory-p directory))
+      (dolist (list-file (directory-files directory t
+					  directory-files-no-dot-files-regexp))
+	(when (file-regular-p list-file)
+	  (let ((lines (with-temp-buffer
+			 (insert-file-contents list-file)
+			 (split-string (buffer-string) "\n"))))
+	    (while (cdr lines)
+	      (unless (string-empty-p (car lines))
+		(push (cons (car lines) (cadr lines)) pairs))
+	      (setq lines (cddr lines)))))))
+    pairs))
+
+(defun files-extras--recover-file (file auto-save)
+  "Replace the text of the buffer visiting FILE with the contents of AUTO-SAVE.
+This is what `recover-file' does once the user confirms."
+  (with-current-buffer (find-file-noselect file t)
+    (let ((inhibit-read-only t)
+	  (coding-system buffer-file-coding-system)
+	  (coding-system-for-read 'auto-save-coding))
+      (erase-buffer)
+      (insert-file-contents auto-save nil)
+      (set-buffer-file-coding-system coding-system)
+      (set-buffer-auto-saved))
+    (after-find-file nil nil t)))
 
 (declare-function alert "alert")
 (defun files-extras-auto-save-alert ()
   "Alert user when auto save data is detected.
 `recover-this-file' notifications are easy to miss.  This function triggers a
 more intrusive alert."
-  (when (and (not buffer-read-only)
+  (when (and (not files-extras--recovering)
+	     (not buffer-read-only)
 	     (file-newer-than-file-p (or buffer-auto-save-file-name
 					 (make-auto-save-file-name))
 				     buffer-file-name))

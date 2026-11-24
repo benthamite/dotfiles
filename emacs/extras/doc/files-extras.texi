@@ -322,11 +322,18 @@ into user-friendly messages (@ref{Process support, , Process support}).
 
 @findex files-extras-recover-all-files
 @findex files-extras-diff-buffer-with-file
-The command @code{files-extras-recover-all-files} recovers all files that have
-auto-save data in the Emacs auto-save directory.  This is useful after a
-crash when @code{recover-session} fails because no session file was created.
-After each recovery attempt@comma{} it runs @code{files-extras-diff-buffer-with-file}
-to show the differences.
+The command @code{files-extras-recover-all-files} recovers every file whose
+auto-save data is newer than the file itself.  It looks at the files
+visited by open buffers and at the files recorded in the auto-save
+session lists (@code{auto-save-list-file-prefix})@comma{} since the hashed names in
+the auto-save directory do not reveal which file each one belongs to.
+It lists the files@comma{} asks once for confirmation@comma{} and then replaces the
+text of each buffer with its auto-save data.  The buffers are left
+modified and unsaved@comma{} so you can review them (for example with
+@code{files-extras-diff-buffer-with-file}) before saving.  Files with unsaved
+changes in an open buffer@comma{} and remote files@comma{} are skipped.  A buffer that
+has @code{auto-save-visited-mode} enabled saves the recovered text almost at
+once.
 
 The command @code{files-extras-diff-buffer-with-file} runs a unified diff
 (@samp{-u}) comparing the current buffer against the file on disk.  This

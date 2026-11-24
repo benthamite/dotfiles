@@ -107,6 +107,13 @@ nonzero status and does not certify values from variable names. The credential
 incident helper keeps read-only operations free of state creation and serializes
 authorized updates from cooperating helper processes.
 
+A copy of security-audit installed outside this repository checks for updates
+when it is run: =scripts/skill-update.py check= compares it with the published
+copy on GitHub, and the agent asks before =apply= replaces the installed
+files, each verified against the hash GitHub lists, with a backup of what it
+replaces. In a checkout of this repository the check does nothing; update with
+git.
+
 The security-audit references for the machine, accounts and habits domains carry
 every Essential item of the Personal Security Checklist (digital-defense.io).
 Its =references/checklist-coverage.md= maps each item to the check that carries
